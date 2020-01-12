@@ -1,0 +1,51 @@
+{
+  "name": "proxy-moxy",
+  "version": "0.0.1",
+  "description": "Proxy server for mocking client application",
+  "main": "server/index.ts",
+  "repository": "git@github.com:G3F4/proxy-moxy.git",
+  "author": "G3F4 <kamil.grabek@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "ts-node --project tsconfig.server.json server/index.ts",
+    "dev:server": "ts-node-dev --project tsconfig.server.json --respawn --transpileOnly server/index.ts",
+    "dev:client": "react-scripts start",
+    "build:client": "react-scripts build",
+    "test:client": "react-scripts test"
+  },
+  "dependencies": {
+    "@material-ui/core": "^4.8.3",
+    "@types/node": "13.1.6",
+    "ts-node": "8.6.1",
+    "ts-node-dev": "1.0.0-pre.44",
+    "typescript": "3.7.4",
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v17.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "4.2.4",
+    "@testing-library/react": "9.3.2",
+    "@testing-library/user-event": "7.1.2",
+    "@types/jest": "24.0.0",
+    "@types/react": "16.9.0",
+    "@types/react-dom": "16.9.0",
+    "react": "16.12.0",
+    "react-dom": "16.12.0",
+    "react-scripts": "3.3.0"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
