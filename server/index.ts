@@ -5,52 +5,79 @@ import {Method, Route} from '../sharedTypes';
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 
 let serverState = {
-  empty: true,
+  requestCount: 0,
 };
 
 let routes: Route[] = [{
   method: 'get',
   url: '/test',
   responseCode: `
-function responseReturn(serverState, requestBody) {
-    return {
-        serverEmpty: serverState.empty
-    };
-}
-
-return responseReturn(serverState, requestBody);
+((state) => {
+  return {
+    requestCount: state.requestCount
+  };
+})(state, request);
 `,
   serverStateUpdateCode: `
-function stateUpdate(serverState, requestBody) {
-    return {
-        ...serverState,
-        ...requestBody,
-    };
-}
-
-return stateUpdate(serverState, requestBody);
+((state) => {
+  return {
+    ...state,
+  };
+})(state, request);
+`,
+}, {
+  method: 'put',
+  url: '/test',
+  responseCode: `
+((state) => {
+  return {};
+})(state, request);
+`,
+  serverStateUpdateCode: `
+((state) => {
+  return {
+    ...state,
+    requestCount: state.requestCount
+      ? state.requestCount + 1
+      : 1
+  };
+})(state, request);
+`,
+}, {
+  method: 'delete',
+  url: '/test',
+  responseCode: `
+((state) => {
+  return {};
+})(state, request);
+`,
+  serverStateUpdateCode: `
+((state) => {
+  return {
+    ...state,
+    requestCount: state.requestCount
+      ? state.requestCount - 1
+      : 0
+  };
+})(state, request);
 `,
 }, {
   method: 'post',
   url: '/test',
   responseCode: `
-function responseReturn(serverState, requestBody) {
-    return {
-        serverEmpty: serverState.empty
-    };
-}
-
-return responseReturn(serverState, requestBody);
+((state, { body }) => {
+  return {
+    requestCount: body.requestCount
+  };
+})(state, request);
 `,
   serverStateUpdateCode: `
-function stateUpdate(serverState, requestBody) {
-    return {
-        ...serverState,
-        ...requestBody,
-    };
-}
-
-return stateUpdate(serverState, requestBody);
+((state, { body }) => {
+  return {
+    ...state,
+    requestCount: body.requestCount
+  };
+})(state, request);
 `
 }];
 
@@ -79,7 +106,7 @@ const sendEvent = (socket: WebSocket, action: string, payload: any): void => {
 function readJson(res: any, cb: any, err: any) {
   let buffer: any;
   /* Register data cb */
-  res.onData((ab, isLast) => {
+  res.onData((ab: ArrayBuffer, isLast: boolean) => {
     try {
       let chunk = Buffer.from(ab);
       if (isLast) {
@@ -137,10 +164,10 @@ App().ws('/*', {
   close: (ws: WebSocket, code: number, message: ArrayBuffer) => {
     console.log(['ws:close'], code, message);
   }
-}).any('/*', async (response, request) => {
+}).any('/*', async (res, req) => {
   try {
-    const method = request.getMethod() as Method;
-    const url = request.getUrl() !== '/' ? request.getUrl() : '/index.html';
+    const method = req.getMethod() as Method;
+    const url = req.getUrl() !== '/' ? req.getUrl() : '/index.html';
     const urlLastChar = url[url.length - 1];
     const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
     const route = routes.find(route => route.url === rawUrl && route.method === method);
@@ -149,30 +176,42 @@ App().ws('/*', {
     console.log(['route'], route);
     
     if (route) {
-      const requestBody = await readJsonAsync(response);
+      const requestBody = await readJsonAsync(res);
       console.log(['requestBody'], requestBody);
       
-      const responseFunction = new Function('serverState', 'requestBody', route.responseCode);
-      const serverStateUpdateFunction = new Function('serverState', 'requestBody', route.serverStateUpdateCode);
+      const request = {
+        body: requestBody,
+      };
       
-      const responseFunctionReturn = responseFunction(serverState, requestBody);
-      const updatedServerStateReturn = serverStateUpdateFunction(serverState, requestBody);
+      const responseCodeStart = `return `;
+      
+      const effectiveResponseCode = responseCodeStart + route.responseCode.trim();
+      const effectiveServerStateUpdateCode = responseCodeStart + route.serverStateUpdateCode.trim();
+      
+      console.log(['effectiveResponseCode'], effectiveResponseCode);
+      console.log(['effectiveServerStateUpdateCode'], effectiveServerStateUpdateCode);
+      
+      const responseFunction = new Function('state', 'request', effectiveResponseCode);
+      const serverStateUpdateFunction = new Function('state', 'request', effectiveServerStateUpdateCode);
+      
+      const responseFunctionReturn = responseFunction(serverState, request);
+      const updatedServerStateReturn = serverStateUpdateFunction(serverState, request);
       
       console.log(['responseFunctionReturn'], responseFunctionReturn)
       console.log(['updatedServerStateReturn'], updatedServerStateReturn)
       
       updateServerState(updatedServerStateReturn);
       
-      response.end(JSON.stringify(responseFunctionReturn));
+      res.end(JSON.stringify(responseFunctionReturn));
     } else {
       const file = readFileSync(`${process.cwd()}/build${url}`);
     
-      response.end(file);
+      res.end(file);
     }
   } catch (e) {
     console.error(`error: ${e.toString()}`);
-    response.writeStatus('404');
-    response.end();
+    res.writeStatus('404');
+    res.end();
   }
 }).listen(PORT, (listenSocket) => {
   if (listenSocket) {

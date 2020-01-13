@@ -69,13 +69,11 @@ function RequestMethodStep({ method, onMethodChange }: { method: Method, onMetho
 }
 
 const initialResponseCode = `
-function responseReturn(serverState, request) {
-    return {
-        serverEmpty: serverState.empty
-    };
-}
+((state, { body }) => { // return response, don't add code at start
+  return {
 
-return responseReturn(serverState, request);
+  };
+})(state, request); // changing those args name breaks script
 `;
 
 function ResponseStep({ code, onChange }: { code: string, onChange: (code: string) => void }) {
@@ -111,15 +109,12 @@ function ResponseStep({ code, onChange }: { code: string, onChange: (code: strin
 }
 
 const initialServerStateUpdateCode = `
-function stateUpdate(serverState, request) {
-    console.log('request.body', request.body);
-    return {
-        ...serverState,
-        ...request.body,
-    };
-}
-
-return stateUpdate(serverState, request);
+((state, { body }) => { // return new state, don't add code at start
+  return {
+    ...state,
+    
+  };
+})(state, request); // changing those args name breaks script
 `;
 
 function UpdateServerStateStep({ code, onChange }: { code: string, onChange: (code: string) => void }) {
