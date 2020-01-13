@@ -66,9 +66,23 @@ let routes: Route[] = [{
   url: '/test',
   responseCode: `
 ((state, { body }) => {
+  return {};
+})(state, request);
+`,
+  serverStateUpdateCode: `
+((state, { body }) => {
   return {
-    requestCount: body.requestCount
+    ...state,
+    data: body
   };
+})(state, request);
+`
+}, {
+  method: 'patch',
+  url: '/test',
+  responseCode: `
+((state, { body }) => {
+  return 'patched!';
 })(state, request);
 `,
   serverStateUpdateCode: `
@@ -139,6 +153,14 @@ async function readJsonAsync(res: any) {
   });
 }
 
+const Sockets: WebSocket[] = [];
+
+function broadcast(event: { action: string, payload: any }) {
+  Sockets.forEach(socket => {
+    socket.send(JSON.stringify(event));
+  });
+}
+
 App().ws('/*', {
   message: (ws, message) => {
     // @ts-ignore
@@ -151,6 +173,7 @@ App().ws('/*', {
     }
   },
   open: (ws: WebSocket, req: HttpRequest) => {
+    Sockets.push(ws);
     ws.send(JSON.stringify({
       action: 'updateServerState',
       payload: serverState,
@@ -173,7 +196,6 @@ App().ws('/*', {
     const route = routes.find(route => route.url === rawUrl && route.method === method);
     console.log(['method'], method);
     console.log(['url'], url);
-    console.log(['route'], route);
     
     if (route) {
       const requestBody = await readJsonAsync(res);
@@ -188,19 +210,21 @@ App().ws('/*', {
       const effectiveResponseCode = responseCodeStart + route.responseCode.trim();
       const effectiveServerStateUpdateCode = responseCodeStart + route.serverStateUpdateCode.trim();
       
-      console.log(['effectiveResponseCode'], effectiveResponseCode);
-      console.log(['effectiveServerStateUpdateCode'], effectiveServerStateUpdateCode);
-      
       const responseFunction = new Function('state', 'request', effectiveResponseCode);
       const serverStateUpdateFunction = new Function('state', 'request', effectiveServerStateUpdateCode);
       
       const responseFunctionReturn = responseFunction(serverState, request);
       const updatedServerStateReturn = serverStateUpdateFunction(serverState, request);
       
-      console.log(['responseFunctionReturn'], responseFunctionReturn)
-      console.log(['updatedServerStateReturn'], updatedServerStateReturn)
+      console.log(['responseFunctionReturn'], responseFunctionReturn);
+      console.log(['updatedServerStateReturn'], updatedServerStateReturn);
       
       updateServerState(updatedServerStateReturn);
+      
+      broadcast({
+        action: 'updateServerState',
+        payload: serverState,
+      });
       
       res.end(JSON.stringify(responseFunctionReturn));
     } else {
@@ -219,4 +243,8 @@ App().ws('/*', {
   }
 });
 
-// curl --header "Content-Type: application/json" --request POST --data '{"items": [{ "value": 1, "text": "test" }]}' http://localhost:5000/test
+// curl -i --header "Content-Type: application/json" --request GET  http://localhost:5000/test
+// curl -i --header "Content-Type: application/json" --request PUT  http://localhost:5000/test
+// curl -i --header "Content-Type: application/json" --request DELETE  http://localhost:5000/test
+// curl -i --header "Content-Type: application/json" --request PATCH --data '{ "requestCount: 12 "}'  http://localhost:5000/test
+// curl -i --header "Content-Type: application/json" --request POST --data '{ "secret": true }'  http://localhost:5000/test
