@@ -80,21 +80,25 @@ function readJson(res: any, cb: any, err: any) {
   let buffer: any;
   /* Register data cb */
   res.onData((ab, isLast) => {
-    let chunk = Buffer.from(ab);
-    if (isLast) {
-      if (buffer) {
-        // @ts-ignore
-        cb(JSON.parse(Buffer.concat([buffer, chunk])));
+    try {
+      let chunk = Buffer.from(ab);
+      if (isLast) {
+        if (buffer) {
+          // @ts-ignore
+          cb(JSON.parse(Buffer.concat([buffer, chunk])));
+        } else {
+          // @ts-ignore
+          cb(JSON.parse(chunk));
+        }
       } else {
-        // @ts-ignore
-        cb(JSON.parse(chunk));
+        if (buffer) {
+          buffer = Buffer.concat([buffer, chunk]);
+        } else {
+          buffer = Buffer.concat([chunk]);
+        }
       }
-    } else {
-      if (buffer) {
-        buffer = Buffer.concat([buffer, chunk]);
-      } else {
-        buffer = Buffer.concat([chunk]);
-      }
+    } catch (e) {
+      cb({});
     }
   });
   
@@ -145,7 +149,7 @@ App().ws('/*', {
     console.log(['route'], route);
     
     if (route) {
-      const requestBody = await readJsonAsync(response) || {};
+      const requestBody = await readJsonAsync(response);
       console.log(['requestBody'], requestBody);
       
       const responseFunction = new Function('serverState', 'requestBody', route.responseCode);
