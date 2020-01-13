@@ -15,13 +15,18 @@ function initialRoutes(): Route[] {
   return []
 }
 
+export const AppStateContext = React.createContext({
+  serverState: initialServerState(),
+  routes: initialRoutes(),
+  addRoute(_route: Route) {},
+});
+
 const socket = new WebSocket(socketUrl);
 
 const App: React.FC = () => {
   const [serverStateLoaded, setServerStateLoaded] = useState(false);
   const [serverState, setServerState] = useState(initialServerState);
   const [routes, setRoutes] = useState(initialRoutes);
-  
   function sendEvent(event: any) {
     try {
       socket.send(JSON.stringify(event));
@@ -72,13 +77,21 @@ const App: React.FC = () => {
     })
   }
   
+  const contextValue = {
+    routes,
+    serverState,
+    addRoute: handleRouteAdded,
+  };
+  
   return (
     <div className="App">
-      <Header addRoute={handleRouteAdded} />
-      {serverStateLoaded && (
-        <ServerState state={serverState} setState={setServerState} />
-      )}
-      <Routes routes={serverState.routes || []} />
+      <AppStateContext.Provider value={contextValue}>
+        <Header />
+        {serverStateLoaded && (
+          <ServerState state={serverState} setState={setServerState} />
+        )}
+        <Routes routes={serverState.routes || []} />
+      </AppStateContext.Provider>
     </div>
   );
 };

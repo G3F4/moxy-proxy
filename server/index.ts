@@ -28,7 +28,8 @@ const sendEvent = (socket: WebSocket, action: string, payload: any): void => {
 };
 
 App().ws('/*', {
-  message: (ws, message, isBinary) => {
+  message: (ws, message) => {
+    // @ts-ignore
     const { action, payload } = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
     console.log(['ws:message:action'], action);
     console.log(['ws:message:payload'], payload);

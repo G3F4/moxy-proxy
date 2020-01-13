@@ -5,6 +5,7 @@ import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import AddRoute from '../add-route/AddRoute';
 import {Route} from '../add-route/AddRouteStepper';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -25,8 +26,16 @@ export default function Routes({ routes }: { routes: Route[] }) {
   return (
     <div className={classes.root}>
       <Typography variant="body1">Routes</Typography>
+      {routes.length === 0 && (
+        <>
+          <Typography variant="caption">
+            No route defined.
+          </Typography>
+          <AddRoute />
+        </>
+      )}
       {routes.map(({ url, method, serverStateUpdateCode, responseCode }) => (
-        <ExpansionPanel>
+        <ExpansionPanel key={`${url}:${method}`}>
           <ExpansionPanelSummary
             expandIcon={<ExpandMoreIcon />}
             aria-controls="panel1a-content"

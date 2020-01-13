@@ -18,7 +18,7 @@ export default function ServerState({ state, setState }: { state: any, setState:
   return (
     <div>
       <Typography variant="body1">Server state</Typography>
-      <ReactJson src={state} />
+      <ReactJson src={state} collapsed />
       {edit ? (
         <Button onClick={doneEditing}>Done</Button>
       ) : (

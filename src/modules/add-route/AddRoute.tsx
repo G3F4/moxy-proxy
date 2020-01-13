@@ -3,13 +3,15 @@ import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import {useTheme} from '@material-ui/core/styles';
-import React from 'react';
+import React, {useContext} from 'react';
+import {AppStateContext} from '../../App';
 import AddRouteStepper, {Route} from './AddRouteStepper';
 
-export default function AddRoute({ addRoute }: { addRoute: any }) {
+export default function AddRoute() {
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
+  const { addRoute } = useContext(AppStateContext);
   
   const handleClickOpen = () => {
     setOpen(true);

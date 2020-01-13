@@ -22,7 +22,7 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export default function Header({ addRoute }: { addRoute: any }) {
+export default function Header() {
   const classes = useStyles();
   
   return (
@@ -32,7 +32,7 @@ export default function Header({ addRoute }: { addRoute: any }) {
           <Typography variant="h6" className={classes.title}>
             Proxy Moxy
           </Typography>
-          <AddRoute addRoute={addRoute} />
+          <AddRoute />
         </Toolbar>
       </AppBar>
     </div>
