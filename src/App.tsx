@@ -1,3 +1,4 @@
+import {Divider} from '@material-ui/core';
 import React, {useEffect, useState} from 'react';
 import './App.css';
 import {Route} from '../sharedTypes';
@@ -91,6 +92,7 @@ const App: React.FC = () => {
       <AppStateContext.Provider value={contextValue}>
         <Header />
         <ServerState state={serverState} setState={setServerState} />
+        <Divider />
         <Routes routes={routes || []} />
       </AppStateContext.Provider>
     </div>

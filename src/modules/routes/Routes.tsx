@@ -26,7 +26,7 @@ export default function Routes({ routes }: { routes: Route[] }) {
   
   return (
     <div className={classes.root}>
-      <Typography variant="body1">Routes</Typography>
+      <Typography variant="h5" style={{ margin: 8 }}>Routes</Typography>
       {routes.length === 0 && (
         <>
           <Typography variant="caption">
@@ -43,13 +43,23 @@ export default function Routes({ routes }: { routes: Route[] }) {
             id="panel1a-header"
           >
             <Typography className={classes.heading}>
-              {`${method}:${url}`}
+              {`${method.toUpperCase()}: ${url}`}
             </Typography>
           </ExpansionPanelSummary>
+          <ExpansionPanelDetails style={{ paddingBottom: 0 }}>
+            <Typography variant="body2">
+              Response
+            </Typography>
+          </ExpansionPanelDetails>
           <ExpansionPanelDetails>
             <SyntaxHighlighter language="javascript" customStyle={{ width: '100%' }}>
               {responseCode.trim()}
             </SyntaxHighlighter>
+          </ExpansionPanelDetails>
+          <ExpansionPanelDetails style={{ paddingBottom: 0 }}>
+            <Typography variant="body2">
+              Server update
+            </Typography>
           </ExpansionPanelDetails>
           <ExpansionPanelDetails>
             <SyntaxHighlighter language="javascript" customStyle={{ width: '100%' }}>
