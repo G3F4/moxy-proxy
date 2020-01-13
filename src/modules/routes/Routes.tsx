@@ -47,13 +47,13 @@ export default function Routes({ routes }: { routes: Route[] }) {
             </Typography>
           </ExpansionPanelSummary>
           <ExpansionPanelDetails>
-            <SyntaxHighlighter language="javascript">
-              {responseCode}
+            <SyntaxHighlighter language="javascript" customStyle={{ width: '100%' }}>
+              {responseCode.trim()}
             </SyntaxHighlighter>
           </ExpansionPanelDetails>
           <ExpansionPanelDetails>
-            <SyntaxHighlighter language="javascript">
-              {serverStateUpdateCode}
+            <SyntaxHighlighter language="javascript" customStyle={{ width: '100%' }}>
+              {serverStateUpdateCode.trim()}
             </SyntaxHighlighter>
           </ExpansionPanelDetails>
         </ExpansionPanel>
