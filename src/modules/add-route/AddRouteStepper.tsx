@@ -1,14 +1,15 @@
 import {ButtonGroup, TextField} from '@material-ui/core';
-import Editor from '@monaco-editor/react';
-import React, {useEffect, useRef, useState} from 'react';
-import { makeStyles, Theme, createStyles } from '@material-ui/core/styles';
-import Stepper from '@material-ui/core/Stepper';
-import Step from '@material-ui/core/Step';
-import StepLabel from '@material-ui/core/StepLabel';
-import StepContent from '@material-ui/core/StepContent';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
+import Step from '@material-ui/core/Step';
+import StepContent from '@material-ui/core/StepContent';
+import StepLabel from '@material-ui/core/StepLabel';
+import Stepper from '@material-ui/core/Stepper';
+import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
+import Editor from '@monaco-editor/react';
+import React, {useRef, useState} from 'react';
+import {Method, Route} from '../../../sharedTypes';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -46,42 +47,35 @@ function RequestMethodStep({ method, onMethodChange }: { method: Method, onMetho
   return (
     <ButtonGroup variant="text" color="primary" aria-label="text primary button group">
       <Button
-        onClick={() => onMethodChange('GET')}
-        variant={method === 'GET' ? 'outlined' : undefined}
+        onClick={() => onMethodChange('get')}
+        variant={method === 'get' ? 'outlined' : undefined}
       >Get</Button>
       <Button
-        onClick={() => onMethodChange('POST')}
-        variant={method === 'POST' ? 'outlined' : undefined}
+        onClick={() => onMethodChange('post')}
+        variant={method === 'post' ? 'outlined' : undefined}
       >Post</Button>
       <Button
-        onClick={() => onMethodChange('PUT')} variant={method === 'PUT' ? 'outlined' : undefined}>Put</Button>
+        onClick={() => onMethodChange('put')} variant={method === 'put' ? 'outlined' : undefined}>Put</Button>
       <Button
-        onClick={() => onMethodChange('PATCH')}
-        variant={method === 'PATCH' ? 'outlined' : undefined}
+        onClick={() => onMethodChange('patch')}
+        variant={method === 'patch' ? 'outlined' : undefined}
       >Patch</Button>
       <Button
-        onClick={() => onMethodChange('DELETE')}
-        variant={method === 'DELETE' ? 'outlined' : undefined}
+        onClick={() => onMethodChange('delete')}
+        variant={method === 'delete' ? 'outlined' : undefined}
       >Delete</Button>
     </ButtonGroup>
   )
 }
 
 const initialResponseCode = `
-interface Request {
-    body: any;
-    params: any;
-}
-
-interface State {
-    empty: boolean;
-}
-
-function response(state: State, request: Request) {
+function responseReturn(serverState, request) {
     return {
-        serverEmpty: state.empty
+        serverEmpty: serverState.empty
     };
 }
+
+return responseReturn(serverState, request);
 `;
 
 function ResponseStep({ code, onChange }: { code: string, onChange: (code: string) => void }) {
@@ -117,20 +111,15 @@ function ResponseStep({ code, onChange }: { code: string, onChange: (code: strin
 }
 
 const initialServerStateUpdateCode = `
-interface Request {
-    body: any;
-    params: any;
-}
-
-interface State {
-    empty: boolean;
-}
-
-function response(state: State, request: Request): State {
+function stateUpdate(serverState, request) {
+    console.log('request.body', request.body);
     return {
-        empty: state.empty
+        ...serverState,
+        ...request.body,
     };
 }
+
+return stateUpdate(serverState, request);
 `;
 
 function UpdateServerStateStep({ code, onChange }: { code: string, onChange: (code: string) => void }) {
@@ -157,7 +146,7 @@ function UpdateServerStateStep({ code, onChange }: { code: string, onChange: (co
       <Editor
         height="50vh"
         width="80vw"
-        language="typescript"
+        language="javascript"
         value={code}
         editorDidMount={handleEditorDidMount}
       />
@@ -165,22 +154,11 @@ function UpdateServerStateStep({ code, onChange }: { code: string, onChange: (co
   );
 }
 
-export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | '';
-
-export interface Route {
-  url: string;
-  method: Method;
-  responseCode: string;
-  serverStateUpdateCode: string;
-}
-
-
-
 export default function AddRouteStepper({ onDone }: { onDone: any }) {
   const classes = useStyles();
   const [activeStep, setActiveStep] = useState(0);
   const [route, setRoute] = useState<Route>({
-    url: '',
+    url: '/',
     method: '',
     responseCode: initialResponseCode,
     serverStateUpdateCode: initialServerStateUpdateCode,

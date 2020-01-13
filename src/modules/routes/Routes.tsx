@@ -1,12 +1,13 @@
-import React from 'react';
-import { Theme, createStyles, makeStyles } from '@material-ui/core/styles';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
+import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import React from 'react';
+import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
+import {Route} from '../../../sharedTypes';
 import AddRoute from '../add-route/AddRoute';
-import {Route} from '../add-route/AddRouteStepper';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -46,14 +47,14 @@ export default function Routes({ routes }: { routes: Route[] }) {
             </Typography>
           </ExpansionPanelSummary>
           <ExpansionPanelDetails>
-            <Typography>
+            <SyntaxHighlighter language="javascript">
               {responseCode}
-            </Typography>
+            </SyntaxHighlighter>
           </ExpansionPanelDetails>
           <ExpansionPanelDetails>
-            <Typography>
+            <SyntaxHighlighter language="javascript">
               {serverStateUpdateCode}
-            </Typography>
+            </SyntaxHighlighter>
           </ExpansionPanelDetails>
         </ExpansionPanel>
       ))}

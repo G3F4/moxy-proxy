@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import './App.css';
-import {Route} from './modules/add-route/AddRouteStepper';
+import {Route} from '../sharedTypes';
 import Header from './modules/header/Header';
 import Routes from './modules/routes/Routes';
 import ServerState from './modules/server-state/ServerState';
@@ -24,7 +24,6 @@ export const AppStateContext = React.createContext({
 const socket = new WebSocket(socketUrl);
 
 const App: React.FC = () => {
-  const [serverStateLoaded, setServerStateLoaded] = useState(false);
   const [serverState, setServerState] = useState(initialServerState);
   const [routes, setRoutes] = useState(initialRoutes);
   function sendEvent(event: any) {
@@ -38,9 +37,6 @@ const App: React.FC = () => {
   }
   
   useEffect(() => {
-    console.log(['starting socket'])
-    
-  
     socket.onopen = event => {
       console.log(['WebSocket.onopen'], event);
     };
@@ -53,12 +49,11 @@ const App: React.FC = () => {
       console.log(['WebSocket.onmessage'], JSON.parse(event.data));
       const { action, payload } = JSON.parse(event.data);
       
-      if (action === 'initialState') {
-        setServerState(payload);
-        setServerStateLoaded(true);
+      if (action === 'updateRoutes') {
+        setRoutes(payload);
       }
       
-      if (action === 'updateStateServer') {
+      if (action === 'updateServerState') {
         setServerState(payload);
       }
     };
@@ -66,14 +61,22 @@ const App: React.FC = () => {
     socket.onerror = event => {
       console.error(['WebSocket.onerror'], event);
     };
+    
+    const pingInterval = setInterval(() => {
+      sendEvent({
+        action: 'ping',
+      })
+    }, 10000);
+    
+    return () => {
+      clearInterval(pingInterval);
+    };
   }, []);
   
   function handleRouteAdded(route: Route) {
-    console.log(['handleRouteAdded'], route)
-    setRoutes([...routes, route]);
     sendEvent({
-      action: 'routeAdded',
-      payload: [...routes, route],
+      action: 'addRoute',
+      payload: route,
     })
   }
   
@@ -87,10 +90,8 @@ const App: React.FC = () => {
     <div className="App">
       <AppStateContext.Provider value={contextValue}>
         <Header />
-        {serverStateLoaded && (
-          <ServerState state={serverState} setState={setServerState} />
-        )}
-        <Routes routes={serverState.routes || []} />
+        <ServerState state={serverState} setState={setServerState} />
+        <Routes routes={routes || []} />
       </AppStateContext.Provider>
     </div>
   );
