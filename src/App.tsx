@@ -1,7 +1,7 @@
-import {Divider} from '@material-ui/core';
-import React, {useEffect, useState} from 'react';
+import { Divider } from '@material-ui/core';
+import React, { useEffect, useState } from 'react';
+import { Route } from '../sharedTypes';
 import './App.css';
-import {Route} from '../sharedTypes';
 import Header from './modules/header/Header';
 import Routes from './modules/routes/Routes';
 import ServerState from './modules/server-state/ServerState';

@@ -1,15 +1,15 @@
-import {ButtonGroup, TextField} from '@material-ui/core';
+import { ButtonGroup, TextField } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Step from '@material-ui/core/Step';
 import StepContent from '@material-ui/core/StepContent';
 import StepLabel from '@material-ui/core/StepLabel';
 import Stepper from '@material-ui/core/Stepper';
-import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
+import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Editor from '@monaco-editor/react';
-import React, {useRef, useState} from 'react';
-import {Method, Route} from '../../../sharedTypes';
+import React, { useRef, useState } from 'react';
+import { Method, Route } from '../../../sharedTypes';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

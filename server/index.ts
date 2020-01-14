@@ -1,7 +1,7 @@
-import { App, HttpRequest, WebSocket } from 'uWebSockets.js';
 import { readFileSync } from 'fs';
 import produce from 'immer';
-import {Method, Route} from '../sharedTypes';
+import { App, HttpRequest, WebSocket } from 'uWebSockets.js';
+import { Method, Route } from '../sharedTypes';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 let serverState = {

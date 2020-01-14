@@ -1,9 +1,9 @@
-import {Button} from '@material-ui/core';
+import { Button } from '@material-ui/core';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import Typography from '@material-ui/core/Typography';
 import Editor from '@monaco-editor/react';
-import React, {useRef, useState} from 'react';
-import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
+import React, { useRef, useState } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 
 export default function RouteCode({
   responseCode,

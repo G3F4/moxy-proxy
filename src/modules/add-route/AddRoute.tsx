@@ -1,11 +1,11 @@
-import {useMediaQuery} from '@material-ui/core';
+import { useMediaQuery } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import {useTheme} from '@material-ui/core/styles';
-import React, {useContext} from 'react';
-import {Route} from '../../../sharedTypes';
-import {AppStateContext} from '../../App';
+import { useTheme } from '@material-ui/core/styles';
+import React, { useContext } from 'react';
+import { Route } from '../../../sharedTypes';
+import { AppStateContext } from '../../App';
 import AddRouteStepper from './AddRouteStepper';
 
 export default function AddRoute() {
