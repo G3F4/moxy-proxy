@@ -1,23 +1,35 @@
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import produce from 'immer';
 import { App, HttpRequest, WebSocket } from 'uWebSockets.js';
 import { PORT } from '../constans';
 import { Method, Route } from '../sharedTypes';
 import { readJsonAsync } from './utils/readJson';
 
-let serverState: JSON = JSON.parse(readFileSync(`${process.cwd()}/data/initialState.json`, 'utf8'));
-let routes: Route[] = JSON.parse(readFileSync(`${process.cwd()}/data/routes.json`, 'utf8'));
+const initialServerStateDataPath = `${process.cwd()}/data/initialServerState.json`;
+const routesDataPath = `${process.cwd()}/data/routes.json`;
+let serverState: JSON = JSON.parse(readFileSync(initialServerStateDataPath, 'utf8'));
+let routes: Route[] = JSON.parse(readFileSync(routesDataPath, 'utf8')).items;
 let Sockets: WebSocket[] = [];
+
+function saveRoutesToFile(items: unknown) {
+  writeFileSync(routesDataPath, JSON.stringify({ items }, null, 2) , 'utf-8');
+}
+
+function saveServerStateToFile(data: unknown) {
+  writeFileSync(initialServerStateDataPath, JSON.stringify(data, null, 2) , 'utf-8');
+}
 
 function updateServerState(serverStateUpdate: Partial<typeof serverState>) {
   serverState = {
     ...serverState,
     ...serverStateUpdate
   };
+  saveServerStateToFile(serverState);
 }
 
 function addRoute(route: Route) {
   routes = [...routes, route];
+  saveRoutesToFile(routes);
 }
 
 function updateRoute(route: Route) {
@@ -27,6 +39,7 @@ function updateRoute(route: Route) {
 
   // @ts-ignore
   routes[routeIndex] = route;
+  saveRoutesToFile(routes);
 }
 
 function sendEvent(socket: WebSocket, action: string, payload: any): void {
