@@ -24,10 +24,10 @@ export const AppStateContext = React.createContext({
 });
 
 const socket = new WebSocket(socketUrl);
-
 const App: React.FC = () => {
   const [serverState, setServerState] = useState(initialServerState);
   const [routes, setRoutes] = useState(initialRoutes);
+
   function sendEvent(event: any) {
     try {
       socket.send(JSON.stringify(event));
@@ -49,6 +49,7 @@ const App: React.FC = () => {
 
     socket.onmessage = event => {
       console.log(['WebSocket.onmessage'], JSON.parse(event.data));
+
       const { action, payload } = JSON.parse(event.data);
 
       if (action === 'updateRoutes') {

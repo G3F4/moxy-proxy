@@ -27,7 +27,7 @@ export default function Routes({ routes }: { routes: Route[] }) {
   
   return (
     <div className={classes.root}>
-      <Typography variant="h5" style={{ margin: 8 }}>Routes</Typography>
+      <Typography style={{ margin: 8 }} variant="h5">Routes</Typography>
       {routes.length === 0 && (
         <>
           <Typography variant="caption">
@@ -39,8 +39,8 @@ export default function Routes({ routes }: { routes: Route[] }) {
       {routes.map(({ url, method, serverStateUpdateCode, responseCode }) => (
         <ExpansionPanel key={`${url}:${method}`}>
           <ExpansionPanelSummary
-            expandIcon={<ExpandMoreIcon />}
             aria-controls="panel1a-content"
+            expandIcon={<ExpandMoreIcon />}
             id="panel1a-header"
           >
             <Typography className={classes.heading}>

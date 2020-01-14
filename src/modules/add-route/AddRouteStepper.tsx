@@ -45,24 +45,24 @@ function UrlPatternStep({ url, onUrlChange }: { url: string, onUrlChange: any })
 
 function RequestMethodStep({ method, onMethodChange }: { method: Method, onMethodChange: (value: Method) => void }) {
   return (
-    <ButtonGroup variant="text" color="primary" aria-label="text primary button group">
+    <ButtonGroup aria-label="text primary button group" color="primary" variant="text">
       <Button
-        onClick={() => onMethodChange('get')}
         variant={method === 'get' ? 'outlined' : undefined}
+        onClick={() => onMethodChange('get')}
       >Get</Button>
       <Button
-        onClick={() => onMethodChange('post')}
         variant={method === 'post' ? 'outlined' : undefined}
+        onClick={() => onMethodChange('post')}
       >Post</Button>
       <Button
-        onClick={() => onMethodChange('put')} variant={method === 'put' ? 'outlined' : undefined}>Put</Button>
+        variant={method === 'put' ? 'outlined' : undefined} onClick={() => onMethodChange('put')}>Put</Button>
       <Button
-        onClick={() => onMethodChange('patch')}
         variant={method === 'patch' ? 'outlined' : undefined}
+        onClick={() => onMethodChange('patch')}
       >Patch</Button>
       <Button
-        onClick={() => onMethodChange('delete')}
         variant={method === 'delete' ? 'outlined' : undefined}
+        onClick={() => onMethodChange('delete')}
       >Delete</Button>
     </ButtonGroup>
   )
@@ -94,15 +94,15 @@ function ResponseStep({ code, onChange }: { code: string, onChange: (code: strin
 
   return (
     <>
-      <button onClick={handleSave} disabled={!isEditorReady}>
+      <button disabled={!isEditorReady} onClick={handleSave}>
         Save
       </button>
       <Editor
+        editorDidMount={handleEditorDidMount}
         height="50vh"
-        width="80vw"
         language="typescript"
         value={code}
-        editorDidMount={handleEditorDidMount}
+        width="80vw"
       />
     </>
   );
@@ -135,15 +135,15 @@ function UpdateServerStateStep({ code, onChange }: { code: string, onChange: (co
   
   return (
     <>
-      <button onClick={handleSave} disabled={!isEditorReady}>
+      <button disabled={!isEditorReady} onClick={handleSave}>
         Save
       </button>
       <Editor
+        editorDidMount={handleEditorDidMount}
         height="50vh"
-        width="80vw"
         language="javascript"
         value={code}
-        editorDidMount={handleEditorDidMount}
+        width="80vw"
       />
     </>
   );
@@ -211,15 +211,12 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
   }
   
   const steps = getSteps();
-  
   const handleNext = () => {
     setActiveStep(prevActiveStep => prevActiveStep + 1);
   };
-  
   const handleBack = () => {
     setActiveStep(prevActiveStep => prevActiveStep - 1);
   };
-  
   const handleSubmit = () => {
     onDone(route);
   };
@@ -235,17 +232,17 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
               <div className={classes.actionsContainer}>
                 <div>
                   <Button
+                    className={classes.button}
                     disabled={activeStep === 0}
                     onClick={handleBack}
-                    className={classes.button}
                   >
                     Back
                   </Button>
                   <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleNext}
                     className={classes.button}
+                    color="primary"
+                    variant="contained"
+                    onClick={handleNext}
                   >
                     Next
                   </Button>
@@ -256,12 +253,12 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
         ))}
       </Stepper>
       {activeStep === steps.length && (
-        <Paper square elevation={0} className={classes.resetContainer}>
+        <Paper square className={classes.resetContainer} elevation={0}>
           <Typography>Route ready to submit</Typography>
-          <Button onClick={handleBack} className={classes.button}>
+          <Button className={classes.button} onClick={handleBack}>
             Back
           </Button>
-          <Button color="primary" onClick={handleSubmit} className={classes.button}>
+          <Button className={classes.button} color="primary" onClick={handleSubmit}>
             Submit
           </Button>
         </Paper>

@@ -11,14 +11,17 @@ export default function ServerState({ serverState, onServerStateChange }: { serv
   function startEditing() {
     setEditing(true);
   }
+
   function doneEditing() {
     setEditing(false);
   }
 
   return (
     <div>
-      <Typography variant="h5" style={{ margin: 8 }}>Server state</Typography>
-      <ReactJson src={serverState} collapsed />
+      <Typography style={{ margin: 8 }} variant="h5">Server state</Typography>
+      {!editing && (
+        <ReactJson collapsed src={serverState} />
+      )}
       {editing ? (
         <Button onClick={doneEditing}>Done</Button>
       ) : (

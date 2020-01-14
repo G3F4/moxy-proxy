@@ -1,11 +1,8 @@
-import React from 'react';
-import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
+import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
-import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
+import React from 'react';
 import AddRoute from '../add-route/AddRoute';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -29,7 +26,7 @@ export default function Header() {
     <div className={classes.root}>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" className={classes.title}>
+          <Typography className={classes.title} variant="h6">
             Proxy Moxy
           </Typography>
           <AddRoute />

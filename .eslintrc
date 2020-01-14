@@ -1,0 +1,34 @@
+
+{
+  "extends": ["react-app"],
+  "plugins": ["react", "@typescript-eslint", "prettier"],
+  "parser": "@typescript-eslint/parser",
+  "rules": {
+    "react/jsx-sort-props": ["error", {
+      "callbacksLast": true,
+      "shorthandFirst": true,
+      "ignoreCase": true
+    }],
+    "padding-line-between-statements": [
+      "error",
+      { "blankLine": "always", "prev": "*", "next": ["return", "break", "continue"] },
+      { "blankLine": "always", "prev": ["if", "class", "for", "function", "switch", "throw", "while", "with", "block"], "next": "*" },
+      { "blankLine": "always", "prev": "*", "next": ["if", "class", "for", "function", "switch", "throw", "while", "with", "block"] },
+      { "blankLine": "always", "prev": ["const", "let"], "next": "expression" },
+      { "blankLine": "always", "prev": "expression", "next": ["const", "let"] },
+      { "blankLine": "never", "prev": ["const", "let"], "next": ["const", "let"] },
+      { "blankLine": "never", "prev": ["case", "default"], "next": ["case", "default"] }
+    ]
+  },
+  "env": {
+    "shared-node-browser": true,
+    "jest": true,
+    "es6": true
+  },
+  "settings": {
+    "react": {
+      "pragma": "React",
+      "version": "detect"
+    }
+  },
+}

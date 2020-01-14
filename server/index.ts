@@ -4,11 +4,9 @@ import produce from 'immer';
 import {Method, Route} from '../sharedTypes';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
-
 let serverState = {
   requestCount: 0,
 };
-
 let routes: Route[] = [{
   method: 'get',
   url: '/test',
@@ -107,6 +105,7 @@ function updateRoute(route: Route) {
   const routeIndex = routes.findIndex(
     ({ url, method }) => route.url === url && route.method === method
   );
+
   // @ts-ignore
   routes[routeIndex] = route;
 }
@@ -124,10 +123,12 @@ const sendEvent = (socket: WebSocket, action: string, payload: any): void => {
 /* Helper function for reading a posted JSON body */
 function readJson(res: any, cb: any, err: any) {
   let buffer: any;
+
   /* Register data cb */
   res.onData((ab: ArrayBuffer, isLast: boolean) => {
     try {
       let chunk = Buffer.from(ab);
+
       if (isLast) {
         if (buffer) {
           // @ts-ignore
@@ -174,16 +175,20 @@ App().ws('/*', {
   message: (ws, message) => {
     // @ts-ignore
     const { action, payload } = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
+
     console.log(['ws:message:action'], action);
     console.log(['ws:message:payload'], payload);
+
     if (action === 'addRoute') {
       addRoute(payload);
       sendEvent(ws,'updateRoutes', routes);
     }
+
     if (action === 'updateRoute') {
       updateRoute(payload);
       sendEvent(ws,'updateRoutes', routes);
     }
+
     if (action === 'clientUpdatedServerServer') {
       updateServerState(payload);
     }
@@ -210,23 +215,27 @@ App().ws('/*', {
     const urlLastChar = url[url.length - 1];
     const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
     const route = routes.find(route => route.url === rawUrl && route.method === method);
+
     console.log(['method'], method);
     console.log(['url'], url);
 
     if (route) {
       const requestBody = await readJsonAsync(res);
+
       console.log(['requestBody'], requestBody);
 
       const request = {
         body: requestBody,
       };
-
+      // eslint-disable-next-line no-new-func
       const responseFunction = new Function('state', 'request', route.responseCode.trim());
+      // eslint-disable-next-line no-new-func
       const serverStateUpdateFunction = new Function('request', route.serverStateUpdateCode.trim());
       const responseFunctionReturn = responseFunction(serverState, request);
       
       if (typeof serverStateUpdateFunction === 'function') {
         const serverStateUpdateFunctionReturn = produce(serverState, serverStateUpdateFunction(request));
+
         console.log(['response'], responseFunctionReturn);
         console.log(['updatedServerState'], serverStateUpdateFunctionReturn);
   

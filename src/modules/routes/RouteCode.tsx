@@ -2,9 +2,8 @@ import {Button} from '@material-ui/core';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import Typography from '@material-ui/core/Typography';
 import Editor from '@monaco-editor/react';
-import React, {useContext, useRef, useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
-import {AppStateContext} from '../../App';
 
 export default function RouteCode({
   responseCode,
@@ -19,7 +18,6 @@ export default function RouteCode({
 }) {
   const [responseEditing, setResponseEditing] = useState(false);
   const [serverStateUpdateEditing, setServerStateUpdateEditing] = useState(false);
-  
   const [responseEditorReady, setResponseEditorReady] = useState(false);
   const responseEditorValueGetter = useRef();
   
@@ -62,28 +60,28 @@ export default function RouteCode({
         </Typography>
         {responseEditing ? (
           <Button
-            onClick={handleResponseSave}
             disabled={!responseEditorReady}
             style={{ marginLeft: 'auto' }}
+            onClick={handleResponseSave}
           >Save</Button>
         ) : (
           <Button
-            onClick={() => setResponseEditing(true)}
             style={{ marginLeft: 'auto' }}
+            onClick={() => setResponseEditing(true)}
           >Edit</Button>
         )}
       </ExpansionPanelDetails>
       <ExpansionPanelDetails>
         {responseEditing ? (
           <Editor
+            editorDidMount={handleResponseEditorDidMount}
             height="30vh"
-            width="80vw"
             language="javascript"
             value={responseCode.trim()}
-            editorDidMount={handleResponseEditorDidMount}
+            width="80vw"
           />
         ) : (
-          <SyntaxHighlighter language="javascript" customStyle={{ width: '100%' }}>
+          <SyntaxHighlighter customStyle={{ width: '100%' }} language="javascript">
             {responseCode.trim()}
           </SyntaxHighlighter>
         )}
@@ -95,28 +93,28 @@ export default function RouteCode({
         </Typography>
         {serverStateUpdateEditing ? (
           <Button
-            onClick={handleServerStateUpdateSave}
             disabled={!serverStateUpdateEditorReady}
             style={{ marginLeft: 'auto' }}
+            onClick={handleServerStateUpdateSave}
           >Save</Button>
         ) : (
           <Button
-            onClick={() => setServerStateUpdateEditing(true)}
             style={{ marginLeft: 'auto' }}
+            onClick={() => setServerStateUpdateEditing(true)}
           >Edit</Button>
         )}
       </ExpansionPanelDetails>
       <ExpansionPanelDetails style={{ paddingBottom: 0 }}>
         {serverStateUpdateEditing ? (
           <Editor
+            editorDidMount={handleServerStateUpdateEditorDidMount}
             height="30vh"
-            width="80vw"
             language="javascript"
             value={serverStateUpdateCode.trim()}
-            editorDidMount={handleServerStateUpdateEditorDidMount}
+            width="80vw"
           />
         ) : (
-          <SyntaxHighlighter language="javascript" customStyle={{ width: '100%' }}>
+          <SyntaxHighlighter customStyle={{ width: '100%' }} language="javascript">
             {serverStateUpdateCode.trim()}
           </SyntaxHighlighter>
         )}

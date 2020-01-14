@@ -13,15 +13,12 @@ export default function AddRoute() {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
   const { addRoute } = useContext(AppStateContext);
-  
   const handleClickOpen = () => {
     setOpen(true);
   };
-  
   const handleClose = () => {
     setOpen(false);
   };
-  
   const handleDone = (route: Route) => {
     setOpen(false);
     addRoute(route);
@@ -33,12 +30,12 @@ export default function AddRoute() {
         Add route
       </Button>
       <Dialog
+        closeAfterTransition
+        aria-labelledby="max-width-dialog-title"
         fullScreen={fullScreen}
         maxWidth="md"
         open={open}
         onClose={handleClose}
-        closeAfterTransition
-        aria-labelledby="max-width-dialog-title"
       >
         <DialogTitle id="max-width-dialog-title">Add route</DialogTitle>
         <AddRouteStepper onDone={handleDone} />
