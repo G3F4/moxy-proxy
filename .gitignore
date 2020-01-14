@@ -105,3 +105,6 @@ dist
 
 #ide
 .idea
+
+#builds
+build

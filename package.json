@@ -1,6 +1,6 @@
 {
   "name": "proxy-moxy",
-  "version": "0.0.1",
+  "version": "0.11.1",
   "description": "Proxy server for mocking client application",
   "main": "server/index.ts",
   "repository": "git@github.com:G3F4/proxy-moxy.git",
@@ -9,9 +9,10 @@
   "private": false,
   "scripts": {
     "start": "ts-node --project tsconfig.server.json server/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "build:client": "react-scripts build",
     "dev:server": "ts-node-dev --project tsconfig.server.json --respawn --transpileOnly server/index.ts",
     "dev:client": "react-scripts start",
-    "build:client": "react-scripts build",
     "test:client": "react-scripts test"
   },
   "dependencies": {
@@ -19,14 +20,14 @@
     "@material-ui/icons": "4.5.1",
     "@monaco-editor/react": "3.0.1",
     "@types/node": "13.1.6",
-    "@types/react-syntax-highlighter": "^11.0.4",
-    "immer": "^5.2.1",
+    "@types/react-syntax-highlighter": "11.0.4",
+    "immer": "5.2.1",
     "jsoneditor": "8.1.2",
     "jsoneditor-react": "3.0.0",
     "react-json-view": "1.19.1",
     "react-monaco-editor": "0.33.0",
-    "react-prism": "^4.3.2",
-    "react-syntax-highlighter": "^12.2.1",
+    "react-prism": "4.3.2",
+    "react-syntax-highlighter": "12.2.1",
     "ts-node": "8.6.1",
     "ts-node-dev": "1.0.0-pre.44",
     "typescript": "3.7.4",
