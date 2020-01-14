@@ -1,5 +1,6 @@
 import { App, HttpRequest, WebSocket } from 'uWebSockets.js';
 import { readFileSync } from 'fs';
+import produce from 'immer';
 import {Method, Route} from '../sharedTypes';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
@@ -12,86 +13,82 @@ let routes: Route[] = [{
   method: 'get',
   url: '/test',
   responseCode: `
-((state) => {
-  return {
-    requestCount: state.requestCount
-  };
-})(state, request);
+// function(state, request) { this line is added on server
+return state.requestCount;
+// } this line is added on server
 `,
   serverStateUpdateCode: `
-((state) => {
-  return {
-    ...state,
-  };
-})(state, request);
+// function(request) { this line is added on server
+return state => {
+
+};
+// } this line is added on server
 `,
 }, {
   method: 'put',
   url: '/test',
   responseCode: `
-((state) => {
-  return {};
-})(state, request);
+// function(state, request) { this line is added on server
+return 'increased';
+// } this line is added on server
 `,
   serverStateUpdateCode: `
-((state) => {
-  return {
-    ...state,
-    requestCount: state.requestCount
-      ? state.requestCount + 1
-      : 1
-  };
-})(state, request);
+// function(request) { this line is added on server
+// inside returned function draft is mutable
+return state => {
+  state.requestCount = state.requestCount + 1;
+};
+// } this line is added on server
 `,
 }, {
   method: 'delete',
   url: '/test',
   responseCode: `
-((state) => {
-  return {};
-})(state, request);
+// function(state, request) { this line is added on server
+return 'decreased';
+// } this line is added on server
 `,
   serverStateUpdateCode: `
-((state) => {
-  return {
-    ...state,
-    requestCount: state.requestCount
-      ? state.requestCount - 1
-      : 0
-  };
-})(state, request);
+// function(request) { this line is added on server
+// inside returned function draft is mutable
+return state => {
+  state.requestCount = state.requestCount
+    ? state.requestCount - 1
+    : 0;
+};
+// } this line is added on server
 `,
 }, {
   method: 'post',
   url: '/test',
   responseCode: `
-((state, { body }) => {
-  return {};
-})(state, request);
+// function(state, request) { this line is added on server
+return;
+// } this line is added on server
 `,
   serverStateUpdateCode: `
-((state, { body }) => {
-  return {
-    ...state,
-    data: body
-  };
-})(state, request);
+// function(request) { this line is added on server
+// inside returned function draft is mutable
+return state => {
+  state.data = request.body;
+};
+// } this line is added on server
 `
 }, {
   method: 'patch',
   url: '/test',
   responseCode: `
-((state, { body }) => {
-  return 'patched!';
-})(state, request);
+// function(state, request) { this line is added on server
+return 'patched!';
+// } this line is added on server
 `,
   serverStateUpdateCode: `
-((state, { body }) => {
-  return {
-    ...state,
-    requestCount: body.requestCount
-  };
-})(state, request);
+// function(request) { this line is added on server
+// inside returned function draft is mutable
+return state => {
+  state.requestCount = request.body.requestCount;
+};
+// } this line is added on server
 `
 }];
 
@@ -104,6 +101,14 @@ function updateServerState(serverStateUpdate: Partial<typeof serverState>) {
 
 function addRoute(route: Route) {
   routes = [...routes, route];
+}
+
+function updateRoute(route: Route) {
+  const routeIndex = routes.findIndex(
+    ({ url, method }) => route.url === url && route.method === method
+  );
+  // @ts-ignore
+  routes[routeIndex] = route;
 }
 
 const sendEvent = (socket: WebSocket, action: string, payload: any): void => {
@@ -175,6 +180,10 @@ App().ws('/*', {
       addRoute(payload);
       sendEvent(ws,'updateRoutes', routes);
     }
+    if (action === 'updateRoute') {
+      updateRoute(payload);
+      sendEvent(ws,'updateRoutes', routes);
+    }
     if (action === 'clientUpdatedServerServer') {
       updateServerState(payload);
     }
@@ -212,26 +221,22 @@ App().ws('/*', {
         body: requestBody,
       };
 
-      const codeStart = `return `;
-
-      const effectiveResponseCode = codeStart + route.responseCode.trim();
-      const effectiveServerStateUpdateCode = codeStart + route.serverStateUpdateCode.trim();
-
-      const responseFunction = new Function('state', 'request', effectiveResponseCode);
-      const serverStateUpdateFunction = new Function('state', 'request', effectiveServerStateUpdateCode);
-
+      const responseFunction = new Function('state', 'request', route.responseCode.trim());
+      const serverStateUpdateFunction = new Function('request', route.serverStateUpdateCode.trim());
       const responseFunctionReturn = responseFunction(serverState, request);
-      const updatedServerStateReturn = serverStateUpdateFunction(serverState, request);
-
-      console.log(['responseFunctionReturn'], responseFunctionReturn);
-      console.log(['updatedServerStateReturn'], updatedServerStateReturn);
-
-      updateServerState(updatedServerStateReturn);
-
-      broadcast({
-        action: 'updateServerState',
-        payload: serverState,
-      });
+      
+      if (typeof serverStateUpdateFunction === 'function') {
+        const serverStateUpdateFunctionReturn = produce(serverState, serverStateUpdateFunction(request));
+        console.log(['response'], responseFunctionReturn);
+        console.log(['updatedServerState'], serverStateUpdateFunctionReturn);
+  
+        updateServerState(serverStateUpdateFunctionReturn);
+  
+        broadcast({
+          action: 'updateServerState',
+          payload: serverState,
+        });
+      }
 
       res.end(JSON.stringify(responseFunctionReturn));
     } else {
@@ -253,5 +258,5 @@ App().ws('/*', {
 // curl -i --header "Content-Type: application/json" --request GET  http://localhost:5000/test
 // curl -i --header "Content-Type: application/json" --request PUT  http://localhost:5000/test
 // curl -i --header "Content-Type: application/json" --request DELETE  http://localhost:5000/test
-// curl -i --header "Content-Type: application/json" --request PATCH --data '{ "requestCount: 12 "}'  http://localhost:5000/test
+// curl -i --header "Content-Type: application/json" --request PATCH --data '{ "requestCount": 12 }'  http://localhost:5000/test
 // curl -i --header "Content-Type: application/json" --request POST --data '{ "secret": true }'  http://localhost:5000/test

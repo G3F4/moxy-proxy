@@ -20,6 +20,7 @@
     "@monaco-editor/react": "3.0.1",
     "@types/node": "13.1.6",
     "@types/react-syntax-highlighter": "^11.0.4",
+    "immer": "^5.2.1",
     "jsoneditor": "8.1.2",
     "jsoneditor-react": "3.0.0",
     "react-json-view": "1.19.1",

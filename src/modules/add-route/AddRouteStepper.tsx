@@ -109,12 +109,12 @@ function ResponseStep({ code, onChange }: { code: string, onChange: (code: strin
 }
 
 const initialServerStateUpdateCode = `
-((state, { body }) => { // return new state, don't add code at start
-  return {
-    ...state,
-    
-  };
-})(state, request); // changing those args name breaks script
+// function(request) { this line is added on server
+// inside returned function draft is mutable
+return state => {
+
+};
+// } this line is added on server
 `;
 
 function UpdateServerStateStep({ code, onChange }: { code: string, onChange: (code: string) => void }) {

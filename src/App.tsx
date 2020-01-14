@@ -20,6 +20,7 @@ export const AppStateContext = React.createContext({
   serverState: initialServerState(),
   routes: initialRoutes(),
   addRoute(_route: Route) {},
+  updateRoute(_route: Route) {},
 });
 
 const socket = new WebSocket(socketUrl);
@@ -74,17 +75,25 @@ const App: React.FC = () => {
     };
   }, []);
 
-  function handleRouteAdded(route: Route) {
+  function handleAddRoute(route: Route) {
     sendEvent({
       action: 'addRoute',
       payload: route,
-    })
+    });
+  }
+  
+  function handleUpdateRoute(route: Route) {
+    sendEvent({
+      action: 'updateRoute',
+      payload: route,
+    });
   }
 
   const contextValue = {
     routes,
     serverState,
-    addRoute: handleRouteAdded,
+    addRoute: handleAddRoute,
+    updateRoute: handleUpdateRoute,
   };
 
   function handleServerStateChange(updatedServerState: any) {
