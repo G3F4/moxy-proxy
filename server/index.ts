@@ -1,11 +1,13 @@
 import { readFileSync } from 'fs';
 import produce from 'immer';
 import { App, HttpRequest, WebSocket } from 'uWebSockets.js';
+import { PORT } from '../constans';
 import { Method, Route } from '../sharedTypes';
+import { readJsonAsync } from './utils/readJson';
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 let serverState: JSON = JSON.parse(readFileSync(`${process.cwd()}/data/initialState.json`, 'utf8'));
 let routes: Route[] = JSON.parse(readFileSync(`${process.cwd()}/data/routes.json`, 'utf8'));
+let Sockets: WebSocket[] = [];
 
 function updateServerState(serverStateUpdate: Partial<typeof serverState>) {
   serverState = {
@@ -27,56 +29,13 @@ function updateRoute(route: Route) {
   routes[routeIndex] = route;
 }
 
-const sendEvent = (socket: WebSocket, action: string, payload: any): void => {
+function sendEvent(socket: WebSocket, action: string, payload: any): void {
   try {
-    socket.send(JSON.stringify({ action, payload }));
-  }
-
-  catch (e) {
+    socket.send(JSON.stringify({action, payload}));
+  } catch (e) {
     console.error(e);
   }
-};
-
-/* Helper function for reading a posted JSON body */
-function readJson(res: any, cb: any, err: any) {
-  let buffer: any;
-
-  /* Register data cb */
-  res.onData((ab: ArrayBuffer, isLast: boolean) => {
-    try {
-      let chunk = Buffer.from(ab);
-
-      if (isLast) {
-        if (buffer) {
-          // @ts-ignore
-          cb(JSON.parse(Buffer.concat([buffer, chunk])));
-        } else {
-          // @ts-ignore
-          cb(JSON.parse(chunk));
-        }
-      } else {
-        if (buffer) {
-          buffer = Buffer.concat([buffer, chunk]);
-        } else {
-          buffer = Buffer.concat([chunk]);
-        }
-      }
-    } catch (e) {
-      cb({});
-    }
-  });
-
-  /* Register error cb */
-  res.onAborted(err);
 }
-
-async function readJsonAsync(res: any) {
-  return new Promise(function(resolve, reject) {
-    readJson(res, resolve, reject);
-  });
-}
-
-const Sockets: WebSocket[] = [];
 
 function broadcast(event: { action: string, payload: any }) {
   Sockets.forEach(socket => {
@@ -93,9 +52,6 @@ App().ws('/*', {
     // @ts-ignore
     const { action, payload } = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
 
-    console.log(['ws:message:action'], action);
-    console.log(['ws:message:payload'], payload);
-
     if (action === 'addRoute') {
       addRoute(payload);
       sendEvent(ws,'updateRoutes', routes);
@@ -111,6 +67,7 @@ App().ws('/*', {
     }
   },
   open: (ws: WebSocket, req: HttpRequest) => {
+    ws.id = Date.now();
     Sockets.push(ws);
     ws.send(JSON.stringify({
       action: 'updateServerState',
@@ -124,6 +81,8 @@ App().ws('/*', {
   },
   close: (ws: WebSocket, code: number, message: ArrayBuffer) => {
     console.log(['ws:close'], code, message);
+
+    Sockets = Sockets.filter(socket => socket.id === ws.id);
   }
 }).any('/*', async (res, req) => {
   try {
@@ -133,14 +92,8 @@ App().ws('/*', {
     const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
     const route = routes.find(route => route.url === rawUrl && route.method === method);
 
-    console.log(['method'], method);
-    console.log(['url'], url);
-
     if (route) {
       const requestBody = await readJsonAsync(res);
-
-      console.log(['requestBody'], requestBody);
-
       const request = {
         body: requestBody,
       };
@@ -153,9 +106,6 @@ App().ws('/*', {
       if (typeof serverStateUpdateFunction === 'function') {
         const serverStateUpdateFunctionReturn = produce(serverState, serverStateUpdateFunction(request));
 
-        console.log(['response'], responseFunctionReturn);
-        console.log(['updatedServerState'], serverStateUpdateFunctionReturn);
-  
         updateServerState(serverStateUpdateFunctionReturn);
   
         broadcast({
