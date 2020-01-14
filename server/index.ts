@@ -110,7 +110,7 @@ const sendEvent = (socket: WebSocket, action: string, payload: any): void => {
   try {
     socket.send(JSON.stringify({ action, payload }));
   }
-  
+
   catch (e) {
     console.error(e);
   }
@@ -142,7 +142,7 @@ function readJson(res: any, cb: any, err: any) {
       cb({});
     }
   });
-  
+
   /* Register error cb */
   res.onAborted(err);
 }
@@ -157,7 +157,11 @@ const Sockets: WebSocket[] = [];
 
 function broadcast(event: { action: string, payload: any }) {
   Sockets.forEach(socket => {
-    socket.send(JSON.stringify(event));
+    try {
+      socket.send(JSON.stringify(event));
+    } catch (e) {
+      return undefined;
+    }
   });
 }
 
@@ -170,6 +174,9 @@ App().ws('/*', {
     if (action === 'addRoute') {
       addRoute(payload);
       sendEvent(ws,'updateRoutes', routes);
+    }
+    if (action === 'clientUpdatedServerServer') {
+      updateServerState(payload);
     }
   },
   open: (ws: WebSocket, req: HttpRequest) => {
@@ -196,40 +203,40 @@ App().ws('/*', {
     const route = routes.find(route => route.url === rawUrl && route.method === method);
     console.log(['method'], method);
     console.log(['url'], url);
-    
+
     if (route) {
       const requestBody = await readJsonAsync(res);
       console.log(['requestBody'], requestBody);
-      
+
       const request = {
         body: requestBody,
       };
-      
-      const responseCodeStart = `return `;
-      
-      const effectiveResponseCode = responseCodeStart + route.responseCode.trim();
-      const effectiveServerStateUpdateCode = responseCodeStart + route.serverStateUpdateCode.trim();
-      
+
+      const codeStart = `return `;
+
+      const effectiveResponseCode = codeStart + route.responseCode.trim();
+      const effectiveServerStateUpdateCode = codeStart + route.serverStateUpdateCode.trim();
+
       const responseFunction = new Function('state', 'request', effectiveResponseCode);
       const serverStateUpdateFunction = new Function('state', 'request', effectiveServerStateUpdateCode);
-      
+
       const responseFunctionReturn = responseFunction(serverState, request);
       const updatedServerStateReturn = serverStateUpdateFunction(serverState, request);
-      
+
       console.log(['responseFunctionReturn'], responseFunctionReturn);
       console.log(['updatedServerStateReturn'], updatedServerStateReturn);
-      
+
       updateServerState(updatedServerStateReturn);
-      
+
       broadcast({
         action: 'updateServerState',
         payload: serverState,
       });
-      
+
       res.end(JSON.stringify(responseFunctionReturn));
     } else {
       const file = readFileSync(`${process.cwd()}/build${url}`);
-    
+
       res.end(file);
     }
   } catch (e) {

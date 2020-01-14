@@ -5,29 +5,29 @@ import ReactJson from 'react-json-view';
 import { JsonEditor as Editor } from 'jsoneditor-react';
 import 'jsoneditor-react/es/editor.min.css';
 
-export default function ServerState({ state, setState }: { state: any, setState: (value: any) => any }) {
-  const [edit, setEdit] = useState(false);
-  
+export default function ServerState({ serverState, onServerStateChange }: { serverState: any, onServerStateChange: (value: any) => any }) {
+  const [editing, setEditing] = useState(false);
+
   function startEditing() {
-    setEdit(true);
+    setEditing(true);
   }
   function doneEditing() {
-    setEdit(false);
+    setEditing(false);
   }
-  
+
   return (
     <div>
       <Typography variant="h5" style={{ margin: 8 }}>Server state</Typography>
-      <ReactJson src={state} collapsed />
-      {edit ? (
+      <ReactJson src={serverState} collapsed />
+      {editing ? (
         <Button onClick={doneEditing}>Done</Button>
       ) : (
         <Button onClick={startEditing}>Edit</Button>
       )}
-      {edit && (
+      {editing && (
         <Editor
-          value={state}
-          onChange={setState}
+          value={serverState}
+          onChange={onServerStateChange}
         />
       )}
     </div>

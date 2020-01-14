@@ -36,62 +36,70 @@ const App: React.FC = () => {
       console.error(e);
     }
   }
-  
+
   useEffect(() => {
     socket.onopen = event => {
       console.log(['WebSocket.onopen'], event);
     };
-  
+
     socket.onclose = event => {
       console.log(['WebSocket.onclose'], event);
     };
-  
+
     socket.onmessage = event => {
       console.log(['WebSocket.onmessage'], JSON.parse(event.data));
       const { action, payload } = JSON.parse(event.data);
-      
+
       if (action === 'updateRoutes') {
         setRoutes(payload);
       }
-      
+
       if (action === 'updateServerState') {
         setServerState(payload);
       }
     };
-  
+
     socket.onerror = event => {
       console.error(['WebSocket.onerror'], event);
     };
-    
+
     const pingInterval = setInterval(() => {
       sendEvent({
         action: 'ping',
       })
     }, 10000);
-    
+
     return () => {
       clearInterval(pingInterval);
     };
   }, []);
-  
+
   function handleRouteAdded(route: Route) {
     sendEvent({
       action: 'addRoute',
       payload: route,
     })
   }
-  
+
   const contextValue = {
     routes,
     serverState,
     addRoute: handleRouteAdded,
   };
-  
+
+  function handleServerStateChange(updatedServerState: any) {
+    setServerState(updatedServerState);
+    sendEvent({
+      action: 'clientUpdatedServerServer',
+      payload: updatedServerState,
+    })
+  }
+
   return (
     <div className="App">
       <AppStateContext.Provider value={contextValue}>
         <Header />
-        <ServerState state={serverState} setState={setServerState} />
+        <ServerState serverState={serverState} onServerStateChange={handleServerStateChange} />
         <Divider />
         <Routes routes={routes || []} />
       </AppStateContext.Provider>
