@@ -4,9 +4,7 @@ import { App, HttpRequest, WebSocket } from 'uWebSockets.js';
 import { Method, Route } from '../sharedTypes';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
-let serverState = {
-  requestCount: 0,
-};
+let serverState: JSON = JSON.parse(readFileSync(`${process.cwd()}/data/initialState.json`, 'utf8'));
 let routes: Route[] = [{
   method: 'get',
   url: '/test',
