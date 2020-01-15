@@ -3,6 +3,7 @@ import produce from 'immer';
 import { App, HttpRequest, WebSocket } from 'uWebSockets.js';
 import { PORT } from '../constans';
 import { Method, Route } from '../sharedTypes';
+import { logError, logInfo } from './utils/logger';
 import { readJsonAsync } from './utils/readJson';
 
 const initialServerStateDataPath = `${process.cwd()}/data/initialServerState.json`;
@@ -24,11 +25,13 @@ function updateServerState(serverStateUpdate: Partial<typeof serverState>) {
     ...serverState,
     ...serverStateUpdate
   };
+  logInfo(['updateServerState'], serverStateUpdate);
   saveServerStateToFile(serverState);
 }
 
 function addRoute(route: Route) {
   routes = [...routes, route];
+  logInfo(['addRoute'], route);
   saveRoutesToFile(routes);
 }
 
@@ -39,18 +42,21 @@ function updateRoute(route: Route) {
 
   // @ts-ignore
   routes[routeIndex] = route;
+  logInfo(['updateRoute'], route);
   saveRoutesToFile(routes);
 }
 
 function sendEvent(socket: WebSocket, action: string, payload: any): void {
   try {
     socket.send(JSON.stringify({action, payload}));
+    logInfo(['sendEvent'], { action, payload });
   } catch (e) {
     console.error(e);
   }
 }
 
 function broadcast(event: { action: string, payload: any }) {
+  logInfo(['broadcast'], event);
   Sockets.forEach(socket => {
     try {
       socket.send(JSON.stringify(event));
@@ -104,6 +110,9 @@ App().ws('/*', {
     const urlLastChar = url[url.length - 1];
     const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
     const route = routes.find(route => route.url === rawUrl && route.method === method);
+    
+    logInfo(['url'], url);
+    logInfo(['method'], method);
 
     if (route) {
       const requestBody = await readJsonAsync(res);
@@ -137,6 +146,7 @@ App().ws('/*', {
     console.error(`error: ${e.toString()}`);
     res.writeStatus('404');
     res.end();
+    logError(['error'], e);
   }
 }).listen(PORT, (listenSocket) => {
   if (listenSocket) {
