@@ -7,8 +7,7 @@ import StepLabel from '@material-ui/core/StepLabel';
 import Stepper from '@material-ui/core/Stepper';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import Editor from '@monaco-editor/react';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Method, Route } from '../../../sharedTypes';
 import CodeEditor from '../common/CodeEditor';
 
@@ -34,39 +33,57 @@ function getSteps() {
   return ['URL pattern', 'Select request type', 'Define response', 'Update server state'];
 }
 
-function UrlPatternStep({ url, onUrlChange }: { url: string, onUrlChange: any }) {
+function UrlPatternStep({ url, onUrlChange }: { url: string; onUrlChange: any }) {
   return (
     <TextField
       label="URL pattern"
       value={url}
       onChange={event => onUrlChange(event.target.value)}
     />
-  )
+  );
 }
 
-function RequestMethodStep({ method, onMethodChange }: { method: Method, onMethodChange: (value: Method) => void }) {
+function RequestMethodStep({
+  method,
+  onMethodChange,
+}: {
+  method: Method;
+  onMethodChange: (value: Method) => void;
+}) {
   return (
     <ButtonGroup aria-label="text primary button group" color="primary" variant="text">
       <Button
         variant={method === 'get' ? 'outlined' : undefined}
         onClick={() => onMethodChange('get')}
-      >Get</Button>
+      >
+        Get
+      </Button>
       <Button
         variant={method === 'post' ? 'outlined' : undefined}
         onClick={() => onMethodChange('post')}
-      >Post</Button>
+      >
+        Post
+      </Button>
       <Button
-        variant={method === 'put' ? 'outlined' : undefined} onClick={() => onMethodChange('put')}>Put</Button>
+        variant={method === 'put' ? 'outlined' : undefined}
+        onClick={() => onMethodChange('put')}
+      >
+        Put
+      </Button>
       <Button
         variant={method === 'patch' ? 'outlined' : undefined}
         onClick={() => onMethodChange('patch')}
-      >Patch</Button>
+      >
+        Patch
+      </Button>
       <Button
         variant={method === 'delete' ? 'outlined' : undefined}
         onClick={() => onMethodChange('delete')}
-      >Delete</Button>
+      >
+        Delete
+      </Button>
     </ButtonGroup>
-  )
+  );
 }
 
 const initialResponseCode = `
@@ -77,7 +94,7 @@ const initialResponseCode = `
 })(state, request); // changing those args name breaks script
 `;
 
-function ResponseStep({ code, onChange }: { code: string, onChange: (code: string) => void }) {
+function ResponseStep({ code, onChange }: { code: string; onChange: (code: string) => void }) {
   return <CodeEditor code={code} onSave={onChange} />;
 }
 
@@ -90,7 +107,13 @@ return state => {
 // } this line is added on server
 `;
 
-function UpdateServerStateStep({ code, onChange }: { code: string, onChange: (code: string) => void }) {
+function UpdateServerStateStep({
+  code,
+  onChange,
+}: {
+  code: string;
+  onChange: (code: string) => void;
+}) {
   return <CodeEditor code={code} onSave={onChange} />;
 }
 
@@ -103,17 +126,19 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
     responseCode: initialResponseCode,
     serverStateUpdateCode: initialServerStateUpdateCode,
   });
-  
+
   function getStepContent(step: number) {
     switch (step) {
       case 0: {
         return (
           <UrlPatternStep
             url={route.url}
-            onUrlChange={(url: string) => setRoute(route => ({
-              ...route,
-              url,
-            }))}
+            onUrlChange={(url: string) =>
+              setRoute(route => ({
+                ...route,
+                url,
+              }))
+            }
           />
         );
       }
@@ -121,10 +146,12 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
         return (
           <RequestMethodStep
             method={route.method}
-            onMethodChange={method => setRoute(route => ({
-              ...route,
-              method,
-            }))}
+            onMethodChange={method =>
+              setRoute(route => ({
+                ...route,
+                method,
+              }))
+            }
           />
         );
       }
@@ -132,10 +159,12 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
         return (
           <ResponseStep
             code={route.responseCode}
-            onChange={responseCode => setRoute(route => ({
-              ...route,
-              responseCode,
-            }))}
+            onChange={responseCode =>
+              setRoute(route => ({
+                ...route,
+                responseCode,
+              }))
+            }
           />
         );
       }
@@ -143,10 +172,12 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
         return (
           <UpdateServerStateStep
             code={route.serverStateUpdateCode}
-            onChange={serverStateUpdateCode => setRoute(route => ({
-              ...route,
-              serverStateUpdateCode,
-            }))}
+            onChange={serverStateUpdateCode =>
+              setRoute(route => ({
+                ...route,
+                serverStateUpdateCode,
+              }))
+            }
           />
         );
       }
@@ -154,7 +185,7 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
         return 'Unknown step';
     }
   }
-  
+
   const steps = getSteps();
   const handleNext = () => {
     setActiveStep(prevActiveStep => prevActiveStep + 1);
@@ -165,7 +196,7 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
   const handleSubmit = () => {
     onDone(route);
   };
-  
+
   return (
     <div className={classes.root}>
       <Stepper activeStep={activeStep} orientation="vertical">

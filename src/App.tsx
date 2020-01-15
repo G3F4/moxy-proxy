@@ -6,14 +6,15 @@ import Header from './modules/header/Header';
 import Routes from './modules/routes/Routes';
 import ServerState from './modules/server-state/ServerState';
 
-const socketUrl = 'ws://localhost:5000';
+const socketUrl =
+  process.env.NODE_ENV === 'production' ? `ws://${window.location.host}` : 'ws://localhost:5000';
 
 function initialServerState(): any {
-  return {}
+  return {};
 }
 
 function initialRoutes(): Route[] {
-  return []
+  return [];
 }
 
 export const AppStateContext = React.createContext({
@@ -31,9 +32,7 @@ const App: React.FC = () => {
   function sendEvent(event: any) {
     try {
       socket.send(JSON.stringify(event));
-    }
-
-    catch (e) {
+    } catch (e) {
       console.error(e);
     }
   }
@@ -68,7 +67,7 @@ const App: React.FC = () => {
     const pingInterval = setInterval(() => {
       sendEvent({
         action: 'ping',
-      })
+      });
     }, 10000);
 
     return () => {
@@ -82,7 +81,7 @@ const App: React.FC = () => {
       payload: route,
     });
   }
-  
+
   function handleUpdateRoute(route: Route) {
     sendEvent({
       action: 'updateRoute',
@@ -102,7 +101,7 @@ const App: React.FC = () => {
     sendEvent({
       action: 'clientUpdatedServerServer',
       payload: updatedServerState,
-    })
+    });
   }
 
   return (
