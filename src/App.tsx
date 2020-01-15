@@ -1,10 +1,11 @@
 import { Divider } from '@material-ui/core';
-import React, { useEffect, useState } from 'react';
+import React, { lazy, useEffect, useState, Suspense } from 'react';
 import { Route } from '../sharedTypes';
 import './App.css';
-import Header from './modules/header/Header';
-import Routes from './modules/routes/Routes';
-import ServerState from './modules/server-state/ServerState';
+
+const LazyHeader = lazy(() => import('./modules/header/Header'));
+const LazyRoutes = lazy(() => import('./modules/routes/Routes'));
+const LazyServerState = lazy(() => import('./modules/server-state/ServerState'));
 
 const socketUrl =
   process.env.NODE_ENV === 'production' ? `ws://${window.location.host}` : 'ws://localhost:5000';
@@ -107,10 +108,19 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <AppStateContext.Provider value={contextValue}>
-        <Header />
-        <ServerState serverState={serverState} onServerStateChange={handleServerStateChange} />
+        <Suspense fallback="Loading header...">
+          <LazyHeader />
+        </Suspense>
+        <Suspense fallback="Loading server state...">
+          <LazyServerState
+            serverState={serverState}
+            onServerStateChange={handleServerStateChange}
+          />
+        </Suspense>
         <Divider />
-        <Routes routes={routes || []} />
+        <Suspense fallback="Loading routes...">
+          <LazyRoutes routes={routes || []} />
+        </Suspense>
       </AppStateContext.Provider>
     </div>
   );
