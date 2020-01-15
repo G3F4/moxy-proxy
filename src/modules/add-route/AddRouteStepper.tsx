@@ -10,6 +10,7 @@ import Typography from '@material-ui/core/Typography';
 import Editor from '@monaco-editor/react';
 import React, { useRef, useState } from 'react';
 import { Method, Route } from '../../../sharedTypes';
+import CodeEditor from '../common/CodeEditor';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -77,35 +78,7 @@ const initialResponseCode = `
 `;
 
 function ResponseStep({ code, onChange }: { code: string, onChange: (code: string) => void }) {
-  const [isEditorReady, setIsEditorReady] = useState(false);
-  const valueGetter = useRef();
-  
-  function handleEditorDidMount(_valueGetter: any) {
-    setIsEditorReady(true);
-    valueGetter.current = _valueGetter;
-  }
-  
-  function handleSave() {
-    // @ts-ignore
-    onChange(valueGetter.current());
-    // @ts-ignore
-    console.log(['code'], valueGetter.current());
-  }
-
-  return (
-    <>
-      <button disabled={!isEditorReady} onClick={handleSave}>
-        Save
-      </button>
-      <Editor
-        editorDidMount={handleEditorDidMount}
-        height="50vh"
-        language="typescript"
-        value={code}
-        width="80vw"
-      />
-    </>
-  );
+  return <CodeEditor code={code} onSave={onChange} />;
 }
 
 const initialServerStateUpdateCode = `
@@ -118,35 +91,7 @@ return state => {
 `;
 
 function UpdateServerStateStep({ code, onChange }: { code: string, onChange: (code: string) => void }) {
-  const [isEditorReady, setIsEditorReady] = useState(false);
-  const valueGetter = useRef();
-  
-  function handleEditorDidMount(_valueGetter: any) {
-    setIsEditorReady(true);
-    valueGetter.current = _valueGetter;
-  }
-  
-  function handleSave() {
-    // @ts-ignore
-    onChange(valueGetter.current());
-    // @ts-ignore
-    console.log(['code'], valueGetter.current());
-  }
-  
-  return (
-    <>
-      <button disabled={!isEditorReady} onClick={handleSave}>
-        Save
-      </button>
-      <Editor
-        editorDidMount={handleEditorDidMount}
-        height="50vh"
-        language="javascript"
-        value={code}
-        width="80vw"
-      />
-    </>
-  );
+  return <CodeEditor code={code} onSave={onChange} />;
 }
 
 export default function AddRouteStepper({ onDone }: { onDone: any }) {
