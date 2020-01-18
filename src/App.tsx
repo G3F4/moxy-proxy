@@ -21,6 +21,9 @@ function initialRoutes(): Route[] {
 export const AppStateContext = React.createContext({
   serverState: initialServerState(),
   routes: initialRoutes(),
+
+  updateServerState(_serverState: unknown) {},
+  resetServerState() {},
   addRoute(_route: Route) {},
   updateRoute(_route: Route) {},
 });
@@ -31,6 +34,7 @@ const App: React.FC = () => {
   const [routes, setRoutes] = useState(initialRoutes);
 
   function sendEvent(event: any) {
+    console.log(['sendEvent'], event);
     try {
       socket.send(JSON.stringify(event));
     } catch (e) {
@@ -76,6 +80,13 @@ const App: React.FC = () => {
     };
   }, []);
 
+  function handleResetServerState() {
+    sendEvent({
+      action: 'resetServerState',
+      payload: null,
+    });
+  }
+
   function handleAddRoute(route: Route) {
     sendEvent({
       action: 'addRoute',
@@ -90,20 +101,22 @@ const App: React.FC = () => {
     });
   }
 
-  const contextValue = {
-    routes,
-    serverState,
-    addRoute: handleAddRoute,
-    updateRoute: handleUpdateRoute,
-  };
-
   function handleServerStateChange(updatedServerState: any) {
     setServerState(updatedServerState);
     sendEvent({
-      action: 'clientUpdatedServerServer',
+      action: 'clientUpdatedServer',
       payload: updatedServerState,
     });
   }
+
+  const contextValue = {
+    routes,
+    serverState,
+    updateServerState: handleServerStateChange,
+    resetServerState: handleResetServerState,
+    addRoute: handleAddRoute,
+    updateRoute: handleUpdateRoute,
+  };
 
   return (
     <div className="App">
@@ -112,10 +125,7 @@ const App: React.FC = () => {
           <LazyHeader />
         </Suspense>
         <Suspense fallback="Loading server state...">
-          <LazyServerState
-            serverState={serverState}
-            onServerStateChange={handleServerStateChange}
-          />
+          <LazyServerState />
         </Suspense>
         <Divider />
         <Suspense fallback="Loading routes...">

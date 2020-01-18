@@ -8,9 +8,10 @@ import { readJsonAsync } from './utils/readJson';
 
 const initialServerStateDataPath = `${process.cwd()}/data/initialServerState.json`;
 const routesDataPath = `${process.cwd()}/data/routes.json`;
-let serverState: JSON = JSON.parse(readFileSync(initialServerStateDataPath, 'utf8'));
-let routes: Route[] = JSON.parse(readFileSync(routesDataPath, 'utf8')).items;
-let Sockets: WebSocket[] = [];
+
+function loadInitialServerState() {
+  return JSON.parse(readFileSync(initialServerStateDataPath, 'utf8'));
+}
 
 function saveRoutesToFile(items: unknown) {
   writeFileSync(routesDataPath, JSON.stringify({ items }, null, 2) , 'utf-8');
@@ -20,17 +21,29 @@ function saveServerStateToFile(data: unknown) {
   writeFileSync(initialServerStateDataPath, JSON.stringify(data, null, 2) , 'utf-8');
 }
 
+const initialServerState = loadInitialServerState();
+let serverState = loadInitialServerState();
+let routes: Route[] = JSON.parse(readFileSync(routesDataPath, 'utf8')).items;
+let Sockets: WebSocket[] = [];
+
 function updateServerState(serverStateUpdate: Partial<typeof serverState>) {
   serverState = {
     ...serverState,
     ...serverStateUpdate
   };
+
   logInfo(['updateServerState'], serverStateUpdate);
   saveServerStateToFile(serverState);
 }
 
+function resetServerState() {
+  console.log(['resetServerState'], initialServerState)
+  updateServerState(initialServerState);
+}
+
 function addRoute(route: Route) {
   routes = [...routes, route];
+
   logInfo(['addRoute'], route);
   saveRoutesToFile(routes);
 }
@@ -42,6 +55,7 @@ function updateRoute(route: Route) {
 
   // @ts-ignore
   routes[routeIndex] = route;
+
   logInfo(['updateRoute'], route);
   saveRoutesToFile(routes);
 }
@@ -55,8 +69,9 @@ function sendEvent(socket: WebSocket, action: string, payload: any): void {
   }
 }
 
-function broadcast(event: { action: string, payload: any }) {
-  logInfo(['broadcast'], event);
+function broadcast(action: string, payload: any) {
+  logInfo(['broadcast'], action, payload);
+
   Sockets.forEach(socket => {
     try {
       socket.send(JSON.stringify(event));
@@ -81,26 +96,23 @@ App().ws('/*', {
       sendEvent(ws,'updateRoutes', routes);
     }
 
-    if (action === 'clientUpdatedServerServer') {
+    if (action === 'clientUpdatedServer') {
       updateServerState(payload);
+      broadcast('updateServerState', serverState);
+    }
+
+    if (action === 'resetServerState') {
+      resetServerState();
+      sendEvent(ws, 'updateServerState', serverState);
     }
   },
   open: (ws: WebSocket, req: HttpRequest) => {
     ws.id = Date.now();
     Sockets.push(ws);
-    ws.send(JSON.stringify({
-      action: 'updateServerState',
-      payload: serverState,
-    }));
-    ws.send(JSON.stringify({
-      action: 'updateRoutes',
-      payload: routes,
-    }));
-    console.log(['ws:open'], req);
+    sendEvent(ws, 'updateServerState', serverState);
+    sendEvent(ws,'updateRoutes', routes);
   },
-  close: (ws: WebSocket, code: number, message: ArrayBuffer) => {
-    console.log(['ws:close'], code, message);
-
+  close: (ws: WebSocket) => {
     Sockets = Sockets.filter(socket => socket.id === ws.id);
   }
 }).any('/*', async (res, req) => {
@@ -110,7 +122,7 @@ App().ws('/*', {
     const urlLastChar = url[url.length - 1];
     const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
     const route = routes.find(route => route.url === rawUrl && route.method === method);
-    
+
     logInfo(['url'], url);
     logInfo(['method'], method);
 
@@ -124,16 +136,16 @@ App().ws('/*', {
       // eslint-disable-next-line no-new-func
       const serverStateUpdateFunction = new Function('request', route.serverStateUpdateCode.trim());
       const responseFunctionReturn = responseFunction(serverState, request);
-      
+
       if (typeof serverStateUpdateFunction === 'function') {
         const serverStateUpdateFunctionReturn = produce(serverState, serverStateUpdateFunction(request));
 
         updateServerState(serverStateUpdateFunctionReturn);
-  
-        broadcast({
-          action: 'updateServerState',
-          payload: serverState,
-        });
+
+        broadcast(
+          'updateServerState',
+          serverState,
+        );
       }
 
       res.end(JSON.stringify(responseFunctionReturn));
