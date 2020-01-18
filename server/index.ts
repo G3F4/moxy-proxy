@@ -149,6 +149,8 @@ App().ws('/*', {
       const serverStateUpdateFunction = new Function('request', route.serverStateUpdateCode.trim());
       const responseFunctionReturn = responseFunction(serverState, request);
 
+      console.log(['responseFunctionReturn'], responseFunctionReturn)
+
       if (typeof serverStateUpdateFunction === 'function') {
         const serverStateUpdateFunctionReturn = produce(serverState, serverStateUpdateFunction(request));
 

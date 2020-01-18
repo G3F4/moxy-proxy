@@ -17,6 +17,7 @@
     "lint": "eslint './**/*.{ts,tsx}'",
     "lint:fix": "eslint './**/*.{ts,tsx}' --fix"
   },
+  "proxy": "http://localhost:5000",
   "dependencies": {
     "@types/jest": "24.0.0",
     "@types/node": "13.1.6",

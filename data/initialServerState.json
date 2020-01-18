@@ -1,4 +1,6 @@
 {
   "requestCount": 0,
-  "data": {}
+  "data": {
+    "requestCount": 123
+  }
 }

@@ -8,7 +8,9 @@ const LazyRoutes = lazy(() => import('./modules/routes/Routes'));
 const LazyServerState = lazy(() => import('./modules/server-state/ServerState'));
 
 const socketUrl =
-  process.env.NODE_ENV === 'production' ? `ws://${window.location.host}` : 'ws://localhost:5000';
+  process.env.NODE_ENV === 'production' ? `wss://${window.location.host}` : 'ws://localhost:5000';
+const apiUrl =
+  process.env.NODE_ENV === 'production' ? window.location.origin : 'http://localhost:5000';
 
 function initialServerState(): any {
   return {};
@@ -25,6 +27,9 @@ export const AppStateContext = React.createContext({
   updateServerState(_serverState: unknown) {},
   resetServerState() {},
   addRoute(_route: Route) {},
+  testRoute(_route: Route, _requestBody: string) {
+    return Promise.resolve(new Response(''));
+  },
   deleteRoute(_routeId: string) {},
   updateRoute(_route: Route) {},
 });
@@ -109,6 +114,24 @@ const App: React.FC = () => {
     });
   }
 
+  async function handleTestRoute({ url, method }: Route, requestBody: string) {
+    const parsedBody = JSON.parse(requestBody);
+    const isEmpty = Object.keys(parsedBody).length === 0;
+
+    if (isEmpty) {
+      return await fetch(`${url}`, { method });
+    }
+
+    return await fetch(`${url}`, {
+      body: JSON.stringify(parsedBody),
+      method,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
   function handleServerStateChange(updatedServerState: any) {
     setServerState(updatedServerState);
     sendEvent({
@@ -125,6 +148,7 @@ const App: React.FC = () => {
     addRoute: handleAddRoute,
     updateRoute: handleUpdateRoute,
     deleteRoute: handleDeleteRoute,
+    testRoute: handleTestRoute,
   };
 
   return (

@@ -23,9 +23,9 @@
     },
     {
       "id": "4",
-      "method": "post",
       "url": "/test",
-      "responseCode": "// function(state, request) { this line is added on server\nreturn;\n// } this line is added on server",
+      "method": "post",
+      "responseCode": "// function(state, request) { this line is added on server\nreturn 'data stored';\n// } this line is added on server",
       "serverStateUpdateCode": "// function(request) { this line is added on server\n// inside returned function draft is mutable\nreturn state => {\n  state.data = request.body;\n};\n// } this line is added on server"
     },
     {

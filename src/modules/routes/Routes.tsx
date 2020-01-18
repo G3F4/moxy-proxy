@@ -9,6 +9,7 @@ import React, { useContext } from 'react';
 import { Route } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
 import AddRoute from '../add-route/AddRoute';
+import TestRoute from "../test-route/TestRoute";
 import RouteCode from './RouteCode';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -38,38 +39,39 @@ export default function Routes({ routes }: { routes: Route[] }) {
           <AddRoute />
         </>
       )}
-      {routes.map(({ id, url, method, serverStateUpdateCode, responseCode }) => (
-        <ExpansionPanel key={id}>
+      {routes.map(route => (
+        <ExpansionPanel key={route.id}>
           <ExpansionPanelSummary
             aria-controls="panel1a-content"
             expandIcon={<ExpandMoreIcon />}
             id="panel1a-header"
           >
             <Typography className={classes.heading}>
-              {`${method.toUpperCase()}: ${url}`}
+              {`${route.method.toUpperCase()}: ${route.url}`}
             </Typography>
           </ExpansionPanelSummary>
           <ExpansionPanelDetails>
-            <Button onClick={() => deleteRoute(id)}>Delete</Button>
+            <Button onClick={() => deleteRoute(route.id)}>Delete</Button>
+            <TestRoute route={route} />
           </ExpansionPanelDetails>
           <RouteCode
-            responseCode={responseCode}
-            serverStateUpdateCode={serverStateUpdateCode}
+            responseCode={route.responseCode}
+            serverStateUpdateCode={route.serverStateUpdateCode}
             onResponseCodeSave={(code: string) => {
               updateRoute({
-                id,
-                url,
-                method,
+                id: route.id,
+                url: route.url,
+                method: route.method,
                 responseCode: code,
-                serverStateUpdateCode,
+                serverStateUpdateCode: route.serverStateUpdateCode,
               })
             }}
             onServerStateUpdateCodeSave={(code: string) => {
               updateRoute({
-                id,
-                url,
-                method,
-                responseCode,
+                id: route.id,
+                url: route.url,
+                method: route.method,
+                responseCode: route.responseCode,
                 serverStateUpdateCode: code,
               })
             }}

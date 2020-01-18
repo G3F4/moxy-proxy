@@ -4,7 +4,7 @@ import Editor from '@monaco-editor/react';
 import React, { useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 
-export default function CodeEditor({ code, title, onSave }: { code: string; title?: string; onSave: any; }) {
+export default function CodeEditor({ code, title,language = 'javascript', onSave }: { code: string; title?: string; language?: string; onSave: any; }) {
   const [editing, setEditing] = useState(false);
   const [editorReady, setEditorReady] = useState(false);
   const valueGetter = useRef();
@@ -44,7 +44,7 @@ export default function CodeEditor({ code, title, onSave }: { code: string; titl
             width="90vw"
           />
         ) : (
-          <SyntaxHighlighter customStyle={{ width: '100%' }} language="javascript">
+          <SyntaxHighlighter customStyle={{ width: '100%' }} language={language}>
             {code.trim()}
           </SyntaxHighlighter>
         )}
