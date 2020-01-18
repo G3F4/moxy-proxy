@@ -4,11 +4,12 @@ import { JsonEditor as Editor } from 'jsoneditor-react';
 import 'jsoneditor-react/es/editor.min.css';
 import React, { useContext, useState } from 'react';
 import ReactJson from 'react-json-view';
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { AppStateContext } from '../../App';
 
 export default function ServerState() {
   const [editing, setEditing] = useState(false);
-  const { serverState, resetServerState, updateServerState } = useContext(AppStateContext);
+  const { serverState, serverStateInterface, resetServerState, updateServerState } = useContext(AppStateContext);
 
   function startEditing() {
     setEditing(true);
@@ -20,7 +21,7 @@ export default function ServerState() {
 
   return (
     <div>
-      <Typography style={{ margin: 8 }} variant="h5">Server state</Typography>
+
       {!editing && (
         <ReactJson collapsed src={serverState} />
       )}
@@ -36,6 +37,10 @@ export default function ServerState() {
           onChange={updateServerState}
         />
       )}
+      <Typography style={{ margin: 8 }} variant="h5">Interface</Typography>
+      <SyntaxHighlighter customStyle={{ width: '100%' }} language="typescript">
+        {serverStateInterface.trim()}
+      </SyntaxHighlighter>
     </div>
   )
 }

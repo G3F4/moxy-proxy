@@ -23,6 +23,7 @@ function initialRoutes(): Route[] {
 export const AppStateContext = React.createContext({
   serverState: initialServerState(),
   routes: initialRoutes(),
+  serverStateInterface: '',
 
   updateServerState(_serverState: unknown) {},
   resetServerState() {},
@@ -37,6 +38,7 @@ export const AppStateContext = React.createContext({
 const socket = new WebSocket(socketUrl);
 const App: React.FC = () => {
   const [serverState, setServerState] = useState(initialServerState);
+  const [serverStateInterface, setServerStateInterface] = useState('');
   const [routes, setRoutes] = useState(initialRoutes);
 
   function sendEvent(event: any) {
@@ -68,6 +70,10 @@ const App: React.FC = () => {
 
       if (action === 'updateServerState') {
         setServerState(payload);
+      }
+
+      if (action === 'updateServerStateInterface') {
+        setServerStateInterface(payload);
       }
     };
 
@@ -143,6 +149,7 @@ const App: React.FC = () => {
   const contextValue = {
     routes,
     serverState,
+    serverStateInterface,
     updateServerState: handleServerStateChange,
     resetServerState: handleResetServerState,
     addRoute: handleAddRoute,
