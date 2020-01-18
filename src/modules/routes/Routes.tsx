@@ -1,4 +1,6 @@
+import { Button } from "@material-ui/core";
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
+import ExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
@@ -23,8 +25,8 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export default function Routes({ routes }: { routes: Route[] }) {
   const classes = useStyles();
-  const { updateRoute } = useContext(AppStateContext);
-  
+  const { updateRoute, deleteRoute } = useContext(AppStateContext);
+
   return (
     <div className={classes.root}>
       <Typography style={{ margin: 8 }} variant="h5">Routes</Typography>
@@ -36,8 +38,8 @@ export default function Routes({ routes }: { routes: Route[] }) {
           <AddRoute />
         </>
       )}
-      {routes.map(({ url, method, serverStateUpdateCode, responseCode }) => (
-        <ExpansionPanel key={`${url}:${method}`}>
+      {routes.map(({ id, url, method, serverStateUpdateCode, responseCode }) => (
+        <ExpansionPanel key={id}>
           <ExpansionPanelSummary
             aria-controls="panel1a-content"
             expandIcon={<ExpandMoreIcon />}
@@ -47,11 +49,15 @@ export default function Routes({ routes }: { routes: Route[] }) {
               {`${method.toUpperCase()}: ${url}`}
             </Typography>
           </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+            <Button onClick={() => deleteRoute(id)}>Delete</Button>
+          </ExpansionPanelDetails>
           <RouteCode
             responseCode={responseCode}
             serverStateUpdateCode={serverStateUpdateCode}
             onResponseCodeSave={(code: string) => {
               updateRoute({
+                id,
                 url,
                 method,
                 responseCode: code,
@@ -60,6 +66,7 @@ export default function Routes({ routes }: { routes: Route[] }) {
             }}
             onServerStateUpdateCodeSave={(code: string) => {
               updateRoute({
+                id,
                 url,
                 method,
                 responseCode,

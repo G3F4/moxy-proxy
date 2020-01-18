@@ -1,30 +1,35 @@
 {
   "items": [
     {
+      "id": "1",
       "url": "/test",
       "method": "get",
       "responseCode": "// function(state, request) { this line is added on server\nreturn state.requestCount;\n// } this line is added on server",
       "serverStateUpdateCode": "// function(request) { this line is added on server\nreturn state => {\n\n};\n// } this line is added on server"
     },
     {
+      "id": "2",
       "method": "put",
       "url": "/test",
       "responseCode": "// function(state, request) { this line is added on server\nreturn 'increased';\n// } this line is added on server",
       "serverStateUpdateCode": "// function(request) { this line is added on server\n// inside returned function draft is mutable\nreturn state => {\n  state.requestCount = state.requestCount + 1;\n};\n// } this line is added on server"
     },
     {
+      "id": "3",
       "method": "delete",
       "url": "/test",
       "responseCode": "// function(state, request) { this line is added on server\nreturn 'decreased';\n// } this line is added on server",
       "serverStateUpdateCode": "// function(request) { this line is added on server\n// inside returned function draft is mutable\nreturn state => {\n  state.requestCount = state.requestCount\n    ? state.requestCount - 1\n    : 0;\n};\n// } this line is added on server"
     },
     {
+      "id": "4",
       "method": "post",
       "url": "/test",
       "responseCode": "// function(state, request) { this line is added on server\nreturn;\n// } this line is added on server",
       "serverStateUpdateCode": "// function(request) { this line is added on server\n// inside returned function draft is mutable\nreturn state => {\n  state.data = request.body;\n};\n// } this line is added on server"
     },
     {
+      "id": "5",
       "method": "patch",
       "url": "/test",
       "responseCode": "// function(state, request) { this line is added on server\nreturn 'patched!';\n// } this line is added on server",

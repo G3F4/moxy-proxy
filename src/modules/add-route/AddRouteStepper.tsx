@@ -121,6 +121,7 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
   const classes = useStyles();
   const [activeStep, setActiveStep] = useState(0);
   const [route, setRoute] = useState<Route>({
+    id: Date.now().toString(),
     url: '/',
     method: '',
     responseCode: initialResponseCode,

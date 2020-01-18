@@ -25,6 +25,7 @@ export const AppStateContext = React.createContext({
   updateServerState(_serverState: unknown) {},
   resetServerState() {},
   addRoute(_route: Route) {},
+  deleteRoute(_routeId: string) {},
   updateRoute(_route: Route) {},
 });
 
@@ -101,6 +102,13 @@ const App: React.FC = () => {
     });
   }
 
+  function handleDeleteRoute(routeId: string) {
+    sendEvent({
+      action: 'deleteRoute',
+      payload: routeId,
+    });
+  }
+
   function handleServerStateChange(updatedServerState: any) {
     setServerState(updatedServerState);
     sendEvent({
@@ -116,6 +124,7 @@ const App: React.FC = () => {
     resetServerState: handleResetServerState,
     addRoute: handleAddRoute,
     updateRoute: handleUpdateRoute,
+    deleteRoute: handleDeleteRoute,
   };
 
   return (

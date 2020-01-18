@@ -60,6 +60,13 @@ function updateRoute(route: Route) {
   saveRoutesToFile(routes);
 }
 
+function deleteRoute(routeId: string) {
+  routes = routes.filter(({ id }) => id !== routeId);
+
+  logInfo(['deleteRoute'], routeId);
+  saveRoutesToFile(routes);
+}
+
 function sendEvent(socket: WebSocket, action: string, payload: any): void {
   try {
     socket.send(JSON.stringify({action, payload}));
@@ -93,6 +100,11 @@ App().ws('/*', {
 
     if (action === 'updateRoute') {
       updateRoute(payload);
+      sendEvent(ws,'updateRoutes', routes);
+    }
+
+    if (action === 'deleteRoute') {
+      deleteRoute(payload);
       sendEvent(ws,'updateRoutes', routes);
     }
 
