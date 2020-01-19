@@ -8,8 +8,9 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { AppStateContext } from '../../App';
 
 export default function ServerState() {
-  const [editing, setEditing] = useState(false);
   const { serverState, serverStateInterface, resetServerState, updateServerState } = useContext(AppStateContext);
+  const [editing, setEditing] = useState(false);
+  const [editorState, setEditorState] = useState(serverState);
 
   function startEditing() {
     setEditing(true);
@@ -17,6 +18,7 @@ export default function ServerState() {
 
   function doneEditing() {
     setEditing(false);
+    updateServerState(editorState);
   }
 
   return (
@@ -33,8 +35,8 @@ export default function ServerState() {
       <Button onClick={resetServerState}>Reset server</Button>
       {editing && (
         <Editor
-          value={serverState}
-          onChange={updateServerState}
+          value={editorState}
+          onChange={setEditorState}
         />
       )}
       <Typography style={{ margin: 8 }} variant="h5">Interface</Typography>

@@ -43,6 +43,9 @@ function updateServerState(serverStateUpdate: Partial<typeof serverState>) {
 
   logInfo(['updateServerState'], serverStateUpdate);
   saveServerStateToFile(serverState);
+  makeTypesFromInitialServerState().then(() => {
+    logInfo(['makeTypesFromInitialServerState'], 'done')
+  });
 }
 
 function resetServerState() {
@@ -76,7 +79,7 @@ function deleteRoute(routeId: string) {
   saveRoutesToFile(routes);
 }
 
-function sendEvent(socket: WebSocket, action: ServerEvent, payload: any): void {
+function sendEvent(socket: WebSocket, action: ServerEvent, payload: unknown): void {
   try {
     socket.send(JSON.stringify({ action, payload }));
     logInfo(['sendEvent'], { action, payload });
@@ -94,7 +97,7 @@ function broadcast(action: ServerEvent, payload: unknown) {
 
   Sockets.forEach(socket => {
     try {
-      socket.send(JSON.stringify(event));
+      socket.send(JSON.stringify({ action, payload }));
     } catch (e) {
       logError(e);
       clearSocket(socket.id);
@@ -110,6 +113,8 @@ async function makeTypesFromInitialServerState() {
   );
 
   logInfo(['makeTypesFromInitialServerState'], stdout, stderr);
+
+  serverStateInterface = loadServerStateInterface();
 
   broadcast('updateServerStateInterface', serverStateInterface);
 }
