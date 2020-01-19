@@ -46,7 +46,7 @@ function updateServerState(serverStateUpdate: Partial<typeof serverState>) {
 }
 
 function resetServerState() {
-  console.log(['resetServerState'], initialServerState);
+  logInfo(['resetServerState'], initialServerState);
   updateServerState(initialServerState);
 }
 
@@ -81,7 +81,7 @@ function sendEvent(socket: WebSocket, action: ServerEvent, payload: any): void {
     socket.send(JSON.stringify({ action, payload }));
     logInfo(['sendEvent'], { action, payload });
   } catch (e) {
-    console.error(e);
+    logError(e);
   }
 }
 
@@ -104,7 +104,7 @@ async function makeTypesFromInitialServerState() {
     'make_types -i interfaces.ts -p proxies.ts data/initialServerState.json ServerState',
   );
 
-  console.log(['makeTypesFromInitialServerState'], stdout, stderr);
+  logInfo(['makeTypesFromInitialServerState'], stdout, stderr);
 
   broadcast('updateServerStateInterface', serverStateInterface);
 }
@@ -151,6 +151,7 @@ App()
     open: (ws: WebSocket) => {
       ws.id = Date.now();
       Sockets.push(ws);
+
       sendEvent(ws, 'updateServerState', serverState);
       sendEvent(ws, 'updateServerStateInterface', serverStateInterface);
       sendEvent(ws, 'updateRoutes', routes);
@@ -184,7 +185,7 @@ App()
         );
         const responseFunctionReturn = responseFunction(serverState, request);
 
-        console.log(['responseFunctionReturn'], responseFunctionReturn);
+        logInfo(['responseFunctionReturn'], responseFunctionReturn);
 
         if (typeof serverStateUpdateFunction === 'function') {
           const serverStateUpdateFunctionReturn = produce(
@@ -204,7 +205,7 @@ App()
         res.end(file);
       }
     } catch (e) {
-      console.error(`error: ${e.toString()}`);
+      logError(`error: ${e.toString()}`);
       res.writeStatus('404');
       res.end();
       logError(['error'], e);
@@ -212,7 +213,7 @@ App()
   })
   .listen(PORT, async listenSocket => {
     if (listenSocket) {
-      console.log(`Listening to port: ${PORT}`);
+      logError(`Listening to port: ${PORT}`);
     }
 
     await makeTypesFromInitialServerState();

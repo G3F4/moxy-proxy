@@ -1,7 +1,11 @@
 export function logInfo(...args: unknown[]) {
-  console.info(...args);
+  setTimeout(() => {
+    console.info(...args);
+  }, 0);
 }
 
 export function logError(...args: unknown[]) {
-  console.error(...args);
+  setTimeout(() => {
+    console.error(...args);
+  }, 0);
 }
