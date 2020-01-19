@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { existsSync, readFileSync, watchFile, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, watchFile, writeFileSync } from 'fs';
 import produce from 'immer';
 import * as util from 'util';
 import { App, WebSocket } from 'uWebSockets.js';
@@ -12,8 +12,9 @@ import { readJsonAsync } from './utils/readJson';
 const initialServerStateDataPath = `${process.cwd()}/data/initialServerState.json`;
 const endpointsMapPath = `${process.cwd()}/data/endpointsMap.json`;
 const serverStateInterfacePath = `${process.cwd()}/interfaces.ts`;
-const endpointMappings: EndpointMapping[] = JSON.parse(readFileSync(endpointsMapPath, 'utf8'));
 const initialServerState = loadInitialServerState();
+
+let endpointMappings: EndpointMapping[] = JSON.parse(readFileSync(endpointsMapPath, 'utf8'));
 let serverState = loadInitialServerState();
 let endpoints: Endpoint[] = [];
 let Sockets: WebSocket[] = [];
@@ -25,10 +26,6 @@ function loadInitialServerState() {
 
 function loadServerStateInterface() {
   return readFileSync(serverStateInterfacePath, 'utf8').toString();
-}
-
-function getEndpointId({ method, url }: Endpoint | EndpointMapping) {
-  return `${method}:${url}`;
 }
 
 function getEndpointPath({ path }: EndpointMapping) {
@@ -61,32 +58,43 @@ export interface Handler {
   serverUpdate: Function;
 }
 
+function handlerPath({ url, method }: Endpoint) {
+  return `${process.cwd()}/endpoints/${url}/${method}.js`;
+}
+
 function loadHandler(endpoint: Endpoint): Handler {
-  const endpointMapping = endpointMappings.find((item: any) => item.id === endpoint.id);
-
-  if (endpointMapping) {
-    return require(getEndpointPath(endpointMapping));
-  }
-
-  return {
-    requestResponse: () => {},
-    serverUpdate: () => {},
-  };
+  return require(handlerPath(endpoint));
 }
 
 function handlerTemplate(endpoint: Endpoint) {
   return (
     `
-export ${endpoint.responseCode}
+export ${endpoint.responseCode.trim()}
 
-export ${endpoint.serverStateUpdateCode}
+export ${endpoint.serverStateUpdateCode.trim()}
 `.trim() + '\n'
   );
+}
+
+function createFolderIfNotExists(path: string) {
+  if (!existsSync(path)){
+    mkdirSync(path);
+  }
 }
 
 function saveEndpointToFile(endpoint: Endpoint, endpointMapping: EndpointMapping) {
   if (endpointMapping) {
     const code = handlerTemplate(endpoint);
+    const folders = endpointMapping.url.split('/');
+
+    folders.forEach((item, index, arr) => {
+      const absolutePath = `${process.cwd()}/endpoints/${arr.slice(0, index + 1).join('/')}`;
+
+      createFolderIfNotExists(absolutePath)
+    });
+
+    console.log(['folders'], folders)
+
     const path = `${process.cwd()}/${endpointMapping.path}`;
     const fileExists = existsSync(path);
 
@@ -130,7 +138,7 @@ function resetServerState() {
 function addEndpoint(endpoint: Endpoint) {
   logInfo(['addEndpoint'], endpoint);
 
-  const path = `endpoints/${getEndpointId(endpoint)}.js`;
+  const path = `endpoints/${endpoint.url}/${endpoint.method}.js`;
   const endpointMapping: EndpointMapping = {
     path,
     id: Date.now().toString(),
@@ -139,7 +147,7 @@ function addEndpoint(endpoint: Endpoint) {
   };
 
   endpoints = [...endpoints, endpoint];
-  endpointMappings.push(endpointMapping);
+  endpointMappings = [...endpointMappings, endpointMapping];
 
   saveEndpointMappings(endpointMappings);
   saveEndpointToFile(endpoint, endpointMapping);
@@ -162,6 +170,7 @@ function updateEndpoint(endpoint: Endpoint) {
 function deleteEndpoint(endpointId: string) {
   // const endpoint = { ...(endpoints.find(({ id }) => id === endpointId) || {}) };
   endpoints = endpoints.filter(({ id }) => id !== endpointId);
+  endpointMappings = endpointMappings.filter(({ id }) => id !== endpointId);
 
   logInfo(['deleteEndpoint'], endpointId);
   // deleteEndpointHandler(endpoint);
