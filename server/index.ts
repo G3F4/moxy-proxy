@@ -1,11 +1,12 @@
 import { exec } from 'child_process';
-import { existsSync, mkdirSync, readFileSync, watchFile, writeFileSync } from 'fs';
+import { existsSync, readFileSync, watchFile, writeFileSync } from 'fs';
 import produce from 'immer';
 import * as util from 'util';
 import { App, WebSocket } from 'uWebSockets.js';
 import { PORT } from '../constans';
 import { ServerState } from '../interfaces';
 import { ClientEvent, Endpoint, EndpointMapping, Method, ServerEvent } from '../sharedTypes';
+import createFolderIfNotExists from './utils/createFolderIfNotExists';
 import { logError, logInfo } from './utils/logger';
 import { readJsonAsync } from './utils/readJson';
 
@@ -19,50 +20,8 @@ let endpoints: Endpoint[] = [];
 let Sockets: WebSocket[] = [];
 let serverStateInterface = loadServerStateInterface();
 
-function loadInitialServerState() {
-  return JSON.parse(readFileSync(initialServerStateDataPath, 'utf8'));
-}
-
-function loadServerStateInterface() {
-  return readFileSync(serverStateInterfacePath, 'utf8').toString();
-}
-
-function getEndpointPath({ path }: EndpointMapping) {
-  return `${process.cwd()}/${path}`;
-}
-
-async function loadEndpoints() {
-  const endpoints: Endpoint[] = [];
-
-  await Promise.all(
-    endpointMappings.map(async (endpointMapping: EndpointMapping) => {
-      const { id, method, url } = endpointMapping;
-      const handler = await import(getEndpointPath(endpointMapping));
-
-      endpoints.push({
-        id,
-        method,
-        url,
-        responseCode: handler.requestResponse.toString(),
-        serverStateUpdateCode: handler.serverUpdate.toString(),
-      });
-    }),
-  );
-
-  return endpoints;
-}
-
-export interface Handler {
-  requestResponse: Function;
-  serverUpdate: Function;
-}
-
-function handlerPath({ url, method }: Endpoint) {
+function handlerPath({ url, method }: Endpoint | EndpointMapping) {
   return `${process.cwd()}/endpoints/${url}/${method}.js`;
-}
-
-function loadHandler(endpoint: Endpoint): Handler {
-  return require(handlerPath(endpoint));
 }
 
 function handlerTemplate(endpoint: Endpoint) {
@@ -75,35 +34,62 @@ export ${endpoint.serverStateUpdateCode.trim()}
   );
 }
 
-function createFolderIfNotExists(path: string) {
-  if (!existsSync(path)){
-    mkdirSync(path);
-  }
+function loadHandler(endpoint: Endpoint | EndpointMapping): Handler {
+  const path = handlerPath(endpoint);
+
+  nocache(path);
+
+  return require(path);
 }
 
-function saveEndpointToFile(endpoint: Endpoint, endpointMapping: EndpointMapping) {
-  if (endpointMapping) {
-    const code = handlerTemplate(endpoint);
-    const folders = endpointMapping.url.split('/');
+function loadInitialServerState() {
+  return JSON.parse(readFileSync(initialServerStateDataPath, 'utf8'));
+}
 
-    folders.forEach((item, index, arr) => {
-      const absolutePath = `${process.cwd()}/endpoints/${arr.slice(0, index + 1).join('/')}`;
+function loadServerStateInterface() {
+  return readFileSync(serverStateInterfacePath, 'utf8').toString();
+}
 
-      createFolderIfNotExists(absolutePath)
-    });
+function loadEndpoints(): Endpoint[] {
+  return endpointMappings.map((endpointMapping: EndpointMapping) => {
+    const { id, method, url } = endpointMapping;
+    const handler = loadHandler(endpointMapping);
 
-    console.log(['folders'], folders)
+    return {
+      id,
+      method,
+      url,
+      responseCode: handler.requestResponse.toString(),
+      serverStateUpdateCode: handler.serverUpdate.toString(),
+    };
+  });
+}
 
-    const path = `${process.cwd()}/${endpointMapping.path}`;
-    const fileExists = existsSync(path);
+export type RequestResponse = (state: ServerState, request: unknown) => unknown;
+export type ServerUpdate = (request: unknown) => (state: ServerState) => void;
 
-    nocache(path);
+export interface Handler {
+  requestResponse: RequestResponse;
+  serverUpdate: ServerUpdate;
+}
 
-    if (fileExists) {
-      writeFileSync(path, code);
-    } else {
-      writeFileSync(path, code, { flag: 'wx' });
-    }
+function saveEndpointToFile(endpoint: Endpoint) {
+  const code = handlerTemplate(endpoint);
+  const folders = endpoint.url.split('/');
+
+  folders.forEach((item, index, arr) => {
+    const absolutePath = `${process.cwd()}/endpoints/${arr.slice(0, index + 1).join('/')}`;
+
+    createFolderIfNotExists(absolutePath)
+  });
+
+  const path = handlerPath(endpoint);
+  const fileExists = existsSync(path);
+
+  if (fileExists) {
+    writeFileSync(path, code);
+  } else {
+    writeFileSync(path, code, { flag: 'wx' });
   }
 }
 
@@ -137,9 +123,7 @@ function resetServerState() {
 function addEndpoint(endpoint: Endpoint) {
   logInfo(['addEndpoint'], endpoint);
 
-  const path = `endpoints/${endpoint.url}/${endpoint.method}.js`;
   const endpointMapping: EndpointMapping = {
-    path,
     id: Date.now().toString(),
     method: endpoint.method,
     url: endpoint.url,
@@ -149,36 +133,34 @@ function addEndpoint(endpoint: Endpoint) {
   endpointMappings = [...endpointMappings, endpointMapping];
 
   saveEndpointMappings(endpointMappings);
-  saveEndpointToFile(endpoint, endpointMapping);
+  saveEndpointToFile(endpoint);
 }
 
 function updateEndpoint(endpoint: Endpoint) {
   const endpointIndex = endpoints.findIndex(
     ({ url, method }) => endpoint.url === url && endpoint.method === method,
   );
-  const endpointMapping = endpointMappings.find((item: any) => item.id === endpoint.id);
 
   // @ts-ignore
   endpoints[endpointIndex] = endpoint;
 
   logInfo(['updateEndpoint'], endpoint);
 
-  endpointMapping && saveEndpointToFile(endpoint, endpointMapping);
+  saveEndpointToFile(endpoint);
 }
 
 function deleteEndpoint(endpointId: string) {
-  // const endpoint = { ...(endpoints.find(({ id }) => id === endpointId) || {}) };
   endpoints = endpoints.filter(({ id }) => id !== endpointId);
   endpointMappings = endpointMappings.filter(({ id }) => id !== endpointId);
 
+  saveEndpointMappings(endpointMappings);
   logInfo(['deleteEndpoint'], endpointId);
-  // deleteEndpointHandler(endpoint);
 }
 
 function sendEvent(socket: WebSocket, action: ServerEvent, payload: unknown): void {
   try {
     socket.send(JSON.stringify({ action, payload }));
-    logInfo(['sendEvent'], { action, payload });
+    // logInfo(['sendEvent'], { action, payload });
   } catch (e) {
     logError(e);
   }
@@ -323,7 +305,7 @@ App()
       logError(`Listening to port: ${PORT}`);
     }
 
-    endpoints = await loadEndpoints();
+    endpoints = loadEndpoints();
 
     await makeTypesFromInitialServerState();
   });

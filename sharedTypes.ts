@@ -16,5 +16,4 @@ export interface EndpointMapping {
   id: string;
   url: string;
   method: Method;
-  path: string;
 }

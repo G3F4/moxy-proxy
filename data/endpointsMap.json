@@ -2,31 +2,26 @@
   {
     "id": "1",
     "url": "test",
-    "method": "get",
-    "path": "endpoints/test/get.js"
+    "method": "get"
   },
   {
     "id": "2",
     "method": "put",
-    "url": "test",
-    "path": "endpoints/test/put.js"
+    "url": "test"
   },
   {
     "id": "3",
     "method": "delete",
-    "url": "test",
-    "path": "endpoints/test/delete.js"
+    "url": "test"
   },
   {
     "id": "4",
     "url": "test",
-    "method": "post",
-    "path": "endpoints/test/post.js"
+    "method": "post"
   },
   {
     "id": "5",
     "url": "test",
-    "method": "patch",
-    "path": "endpoints/test/patch.js"
+    "method": "patch"
   }
 ]

@@ -1,5 +1,5 @@
 export function requestResponse(state, request) {
-    return state.requestCount * 21;
+    return state.requestCount;
 }
 
 export function serverUpdate(request) {
