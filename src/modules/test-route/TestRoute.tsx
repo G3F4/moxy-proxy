@@ -32,9 +32,16 @@ export default function TestRoute({ route }: { route: Route }) {
 
   async function handleTest() {
     const response = await testRoute(route, requestBody);
-    const json = await response.json();
 
-    setResponseJson(json.toString());
+    if (response.status < 300) {
+      try {
+        const data = await response.json();
+
+        setResponseJson(JSON.stringify(data));
+      } catch (e) {
+        setResponseJson('');
+      }
+    }
   }
 
   return (

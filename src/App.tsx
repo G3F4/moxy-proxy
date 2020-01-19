@@ -123,13 +123,10 @@ const App: React.FC = () => {
   async function handleTestRoute({ url, method }: Route, requestBody: string) {
     const parsedBody = JSON.parse(requestBody);
     const isEmpty = Object.keys(parsedBody).length === 0;
-
-    if (isEmpty) {
-      return await fetch(`${url}`, { method });
-    }
+    const body = isEmpty ? undefined : JSON.stringify(parsedBody);
 
     return await fetch(`${url}`, {
-      body: JSON.stringify(parsedBody),
+      body,
       method,
       headers: {
         Accept: 'application/json',
