@@ -11,3 +11,10 @@ export interface Endpoint {
   responseCode: string;
   serverStateUpdateCode: string;
 }
+
+export interface EndpointMapping {
+  id: string;
+  url: string;
+  method: Method;
+  path: string;
+}

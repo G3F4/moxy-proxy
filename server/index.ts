@@ -5,13 +5,22 @@ import * as util from 'util';
 import { App, WebSocket } from 'uWebSockets.js';
 import { PORT } from '../constans';
 import { ServerState } from '../interfaces';
-import { ClientEvent, Method, Endpoint, ServerEvent } from '../sharedTypes';
+import { ClientEvent, Method, Endpoint, ServerEvent, EndpointMapping } from '../sharedTypes';
 import { logError, logInfo } from './utils/logger';
 import { readJsonAsync } from './utils/readJson';
 
 const initialServerStateDataPath = `${process.cwd()}/data/initialServerState.json`;
-const serverStateInterfacePath = `${process.cwd()}/interfaces.ts`;
 const endpointsPath = `${process.cwd()}/data/endpoints.json`;
+const endpointsMapPath = `${process.cwd()}/data/endpointsMap.json`;
+const endpointsHandlers: Record<string, { requestResponse: Function, serverUpdate: Function }> = {};
+const serverStateInterfacePath = `${process.cwd()}/interfaces.ts`;
+const endpointMappings: EndpointMapping[] = JSON.parse(readFileSync(endpointsMapPath, 'utf8')).items;
+const initialServerState = loadInitialServerState();
+
+let serverState = loadInitialServerState();
+let endpoints: Endpoint[] = [];
+let Sockets: WebSocket[] = [];
+let serverStateInterface = loadServerStateInterface();
 
 function loadInitialServerState() {
   return JSON.parse(readFileSync(initialServerStateDataPath, 'utf8'));
@@ -21,19 +30,61 @@ function loadServerStateInterface() {
   return readFileSync(serverStateInterfacePath, 'utf8').toString();
 }
 
+function getEndpointId({ method, url}: Endpoint | EndpointMapping) {
+  return `${method}:${url}`;
+}
+
+function getEndpointPath({ path}: EndpointMapping) {
+  return `../${path}`;
+}
+
+async function loadEndpoints() {
+  const endpoints: Endpoint[] = [];
+
+  await Promise.all(
+    endpointMappings.map(async (endpointMapping: EndpointMapping) => {
+      const { id, method, url } = endpointMapping;
+      const handler = await import(getEndpointPath(endpointMapping));
+
+      endpointsHandlers[getEndpointId(endpointMapping)] = handler;
+      endpoints.push({
+        id,
+        method,
+        url,
+        responseCode: handler.requestResponse.toString(),
+        serverStateUpdateCode: handler.serverUpdate.toString(),
+      })
+    }),
+  );
+
+  return endpoints;
+}
+
 function saveEndpointsToFile(items: unknown) {
   writeFileSync(endpointsPath, JSON.stringify({ items }, null, 2), 'utf-8');
+}
+
+function handlerTemplate(endpoint: Endpoint) {
+  return `
+export ${endpoint.responseCode}
+
+export ${endpoint.serverStateUpdateCode}
+`.trim() + '\n';
+}
+
+function saveEndpointToFile(endpoint: Endpoint) {
+  const endpointMapping = endpointMappings.find((item: any) => item.id === endpoint.id);
+
+  if (endpointMapping) {
+    const code = handlerTemplate(endpoint);
+
+    writeFileSync(endpointMapping.path, code);
+  }
 }
 
 function saveServerStateToFile(data: unknown) {
   writeFileSync(initialServerStateDataPath, JSON.stringify(data, null, 2), 'utf-8');
 }
-
-const initialServerState = loadInitialServerState();
-let serverState = loadInitialServerState();
-let endpoints: Endpoint[] = JSON.parse(readFileSync(endpointsPath, 'utf8')).items;
-let Sockets: WebSocket[] = [];
-let serverStateInterface = loadServerStateInterface();
 
 function updateServerState(serverStateUpdate: Partial<typeof serverState>) {
   serverState = {
@@ -44,7 +95,7 @@ function updateServerState(serverStateUpdate: Partial<typeof serverState>) {
   logInfo(['updateServerState'], serverStateUpdate);
   saveServerStateToFile(serverState);
   makeTypesFromInitialServerState().then(() => {
-    logInfo(['makeTypesFromInitialServerState'], 'done')
+    logInfo(['makeTypesFromInitialServerState'], 'done');
   });
 }
 
@@ -69,14 +120,15 @@ function updateEndpoint(endpoint: Endpoint) {
   endpoints[endpointIndex] = endpoint;
 
   logInfo(['updateEndpoint'], endpoint);
-  saveEndpointsToFile(endpoints);
+  saveEndpointToFile(endpoint);
 }
 
 function deleteEndpoint(endpointId: string) {
+  // const endpoint = { ...(endpoints.find(({ id }) => id === endpointId) || {}) };
   endpoints = endpoints.filter(({ id }) => id !== endpointId);
 
   logInfo(['deleteEndpoint'], endpointId);
-  saveEndpointsToFile(endpoints);
+  // deleteEndpointHandler(endpoint);
 }
 
 function sendEvent(socket: WebSocket, action: ServerEvent, payload: unknown): void {
@@ -176,7 +228,9 @@ App()
       const url = req.getUrl() !== '/' ? req.getUrl() : '/index.html';
       const urlLastChar = url[url.length - 1];
       const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
-      const endpoint = endpoints.find(endpoint => endpoint.url === rawUrl && endpoint.method === method);
+      const endpoint = endpoints.find(
+        endpoint => endpoint.url === rawUrl && endpoint.method === method,
+      );
 
       logInfo(['url'], url);
       logInfo(['method'], method);
@@ -186,16 +240,12 @@ App()
         const request = {
           body: requestBody,
         };
-        // eslint-disable-next-line no-new-func
-        const responseFunction = new Function('state', 'request', endpoint.responseCode.trim());
-        // eslint-disable-next-line no-new-func
-        const serverStateUpdateFunction = new Function(
-          'request',
-          endpoint.serverStateUpdateCode.trim(),
-        );
-        const responseFunctionReturn = responseFunction(serverState, request);
+        const handler = endpointsHandlers[getEndpointId(endpoint)];
+        const requestResponseFunction = handler.requestResponse;
+        const serverStateUpdateFunction = handler.serverUpdate;
+        const requestResponseFunctionReturn = requestResponseFunction(serverState, request);
 
-        logInfo(['responseFunctionReturn'], responseFunctionReturn);
+        logInfo(['requestResponseFunctionReturn'], requestResponseFunctionReturn);
 
         if (typeof serverStateUpdateFunction === 'function') {
           const serverStateUpdateFunctionReturn = produce(
@@ -208,7 +258,7 @@ App()
           broadcast('updateServerState', serverState);
         }
 
-        res.end(JSON.stringify(responseFunctionReturn));
+        res.end(JSON.stringify(requestResponseFunctionReturn));
       } else {
         const file = readFileSync(`${process.cwd()}/build${url}`);
 
@@ -225,6 +275,8 @@ App()
     if (listenSocket) {
       logError(`Listening to port: ${PORT}`);
     }
+
+    endpoints = await loadEndpoints();
 
     await makeTypesFromInitialServerState();
   });
