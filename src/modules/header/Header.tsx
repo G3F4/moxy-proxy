@@ -48,6 +48,7 @@ export default function Header() {
           value={activeTab}
           onChange={handleChange}
         >
+          <Tab label="State interface" />
           <Tab label="Server state" />
           <Tab label="Endpoints" />
         </Tabs>
