@@ -1,9 +1,9 @@
 {
-  "name": "proxy-moxy",
-  "version": "0.35.1",
+  "name": "moxy-proxy",
+  "version": "0.36.0",
   "description": "Proxy server for mocking client application",
   "main": "server/index.ts",
-  "repository": "git@github.com:G3F4/proxy-moxy.git",
+  "repository": "git@github.com:G3F4/moxy-proxy.git",
   "author": "G3F4 <kamil.grabek@gmail.com>",
   "license": "MIT",
   "private": false,

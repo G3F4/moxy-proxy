@@ -1,5 +1,4 @@
-import { Divider } from '@material-ui/core';
-import React, { lazy, useEffect, useState, Suspense } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { ServerState } from '../interfaces';
 import { Endpoint, ServerEvent } from '../sharedTypes';
 import './App.css';
@@ -20,10 +19,12 @@ function initialEndpoint(): Endpoint[] {
 }
 
 export const AppStateContext = React.createContext({
+  activeTab: 0,
   serverState: initialServerState(),
   endpoints: initialEndpoint(),
   serverStateInterface: '',
 
+  changeActiveTab(_tabIndex: number) {},
   updateServerState(_serverState: unknown) {},
   resetServerState() {},
   addEndpoint(_endpoint: Endpoint) {},
@@ -42,6 +43,7 @@ function parseMessage(message: string): { action: ServerEvent; payload: unknown 
 
 const socket = new WebSocket(socketUrl);
 const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState(0);
   const [serverState, setServerState] = useState(initialServerState);
   const [serverStateInterface, setServerStateInterface] = useState('');
   const [endpoints, setEndpoints] = useState(initialEndpoint);
@@ -149,9 +151,11 @@ const App: React.FC = () => {
   }
 
   const contextValue = {
+    activeTab,
     endpoints,
     serverState,
     serverStateInterface,
+    changeActiveTab: setActiveTab,
     updateServerState: handleServerStateChange,
     resetServerState: handleResetServerState,
     addEndpoint: handleAddEndpoint,
@@ -166,13 +170,16 @@ const App: React.FC = () => {
         <Suspense fallback="Loading header...">
           <LazyHeader />
         </Suspense>
-        <Suspense fallback="Loading server state...">
-          <LazyServerState />
-        </Suspense>
-        <Divider />
-        <Suspense fallback="Loading endpoints...">
-          <LazyEndpoints endpoints={endpoints || []} />
-        </Suspense>
+        {activeTab === 0 && (
+          <Suspense fallback="Loading server state...">
+            <LazyServerState />
+          </Suspense>
+        )}
+        {activeTab === 1 && (
+          <Suspense fallback="Loading endpoints...">
+            <LazyEndpoints endpoints={endpoints || []} />
+          </Suspense>
+        )}
       </AppStateContext.Provider>
     </div>
   );

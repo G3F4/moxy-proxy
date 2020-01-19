@@ -13,7 +13,6 @@ const initialServerStateDataPath = `${process.cwd()}/data/initialServerState.jso
 const endpointsMapPath = `${process.cwd()}/data/endpointsMap.json`;
 const serverStateInterfacePath = `${process.cwd()}/interfaces.ts`;
 const initialServerState = loadInitialServerState();
-
 let endpointMappings: EndpointMapping[] = JSON.parse(readFileSync(endpointsMapPath, 'utf8'));
 let serverState = loadInitialServerState();
 let endpoints: Endpoint[] = [];

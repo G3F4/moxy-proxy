@@ -23,16 +23,20 @@ export default function ServerState() {
 
   return (
     <div>
-
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography style={{ margin: 8 }} variant="h5">Server state</Typography>
+        <div>
+          {editing ? (
+            <Button onClick={doneEditing}>Done</Button>
+          ) : (
+            <Button onClick={startEditing}>Edit</Button>
+          )}
+          <Button onClick={resetServerState}>Reset server</Button>
+        </div>
+      </div>
       {!editing && (
-        <ReactJson collapsed src={serverState} />
+        <ReactJson name="state" src={serverState} />
       )}
-      {editing ? (
-        <Button onClick={doneEditing}>Done</Button>
-      ) : (
-        <Button onClick={startEditing}>Edit</Button>
-      )}
-      <Button onClick={resetServerState}>Reset server</Button>
       {editing && (
         <Editor
           value={editorState}
