@@ -33,7 +33,6 @@ export class ServerStateProxy {
 
 export class DataProxy {
   public readonly test: string[] | null;
-  public readonly a: boolean;
   public static Parse(d: string): DataProxy {
     return DataProxy.Create(JSON.parse(d));
   }
@@ -58,12 +57,10 @@ export class DataProxy {
     if (d.test === undefined) {
       d.test = null;
     }
-    checkBoolean(d.a, false, field + ".a");
     return new DataProxy(d);
   }
   private constructor(d: any) {
     this.test = d.test;
-    this.a = d.a;
   }
 }
 
