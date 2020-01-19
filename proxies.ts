@@ -1,12 +1,12 @@
 // Stores the currently-being-typechecked object for error messages.
 let obj: any = null;
-export class RootNameProxy {
+export class ServerStateProxy {
   public readonly requestCount: number;
   public readonly data: DataProxy;
-  public static Parse(d: string): RootNameProxy {
-    return RootNameProxy.Create(JSON.parse(d));
+  public static Parse(d: string): ServerStateProxy {
+    return ServerStateProxy.Create(JSON.parse(d));
   }
-  public static Create(d: any, field: string = 'root'): RootNameProxy {
+  public static Create(d: any, field: string = 'root'): ServerStateProxy {
     if (!field) {
       obj = d;
       field = "root";
@@ -20,7 +20,7 @@ export class RootNameProxy {
     }
     checkNumber(d.requestCount, false, field + ".requestCount");
     d.data = DataProxy.Create(d.data, field + ".data");
-    return new RootNameProxy(d);
+    return new ServerStateProxy(d);
   }
   private constructor(d: any) {
     this.requestCount = d.requestCount;

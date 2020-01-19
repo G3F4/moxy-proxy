@@ -123,7 +123,7 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
   const [route, setRoute] = useState<Route>({
     id: Date.now().toString(),
     url: '/',
-    method: '',
+    method: 'get',
     responseCode: initialResponseCode,
     serverStateUpdateCode: initialServerStateUpdateCode,
   });

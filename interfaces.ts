@@ -1,4 +1,4 @@
-export interface RootName {
+export interface ServerState {
   requestCount: number;
   data: Data;
 }

@@ -4,7 +4,8 @@ import produce from 'immer';
 import * as util from 'util';
 import { App, WebSocket } from 'uWebSockets.js';
 import { PORT } from '../constans';
-import { Method, Route } from '../sharedTypes';
+import { ServerState } from '../interfaces';
+import { ClientEvent, Method, Route, ServerEvent } from '../sharedTypes';
 import { logError, logInfo } from './utils/logger';
 import { readJsonAsync } from './utils/readJson';
 
@@ -75,7 +76,7 @@ function deleteRoute(routeId: string) {
   saveRoutesToFile(routes);
 }
 
-function sendEvent(socket: WebSocket, action: string, payload: any): void {
+function sendEvent(socket: WebSocket, action: ServerEvent, payload: any): void {
   try {
     socket.send(JSON.stringify({ action, payload }));
     logInfo(['sendEvent'], { action, payload });
@@ -84,7 +85,7 @@ function sendEvent(socket: WebSocket, action: string, payload: any): void {
   }
 }
 
-function broadcast(action: string, payload: any) {
+function broadcast(action: ServerEvent, payload: unknown) {
   logInfo(['broadcast'], action, payload);
 
   Sockets.forEach(socket => {
@@ -100,38 +101,45 @@ const execPromised = util.promisify(exec);
 
 async function makeTypesFromInitialServerState() {
   const { stdout, stderr } = await execPromised(
-    'make_types -i interfaces.ts -p proxies.ts data/initialServerState.json RootName',
+    'make_types -i interfaces.ts -p proxies.ts data/initialServerState.json ServerState',
   );
-  console.log('stdout:', stdout);
-  console.log('stderr:', stderr);
+
+  console.log(['makeTypesFromInitialServerState'], stdout, stderr);
+
+  broadcast('updateServerStateInterface', serverStateInterface);
+}
+
+function parseMessage(message: ArrayBuffer): { action: ClientEvent; payload: unknown } {
+  const { action, payload } = JSON.parse(
+    // @ts-ignore
+    String.fromCharCode.apply(null, new Uint8Array(message)),
+  );
+
+  return { action, payload };
 }
 
 App()
   .ws('/*', {
     message: (ws, message) => {
-      // @ts-ignore
-      const { action, payload } = JSON.parse(
-        // @ts-ignore
-        String.fromCharCode.apply(null, new Uint8Array(message)),
-      );
+      const { action, payload } = parseMessage(message);
 
       if (action === 'addRoute') {
-        addRoute(payload);
+        addRoute(payload as Route);
         sendEvent(ws, 'updateRoutes', routes);
       }
 
       if (action === 'updateRoute') {
-        updateRoute(payload);
+        updateRoute(payload as Route);
         sendEvent(ws, 'updateRoutes', routes);
       }
 
       if (action === 'deleteRoute') {
-        deleteRoute(payload);
+        deleteRoute(payload as string);
         sendEvent(ws, 'updateRoutes', routes);
       }
 
       if (action === 'clientUpdatedServer') {
-        updateServerState(payload);
+        updateServerState(payload as ServerState);
         broadcast('updateServerState', serverState);
       }
 
