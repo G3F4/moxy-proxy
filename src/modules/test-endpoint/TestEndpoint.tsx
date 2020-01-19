@@ -1,14 +1,26 @@
-import { useMediaQuery } from '@material-ui/core';
+import { IconButton, useMediaQuery } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import { useTheme } from '@material-ui/core/styles';
+import { createStyles, makeStyles, Theme, useTheme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
+import { Close } from '@material-ui/icons';
 import React, { useContext, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { Endpoint } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
 import CodeEditor from '../common/CodeEditor';
+
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    closeButton: {
+      position: 'absolute',
+      right: theme.spacing(1),
+      top: theme.spacing(1),
+      color: theme.palette.grey[500],
+    },
+  }),
+);
 
 const emptyJsonString = `
 {}
@@ -19,6 +31,7 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   const [requestBody, setRequestBody] = useState(emptyJsonString);
   const [responseJson, setResponseJson] = useState(emptyJsonString);
   const theme = useTheme();
+  const classes = useStyles();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
   const { testEndpoint } = useContext(AppStateContext);
 
@@ -55,7 +68,12 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
         open={open}
         onClose={handleClose}
       >
-        <DialogTitle id="max-width-dialog-title">{`Test endpoint ${endpoint.method}:${endpoint.url}`}</DialogTitle>
+        <DialogTitle disableTypography id="max-width-dialog-title">
+          <Typography variant="h6" style={{ marginRight: 40 }}>{`Test endpoint ${endpoint.method}:${endpoint.url}`}</Typography>
+          <IconButton aria-label="close" className={classes.closeButton} onClick={handleClose}>
+            <Close />
+          </IconButton>
+        </DialogTitle>
         <CodeEditor
           code={requestBody}
           language="json"
