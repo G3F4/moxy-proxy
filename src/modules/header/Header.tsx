@@ -3,7 +3,7 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import React from 'react';
-import AddRoute from '../add-route/AddRoute';
+import AddEndpoint from '../add-endpoint/AddEndpoint';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -21,7 +21,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export default function Header() {
   const classes = useStyles();
-  
+
   return (
     <div className={classes.root}>
       <AppBar position="static">
@@ -29,7 +29,7 @@ export default function Header() {
           <Typography className={classes.title} variant="h6">
             Proxy Moxy
           </Typography>
-          <AddRoute />
+          <AddEndpoint />
         </Toolbar>
       </AppBar>
     </div>

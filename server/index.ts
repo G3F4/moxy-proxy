@@ -5,13 +5,13 @@ import * as util from 'util';
 import { App, WebSocket } from 'uWebSockets.js';
 import { PORT } from '../constans';
 import { ServerState } from '../interfaces';
-import { ClientEvent, Method, Route, ServerEvent } from '../sharedTypes';
+import { ClientEvent, Method, Endpoint, ServerEvent } from '../sharedTypes';
 import { logError, logInfo } from './utils/logger';
 import { readJsonAsync } from './utils/readJson';
 
 const initialServerStateDataPath = `${process.cwd()}/data/initialServerState.json`;
 const serverStateInterfacePath = `${process.cwd()}/interfaces.ts`;
-const routesDataPath = `${process.cwd()}/data/routes.json`;
+const endpointsPath = `${process.cwd()}/data/endpoints.json`;
 
 function loadInitialServerState() {
   return JSON.parse(readFileSync(initialServerStateDataPath, 'utf8'));
@@ -21,8 +21,8 @@ function loadServerStateInterface() {
   return readFileSync(serverStateInterfacePath, 'utf8').toString();
 }
 
-function saveRoutesToFile(items: unknown) {
-  writeFileSync(routesDataPath, JSON.stringify({ items }, null, 2), 'utf-8');
+function saveEndpointsToFile(items: unknown) {
+  writeFileSync(endpointsPath, JSON.stringify({ items }, null, 2), 'utf-8');
 }
 
 function saveServerStateToFile(data: unknown) {
@@ -31,7 +31,7 @@ function saveServerStateToFile(data: unknown) {
 
 const initialServerState = loadInitialServerState();
 let serverState = loadInitialServerState();
-let routes: Route[] = JSON.parse(readFileSync(routesDataPath, 'utf8')).items;
+let endpoints: Endpoint[] = JSON.parse(readFileSync(endpointsPath, 'utf8')).items;
 let Sockets: WebSocket[] = [];
 let serverStateInterface = loadServerStateInterface();
 
@@ -53,30 +53,30 @@ function resetServerState() {
   updateServerState(initialServerState);
 }
 
-function addRoute(route: Route) {
-  routes = [...routes, route];
+function addEndpoint(endpoint: Endpoint) {
+  endpoints = [...endpoints, endpoint];
 
-  logInfo(['addRoute'], route);
-  saveRoutesToFile(routes);
+  logInfo(['addEndpoint'], endpoint);
+  saveEndpointsToFile(endpoints);
 }
 
-function updateRoute(route: Route) {
-  const routeIndex = routes.findIndex(
-    ({ url, method }) => route.url === url && route.method === method,
+function updateEndpoint(endpoint: Endpoint) {
+  const endpointIndex = endpoints.findIndex(
+    ({ url, method }) => endpoint.url === url && endpoint.method === method,
   );
 
   // @ts-ignore
-  routes[routeIndex] = route;
+  endpoints[endpointIndex] = endpoint;
 
-  logInfo(['updateRoute'], route);
-  saveRoutesToFile(routes);
+  logInfo(['updateEndpoint'], endpoint);
+  saveEndpointsToFile(endpoints);
 }
 
-function deleteRoute(routeId: string) {
-  routes = routes.filter(({ id }) => id !== routeId);
+function deleteEndpoint(endpointId: string) {
+  endpoints = endpoints.filter(({ id }) => id !== endpointId);
 
-  logInfo(['deleteRoute'], routeId);
-  saveRoutesToFile(routes);
+  logInfo(['deleteEndpoint'], endpointId);
+  saveEndpointsToFile(endpoints);
 }
 
 function sendEvent(socket: WebSocket, action: ServerEvent, payload: unknown): void {
@@ -133,19 +133,19 @@ App()
     message: (ws, message) => {
       const { action, payload } = parseMessage(message);
 
-      if (action === 'addRoute') {
-        addRoute(payload as Route);
-        sendEvent(ws, 'updateRoutes', routes);
+      if (action === 'addEndpoint') {
+        addEndpoint(payload as Endpoint);
+        sendEvent(ws, 'updateEndpoints', endpoints);
       }
 
-      if (action === 'updateRoute') {
-        updateRoute(payload as Route);
-        sendEvent(ws, 'updateRoutes', routes);
+      if (action === 'updateEndpoint') {
+        updateEndpoint(payload as Endpoint);
+        sendEvent(ws, 'updateEndpoints', endpoints);
       }
 
-      if (action === 'deleteRoute') {
-        deleteRoute(payload as string);
-        sendEvent(ws, 'updateRoutes', routes);
+      if (action === 'deleteEndpoint') {
+        deleteEndpoint(payload as string);
+        sendEvent(ws, 'updateEndpoints', endpoints);
       }
 
       if (action === 'clientUpdatedServer') {
@@ -164,7 +164,7 @@ App()
 
       sendEvent(ws, 'updateServerState', serverState);
       sendEvent(ws, 'updateServerStateInterface', serverStateInterface);
-      sendEvent(ws, 'updateRoutes', routes);
+      sendEvent(ws, 'updateEndpoints', endpoints);
     },
     close: (ws: WebSocket) => {
       Sockets = Sockets.filter(socket => socket.id === ws.id);
@@ -176,22 +176,22 @@ App()
       const url = req.getUrl() !== '/' ? req.getUrl() : '/index.html';
       const urlLastChar = url[url.length - 1];
       const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
-      const route = routes.find(route => route.url === rawUrl && route.method === method);
+      const endpoint = endpoints.find(endpoint => endpoint.url === rawUrl && endpoint.method === method);
 
       logInfo(['url'], url);
       logInfo(['method'], method);
 
-      if (route) {
+      if (endpoint) {
         const requestBody = await readJsonAsync(res);
         const request = {
           body: requestBody,
         };
         // eslint-disable-next-line no-new-func
-        const responseFunction = new Function('state', 'request', route.responseCode.trim());
+        const responseFunction = new Function('state', 'request', endpoint.responseCode.trim());
         // eslint-disable-next-line no-new-func
         const serverStateUpdateFunction = new Function(
           'request',
-          route.serverStateUpdateCode.trim(),
+          endpoint.serverStateUpdateCode.trim(),
         );
         const responseFunctionReturn = responseFunction(serverState, request);
 

@@ -4,7 +4,7 @@
       "id": "1",
       "url": "/test",
       "method": "get",
-      "responseCode": "// function(state, request) { this line is added on server\nreturn state.users[0].name;\n// } this line is added on server",
+      "responseCode": "// function(state, request) { this line is added on server\nreturn state.requestCount;\n// } this line is added on server",
       "serverStateUpdateCode": "// function(request) { this line is added on server\nreturn state => {\n\n};\n// } this line is added on server"
     },
     {

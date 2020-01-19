@@ -8,7 +8,7 @@ import Stepper from '@material-ui/core/Stepper';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import React, { useState } from 'react';
-import { Method, Route } from '../../../sharedTypes';
+import { Method, Endpoint } from '../../../sharedTypes';
 import CodeEditor from '../common/CodeEditor';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -117,10 +117,10 @@ function UpdateServerStateStep({
   return <CodeEditor code={code} onSave={onChange} />;
 }
 
-export default function AddRouteStepper({ onDone }: { onDone: any }) {
+export default function AddEndpointStepper({ onDone }: { onDone: any }) {
   const classes = useStyles();
   const [activeStep, setActiveStep] = useState(0);
-  const [route, setRoute] = useState<Route>({
+  const [endpoint, setEndpoint] = useState<Endpoint>({
     id: Date.now().toString(),
     url: '/',
     method: 'get',
@@ -133,10 +133,10 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
       case 0: {
         return (
           <UrlPatternStep
-            url={route.url}
+            url={endpoint.url}
             onUrlChange={(url: string) =>
-              setRoute(route => ({
-                ...route,
+              setEndpoint(endpoint => ({
+                ...endpoint,
                 url,
               }))
             }
@@ -146,10 +146,10 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
       case 1: {
         return (
           <RequestMethodStep
-            method={route.method}
+            method={endpoint.method}
             onMethodChange={method =>
-              setRoute(route => ({
-                ...route,
+              setEndpoint(endpoint => ({
+                ...endpoint,
                 method,
               }))
             }
@@ -159,10 +159,10 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
       case 2: {
         return (
           <ResponseStep
-            code={route.responseCode}
+            code={endpoint.responseCode}
             onChange={responseCode =>
-              setRoute(route => ({
-                ...route,
+              setEndpoint(endpoint => ({
+                ...endpoint,
                 responseCode,
               }))
             }
@@ -172,10 +172,10 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
       case 3: {
         return (
           <UpdateServerStateStep
-            code={route.serverStateUpdateCode}
+            code={endpoint.serverStateUpdateCode}
             onChange={serverStateUpdateCode =>
-              setRoute(route => ({
-                ...route,
+              setEndpoint(endpoint => ({
+                ...endpoint,
                 serverStateUpdateCode,
               }))
             }
@@ -195,7 +195,7 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
     setActiveStep(prevActiveStep => prevActiveStep - 1);
   };
   const handleSubmit = () => {
-    onDone(route);
+    onDone(endpoint);
   };
 
   return (
@@ -231,7 +231,7 @@ export default function AddRouteStepper({ onDone }: { onDone: any }) {
       </Stepper>
       {activeStep === steps.length && (
         <Paper square className={classes.resetContainer} elevation={0}>
-          <Typography>Route ready to submit</Typography>
+          <Typography>Endpoint ready to submit</Typography>
           <Button className={classes.button} onClick={handleBack}>
             Back
           </Button>

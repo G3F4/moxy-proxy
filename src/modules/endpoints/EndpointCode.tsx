@@ -2,7 +2,7 @@ import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import React from 'react';
 import CodeEditor from '../common/CodeEditor';
 
-export default function RouteCode({
+export default function EndpointCode({
   responseCode,
   serverStateUpdateCode,
   onResponseCodeSave,

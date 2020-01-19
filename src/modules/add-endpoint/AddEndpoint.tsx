@@ -4,31 +4,29 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { useTheme } from '@material-ui/core/styles';
 import React, { useContext } from 'react';
-import { Route } from '../../../sharedTypes';
+import { Endpoint } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
-import AddRouteStepper from './AddRouteStepper';
+import AddEndpointStepper from './AddEndpointStepper';
 
-export default function AddRoute() {
+export default function AddEndpoint() {
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
-  const { addRoute } = useContext(AppStateContext);
+  const { addEndpoint } = useContext(AppStateContext);
   const handleClickOpen = () => {
     setOpen(true);
   };
   const handleClose = () => {
     setOpen(false);
   };
-  const handleDone = (route: Route) => {
+  const handleDone = (endpoint: Endpoint) => {
     setOpen(false);
-    addRoute(route);
+    addEndpoint(endpoint);
   };
-  
-  return  (
+
+  return (
     <div>
-      <Button onClick={handleClickOpen}>
-        Add route
-      </Button>
+      <Button onClick={handleClickOpen}>Add endpoint</Button>
       <Dialog
         closeAfterTransition
         aria-labelledby="max-width-dialog-title"
@@ -37,8 +35,8 @@ export default function AddRoute() {
         open={open}
         onClose={handleClose}
       >
-        <DialogTitle id="max-width-dialog-title">Add route</DialogTitle>
-        <AddRouteStepper onDone={handleDone} />
+        <DialogTitle id="max-width-dialog-title">Add endpoint</DialogTitle>
+        <AddEndpointStepper onDone={handleDone} />
       </Dialog>
     </div>
   );

@@ -1,45 +1,50 @@
 import { Divider } from '@material-ui/core';
 import React, { lazy, useEffect, useState, Suspense } from 'react';
-import { Route } from '../sharedTypes';
+import { ServerState } from '../interfaces';
+import { Endpoint, ServerEvent } from '../sharedTypes';
 import './App.css';
 
 const LazyHeader = lazy(() => import('./modules/header/Header'));
-const LazyRoutes = lazy(() => import('./modules/routes/Routes'));
+const LazyEndpoints = lazy(() => import('./modules/endpoints/Endpoints'));
 const LazyServerState = lazy(() => import('./modules/server-state/ServerState'));
-
 const socketUrl =
   process.env.NODE_ENV === 'production' ? `wss://${window.location.host}` : 'ws://localhost:5000';
-const apiUrl =
-  process.env.NODE_ENV === 'production' ? window.location.origin : 'http://localhost:5000';
 
-function initialServerState(): any {
+function initialServerState(): ServerState {
+  //@ts-ignore
   return {};
 }
 
-function initialRoutes(): Route[] {
+function initialEndpoint(): Endpoint[] {
   return [];
 }
 
 export const AppStateContext = React.createContext({
   serverState: initialServerState(),
-  routes: initialRoutes(),
+  endpoints: initialEndpoint(),
   serverStateInterface: '',
 
   updateServerState(_serverState: unknown) {},
   resetServerState() {},
-  addRoute(_route: Route) {},
-  testRoute(_route: Route, _requestBody: string) {
+  addEndpoint(_endpoint: Endpoint) {},
+  deleteEndpoint(_endpointId: string) {},
+  updateEndpoint(_endpoint: Endpoint) {},
+  testEndpoint(_endpoint: Endpoint, _requestBody: string) {
     return Promise.resolve(new Response(''));
   },
-  deleteRoute(_routeId: string) {},
-  updateRoute(_route: Route) {},
 });
+
+function parseMessage(message: string): { action: ServerEvent; payload: unknown } {
+  const { action, payload } = JSON.parse(message);
+
+  return { action, payload };
+}
 
 const socket = new WebSocket(socketUrl);
 const App: React.FC = () => {
   const [serverState, setServerState] = useState(initialServerState);
   const [serverStateInterface, setServerStateInterface] = useState('');
-  const [routes, setRoutes] = useState(initialRoutes);
+  const [endpoints, setEndpoints] = useState(initialEndpoint);
 
   function sendEvent(event: any) {
     console.log(['sendEvent'], event);
@@ -62,18 +67,18 @@ const App: React.FC = () => {
     socket.onmessage = event => {
       console.log(['WebSocket.onmessage'], JSON.parse(event.data));
 
-      const { action, payload } = JSON.parse(event.data);
+      const { action, payload } = parseMessage(event.data);
 
-      if (action === 'updateRoutes') {
-        setRoutes(payload);
+      if (action === 'updateEndpoints') {
+        setEndpoints(payload as Endpoint[]);
       }
 
       if (action === 'updateServerState') {
-        setServerState(payload);
+        setServerState(payload as ServerState);
       }
 
       if (action === 'updateServerStateInterface') {
-        setServerStateInterface(payload);
+        setServerStateInterface(payload as string);
       }
     };
 
@@ -99,28 +104,28 @@ const App: React.FC = () => {
     });
   }
 
-  function handleAddRoute(route: Route) {
+  function handleAddEndpoint(endpoint: Endpoint) {
     sendEvent({
-      action: 'addRoute',
-      payload: route,
+      action: 'addEndpoint',
+      payload: endpoint,
     });
   }
 
-  function handleUpdateRoute(route: Route) {
+  function handleUpdateEndpoint(endpoint: Endpoint) {
     sendEvent({
-      action: 'updateRoute',
-      payload: route,
+      action: 'updateEndpoint',
+      payload: endpoint,
     });
   }
 
-  function handleDeleteRoute(routeId: string) {
+  function handleDeleteEndpoint(endpointId: string) {
     sendEvent({
-      action: 'deleteRoute',
-      payload: routeId,
+      action: 'deleteEndpoint',
+      payload: endpointId,
     });
   }
 
-  async function handleTestRoute({ url, method }: Route, requestBody: string) {
+  async function handleTestEndpoint({ url, method }: Endpoint, requestBody: string) {
     const parsedBody = JSON.parse(requestBody);
     const isEmpty = Object.keys(parsedBody).length === 0;
     const body = isEmpty ? undefined : JSON.stringify(parsedBody);
@@ -144,15 +149,15 @@ const App: React.FC = () => {
   }
 
   const contextValue = {
-    routes,
+    endpoints,
     serverState,
     serverStateInterface,
     updateServerState: handleServerStateChange,
     resetServerState: handleResetServerState,
-    addRoute: handleAddRoute,
-    updateRoute: handleUpdateRoute,
-    deleteRoute: handleDeleteRoute,
-    testRoute: handleTestRoute,
+    addEndpoint: handleAddEndpoint,
+    updateEndpoint: handleUpdateEndpoint,
+    deleteEndpoint: handleDeleteEndpoint,
+    testEndpoint: handleTestEndpoint,
   };
 
   return (
@@ -165,8 +170,8 @@ const App: React.FC = () => {
           <LazyServerState />
         </Suspense>
         <Divider />
-        <Suspense fallback="Loading routes...">
-          <LazyRoutes routes={routes || []} />
+        <Suspense fallback="Loading endpoints...">
+          <LazyEndpoints endpoints={endpoints || []} />
         </Suspense>
       </AppStateContext.Provider>
     </div>

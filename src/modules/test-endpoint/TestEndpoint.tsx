@@ -1,26 +1,26 @@
-import { useMediaQuery } from "@material-ui/core";
-import Button from "@material-ui/core/Button";
-import Dialog from "@material-ui/core/Dialog";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import { useTheme } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
-import React, { useContext, useState } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { Route } from "../../../sharedTypes";
-import { AppStateContext } from "../../App";
-import CodeEditor from "../common/CodeEditor";
+import { useMediaQuery } from '@material-ui/core';
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import { useTheme } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
+import React, { useContext, useState } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { Endpoint } from '../../../sharedTypes';
+import { AppStateContext } from '../../App';
+import CodeEditor from '../common/CodeEditor';
 
 const emptyJsonString = `
 {}
 `;
 
-export default function TestRoute({ route }: { route: Route }) {
+export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   const [open, setOpen] = useState(false);
   const [requestBody, setRequestBody] = useState(emptyJsonString);
   const [responseJson, setResponseJson] = useState(emptyJsonString);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
-  const { testRoute } = useContext(AppStateContext);
+  const { testEndpoint } = useContext(AppStateContext);
 
   function handleClickOpen() {
     setOpen(true);
@@ -31,7 +31,7 @@ export default function TestRoute({ route }: { route: Route }) {
   }
 
   async function handleTest() {
-    const response = await testRoute(route, requestBody);
+    const response = await testEndpoint(endpoint, requestBody);
 
     if (response.status < 300) {
       try {
@@ -46,7 +46,7 @@ export default function TestRoute({ route }: { route: Route }) {
 
   return (
     <div>
-      <Button onClick={handleClickOpen}>Test route</Button>
+      <Button onClick={handleClickOpen}>Test endpoint</Button>
       <Dialog
         closeAfterTransition
         aria-labelledby="max-width-dialog-title"
@@ -55,11 +55,11 @@ export default function TestRoute({ route }: { route: Route }) {
         open={open}
         onClose={handleClose}
       >
-        <DialogTitle id="max-width-dialog-title">{`Test route ${route.method}:${route.url}`}</DialogTitle>
+        <DialogTitle id="max-width-dialog-title">{`Test endpoint ${endpoint.method}:${endpoint.url}`}</DialogTitle>
         <CodeEditor
           code={requestBody}
-          title="Request body"
           language="json"
+          title="Request body"
           onSave={setRequestBody}
         />
         <Button onClick={handleTest}>Test</Button>
