@@ -1,21 +1,20 @@
 import { exec } from 'child_process';
-import { existsSync, openSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import produce from 'immer';
 import * as util from 'util';
 import { App, WebSocket } from 'uWebSockets.js';
 import { PORT } from '../constans';
 import { ServerState } from '../interfaces';
-import { ClientEvent, Method, Endpoint, ServerEvent, EndpointMapping } from '../sharedTypes';
+import { ClientEvent, Endpoint, EndpointMapping, Method, ServerEvent } from '../sharedTypes';
 import { logError, logInfo } from './utils/logger';
 import { readJsonAsync } from './utils/readJson';
 
 const initialServerStateDataPath = `${process.cwd()}/data/initialServerState.json`;
 const endpointsMapPath = `${process.cwd()}/data/endpointsMap.json`;
-const endpointsHandlers: Record<string, { requestResponse: Function, serverUpdate: Function }> = {};
+const endpointsHandlers: Record<string, { requestResponse: Function; serverUpdate: Function }> = {};
 const serverStateInterfacePath = `${process.cwd()}/interfaces.ts`;
 const endpointMappings: EndpointMapping[] = JSON.parse(readFileSync(endpointsMapPath, 'utf8'));
 const initialServerState = loadInitialServerState();
-
 let serverState = loadInitialServerState();
 let endpoints: Endpoint[] = [];
 let Sockets: WebSocket[] = [];
@@ -29,11 +28,11 @@ function loadServerStateInterface() {
   return readFileSync(serverStateInterfacePath, 'utf8').toString();
 }
 
-function getEndpointId({ method, url}: Endpoint | EndpointMapping) {
+function getEndpointId({ method, url }: Endpoint | EndpointMapping) {
   return `${method}:${url}`;
 }
 
-function getEndpointPath({ path}: EndpointMapping) {
+function getEndpointPath({ path }: EndpointMapping) {
   return `${process.cwd()}/${path}`;
 }
 
@@ -52,7 +51,7 @@ async function loadEndpoints() {
         url,
         responseCode: handler.requestResponse.toString(),
         serverStateUpdateCode: handler.serverUpdate.toString(),
-      })
+      });
     }),
   );
 
@@ -60,11 +59,13 @@ async function loadEndpoints() {
 }
 
 function handlerTemplate(endpoint: Endpoint) {
-  return `
+  return (
+    `
 export ${endpoint.responseCode}
 
 export ${endpoint.serverStateUpdateCode}
-`.trim() + '\n';
+`.trim() + '\n'
+  );
 }
 
 function saveEndpointToFile(endpoint: Endpoint, endpointMapping: EndpointMapping) {
@@ -109,8 +110,8 @@ function resetServerState() {
 
 function addEndpoint(endpoint: Endpoint) {
   logInfo(['addEndpoint'], endpoint);
-  const path = `endpoints/${getEndpointId(endpoint)}.js`;
 
+  const path = `endpoints/${getEndpointId(endpoint)}.js`;
   const endpointMapping: EndpointMapping = {
     path,
     id: Date.now().toString(),

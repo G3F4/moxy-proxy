@@ -1,9 +1,9 @@
 export function requestResponse(state, request) {
-  return state.requestCount;
+    return 'patched!';
 }
 
 export function serverUpdate(request) {
-  return state => {
-  
-  };
+    return function (state) {
+        state.requstCount = request.body.requstCount;
+    };
 }

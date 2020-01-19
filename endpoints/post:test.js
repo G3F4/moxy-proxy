@@ -1,9 +1,9 @@
 export function requestResponse(state, request) {
-  return state.requestCount;
+    return 'data stored!';
 }
 
 export function serverUpdate(request) {
-  return state => {
-  
-  };
+    return function (state) {
+        state.data = { ...state.data, ...request.body };
+    };
 }
