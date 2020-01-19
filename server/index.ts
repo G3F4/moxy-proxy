@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { openSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, openSync, readFileSync, writeFileSync } from 'fs';
 import produce from 'immer';
 import * as util from 'util';
 import { App, WebSocket } from 'uWebSockets.js';
@@ -70,8 +70,14 @@ export ${endpoint.serverStateUpdateCode}
 function saveEndpointToFile(endpoint: Endpoint, endpointMapping: EndpointMapping) {
   if (endpointMapping) {
     const code = handlerTemplate(endpoint);
+    const path = `${process.cwd()}/${endpointMapping.path}`;
+    const fileExists = existsSync(path);
 
-    writeFileSync(`${process.cwd()}/${endpointMapping.path}`, code, { flag: 'wx' });
+    if (fileExists) {
+      writeFileSync(path, code);
+    } else {
+      writeFileSync(path, code, { flag: 'wx' });
+    }
   }
 }
 
@@ -111,8 +117,6 @@ function addEndpoint(endpoint: Endpoint) {
     method: endpoint.method,
     url: endpoint.url,
   };
-
-//  openSync(`${process.cwd()}/${path}`, 'w');
 
   endpoints = [...endpoints, endpoint];
   endpointMappings.push(endpointMapping);

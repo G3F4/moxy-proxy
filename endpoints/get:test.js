@@ -1,8 +1,9 @@
 export function requestResponse(state, request) {
-    return state.requestCount + 10111;
+  return state.requestCount;
 }
 
 export function serverUpdate(request) {
-    return function (state) {
-    };
+  return state => {
+  
+  };
 }
