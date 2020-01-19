@@ -5,4 +5,5 @@ export interface ServerState {
 }
 export interface Data {
   test?: (string)[] | null;
+  a: boolean;
 }

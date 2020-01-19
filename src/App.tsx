@@ -132,14 +132,17 @@ const App: React.FC = () => {
     const parsedBody = JSON.parse(requestBody);
     const isEmpty = Object.keys(parsedBody).length === 0;
     const body = isEmpty ? undefined : JSON.stringify(parsedBody);
+    const headers = isEmpty
+      ? undefined
+      : {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        };
 
     return await fetch(`${url}`, {
       body,
       method,
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
   }
 
