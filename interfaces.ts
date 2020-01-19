@@ -3,5 +3,5 @@ export interface ServerState {
   data: Data;
 }
 export interface Data {
-  requestCount: number;
+  test?: (string)[] | null;
 }

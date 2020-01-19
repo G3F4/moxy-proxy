@@ -85,6 +85,10 @@ function sendEvent(socket: WebSocket, action: ServerEvent, payload: any): void {
   }
 }
 
+function clearSocket(socketId: string) {
+  Sockets.filter(({ id }) => id === socketId);
+}
+
 function broadcast(action: ServerEvent, payload: unknown) {
   logInfo(['broadcast'], action, payload);
 
@@ -92,7 +96,8 @@ function broadcast(action: ServerEvent, payload: unknown) {
     try {
       socket.send(JSON.stringify(event));
     } catch (e) {
-      return undefined;
+      logError(e);
+      clearSocket(socket.id);
     }
   });
 }

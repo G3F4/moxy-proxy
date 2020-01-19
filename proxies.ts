@@ -29,7 +29,7 @@ export class ServerStateProxy {
 }
 
 export class DataProxy {
-  public readonly requestCount: number;
+  public readonly test: string[] | null;
   public static Parse(d: string): DataProxy {
     return DataProxy.Create(JSON.parse(d));
   }
@@ -45,11 +45,19 @@ export class DataProxy {
     } else if (Array.isArray(d)) {
       throwIsArray(field, d, false);
     }
-    checkNumber(d.requestCount, false, field + ".requestCount");
+    checkArray(d.test, field + ".test");
+    if (d.test) {
+      for (let i = 0; i < d.test.length; i++) {
+        checkString(d.test[i], false, field + ".test" + "[" + i + "]");
+      }
+    }
+    if (d.test === undefined) {
+      d.test = null;
+    }
     return new DataProxy(d);
   }
   private constructor(d: any) {
-    this.requestCount = d.requestCount;
+    this.test = d.test;
   }
 }
 
@@ -62,9 +70,19 @@ function throwNotObject(field: string, d: any, nullable: boolean): never {
 function throwIsArray(field: string, d: any, nullable: boolean): never {
   return errorHelper(field, d, "object", nullable);
 }
+function checkArray(d: any, field: string): void {
+  if (!Array.isArray(d) && d !== null && d !== undefined) {
+    errorHelper(field, d, "array", true);
+  }
+}
 function checkNumber(d: any, nullable: boolean, field: string): void {
   if (typeof(d) !== 'number' && (!nullable || (nullable && d !== null && d !== undefined))) {
     errorHelper(field, d, "number", nullable);
+  }
+}
+function checkString(d: any, nullable: boolean, field: string): void {
+  if (typeof(d) !== 'string' && (!nullable || (nullable && d !== null && d !== undefined))) {
+    errorHelper(field, d, "string", nullable);
   }
 }
 function errorHelper(field: string, d: any, type: string, nullable: boolean): never {
