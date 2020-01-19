@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { readFileSync, writeFileSync } from 'fs';
+import { openSync, readFileSync, writeFileSync } from 'fs';
 import produce from 'immer';
 import * as util from 'util';
 import { App, WebSocket } from 'uWebSockets.js';
@@ -10,11 +10,10 @@ import { logError, logInfo } from './utils/logger';
 import { readJsonAsync } from './utils/readJson';
 
 const initialServerStateDataPath = `${process.cwd()}/data/initialServerState.json`;
-const endpointsPath = `${process.cwd()}/data/endpoints.json`;
 const endpointsMapPath = `${process.cwd()}/data/endpointsMap.json`;
 const endpointsHandlers: Record<string, { requestResponse: Function, serverUpdate: Function }> = {};
 const serverStateInterfacePath = `${process.cwd()}/interfaces.ts`;
-const endpointMappings: EndpointMapping[] = JSON.parse(readFileSync(endpointsMapPath, 'utf8')).items;
+const endpointMappings: EndpointMapping[] = JSON.parse(readFileSync(endpointsMapPath, 'utf8'));
 const initialServerState = loadInitialServerState();
 
 let serverState = loadInitialServerState();
@@ -35,7 +34,7 @@ function getEndpointId({ method, url}: Endpoint | EndpointMapping) {
 }
 
 function getEndpointPath({ path}: EndpointMapping) {
-  return `../${path}`;
+  return `${process.cwd()}/${path}`;
 }
 
 async function loadEndpoints() {
@@ -60,10 +59,6 @@ async function loadEndpoints() {
   return endpoints;
 }
 
-function saveEndpointsToFile(items: unknown) {
-  writeFileSync(endpointsPath, JSON.stringify({ items }, null, 2), 'utf-8');
-}
-
 function handlerTemplate(endpoint: Endpoint) {
   return `
 export ${endpoint.responseCode}
@@ -72,18 +67,20 @@ export ${endpoint.serverStateUpdateCode}
 `.trim() + '\n';
 }
 
-function saveEndpointToFile(endpoint: Endpoint) {
-  const endpointMapping = endpointMappings.find((item: any) => item.id === endpoint.id);
-
+function saveEndpointToFile(endpoint: Endpoint, endpointMapping: EndpointMapping) {
   if (endpointMapping) {
     const code = handlerTemplate(endpoint);
 
-    writeFileSync(endpointMapping.path, code);
+    writeFileSync(`${process.cwd()}/${endpointMapping.path}`, code, { flag: 'wx' });
   }
 }
 
 function saveServerStateToFile(data: unknown) {
   writeFileSync(initialServerStateDataPath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+function saveEndpointMappings(data: unknown) {
+  writeFileSync(endpointsMapPath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 function updateServerState(serverStateUpdate: Partial<typeof serverState>) {
@@ -105,22 +102,37 @@ function resetServerState() {
 }
 
 function addEndpoint(endpoint: Endpoint) {
-  endpoints = [...endpoints, endpoint];
-
   logInfo(['addEndpoint'], endpoint);
-  saveEndpointsToFile(endpoints);
+  const path = `endpoints/${getEndpointId(endpoint)}.js`;
+
+  const endpointMapping: EndpointMapping = {
+    path,
+    id: Date.now().toString(),
+    method: endpoint.method,
+    url: endpoint.url,
+  };
+
+//  openSync(`${process.cwd()}/${path}`, 'w');
+
+  endpoints = [...endpoints, endpoint];
+  endpointMappings.push(endpointMapping);
+
+  saveEndpointMappings(endpointMappings);
+  saveEndpointToFile(endpoint, endpointMapping);
 }
 
 function updateEndpoint(endpoint: Endpoint) {
   const endpointIndex = endpoints.findIndex(
     ({ url, method }) => endpoint.url === url && endpoint.method === method,
   );
+  const endpointMapping = endpointMappings.find((item: any) => item.id === endpoint.id);
 
   // @ts-ignore
   endpoints[endpointIndex] = endpoint;
 
   logInfo(['updateEndpoint'], endpoint);
-  saveEndpointToFile(endpoint);
+
+  endpointMapping && saveEndpointToFile(endpoint, endpointMapping);
 }
 
 function deleteEndpoint(endpointId: string) {
@@ -229,7 +241,7 @@ App()
       const urlLastChar = url[url.length - 1];
       const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
       const endpoint = endpoints.find(
-        endpoint => endpoint.url === rawUrl && endpoint.method === method,
+        endpoint => `/${endpoint.url}` === rawUrl && endpoint.method === method,
       );
 
       logInfo(['url'], url);

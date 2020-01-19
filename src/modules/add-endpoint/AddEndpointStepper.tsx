@@ -87,11 +87,9 @@ function RequestMethodStep({
 }
 
 const initialResponseCode = `
-((state, { body }) => { // return response, don't add code at start
-  return {
-
-  };
-})(state, request); // changing those args name breaks script
+function requestResponse(state, request) {
+    return state;
+}
 `;
 
 function ResponseStep({ code, onChange }: { code: string; onChange: (code: string) => void }) {
@@ -99,12 +97,11 @@ function ResponseStep({ code, onChange }: { code: string; onChange: (code: strin
 }
 
 const initialServerStateUpdateCode = `
-// function(request) { this line is added on server
-// inside returned function draft is mutable
-return state => {
-
-};
-// } this line is added on server
+function serverUpdate(request) {
+    return function (state) {
+      state.modified = true;
+    };
+}
 `;
 
 function UpdateServerStateStep({
@@ -122,7 +119,7 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
   const [activeStep, setActiveStep] = useState(0);
   const [endpoint, setEndpoint] = useState<Endpoint>({
     id: Date.now().toString(),
-    url: '/',
+    url: '',
     method: 'get',
     responseCode: initialResponseCode,
     serverStateUpdateCode: initialServerStateUpdateCode,

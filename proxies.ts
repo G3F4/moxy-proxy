@@ -3,6 +3,7 @@ let obj: any = null;
 export class ServerStateProxy {
   public readonly requestCount: number;
   public readonly data: DataProxy;
+  public readonly modified: boolean;
   public static Parse(d: string): ServerStateProxy {
     return ServerStateProxy.Create(JSON.parse(d));
   }
@@ -20,11 +21,13 @@ export class ServerStateProxy {
     }
     checkNumber(d.requestCount, false, field + ".requestCount");
     d.data = DataProxy.Create(d.data, field + ".data");
+    checkBoolean(d.modified, false, field + ".modified");
     return new ServerStateProxy(d);
   }
   private constructor(d: any) {
     this.requestCount = d.requestCount;
     this.data = d.data;
+    this.modified = d.modified;
   }
 }
 
@@ -78,6 +81,11 @@ function checkArray(d: any, field: string): void {
 function checkNumber(d: any, nullable: boolean, field: string): void {
   if (typeof(d) !== 'number' && (!nullable || (nullable && d !== null && d !== undefined))) {
     errorHelper(field, d, "number", nullable);
+  }
+}
+function checkBoolean(d: any, nullable: boolean, field: string): void {
+  if (typeof(d) !== 'boolean' && (!nullable || (nullable && d !== null && d !== undefined))) {
+    errorHelper(field, d, "boolean", nullable);
   }
 }
 function checkString(d: any, nullable: boolean, field: string): void {
