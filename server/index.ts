@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, watchFile, writeFileSync } from 'fs';
 import produce from 'immer';
 import * as util from 'util';
 import { App, WebSocket } from 'uWebSockets.js';
@@ -11,7 +11,6 @@ import { readJsonAsync } from './utils/readJson';
 
 const initialServerStateDataPath = `${process.cwd()}/data/initialServerState.json`;
 const endpointsMapPath = `${process.cwd()}/data/endpointsMap.json`;
-const endpointsHandlers: Record<string, { requestResponse: Function; serverUpdate: Function }> = {};
 const serverStateInterfacePath = `${process.cwd()}/interfaces.ts`;
 const endpointMappings: EndpointMapping[] = JSON.parse(readFileSync(endpointsMapPath, 'utf8'));
 const initialServerState = loadInitialServerState();
@@ -44,7 +43,6 @@ async function loadEndpoints() {
       const { id, method, url } = endpointMapping;
       const handler = await import(getEndpointPath(endpointMapping));
 
-      endpointsHandlers[getEndpointId(endpointMapping)] = handler;
       endpoints.push({
         id,
         method,
@@ -56,6 +54,24 @@ async function loadEndpoints() {
   );
 
   return endpoints;
+}
+
+export interface Handler {
+  requestResponse: Function;
+  serverUpdate: Function;
+}
+
+function loadHandler(endpoint: Endpoint): Handler {
+  const endpointMapping = endpointMappings.find((item: any) => item.id === endpoint.id);
+
+  if (endpointMapping) {
+    return require(getEndpointPath(endpointMapping));
+  }
+
+  return {
+    requestResponse: () => {},
+    serverUpdate: () => {},
+  };
 }
 
 function handlerTemplate(endpoint: Endpoint) {
@@ -74,6 +90,8 @@ function saveEndpointToFile(endpoint: Endpoint, endpointMapping: EndpointMapping
     const path = `${process.cwd()}/${endpointMapping.path}`;
     const fileExists = existsSync(path);
 
+    nocache(path);
+
     if (fileExists) {
       writeFileSync(path, code);
     } else {
@@ -91,12 +109,13 @@ function saveEndpointMappings(data: unknown) {
 }
 
 function updateServerState(serverStateUpdate: Partial<typeof serverState>) {
+  logInfo(['updateServerState'], serverStateUpdate);
+
   serverState = {
     ...serverState,
     ...serverStateUpdate,
   };
 
-  logInfo(['updateServerState'], serverStateUpdate);
   saveServerStateToFile(serverState);
   makeTypesFromInitialServerState().then(() => {
     logInfo(['makeTypesFromInitialServerState'], 'done');
@@ -155,6 +174,12 @@ function sendEvent(socket: WebSocket, action: ServerEvent, payload: unknown): vo
   } catch (e) {
     logError(e);
   }
+}
+
+function nocache(module: string) {
+  watchFile(require('path').resolve(module), () => {
+    delete require.cache[require.resolve(module)];
+  });
 }
 
 function clearSocket(socketId: string) {
@@ -257,25 +282,22 @@ App()
         const request = {
           body: requestBody,
         };
-        const handler = endpointsHandlers[getEndpointId(endpoint)];
-        const requestResponseFunction = handler.requestResponse;
-        const serverStateUpdateFunction = handler.serverUpdate;
-        const requestResponseFunctionReturn = requestResponseFunction(serverState, request);
+        const { requestResponse, serverUpdate } = loadHandler(endpoint);
 
-        logInfo(['requestResponseFunctionReturn'], requestResponseFunctionReturn);
+        logInfo(['requestResponse'], requestResponse.toString());
+        logInfo(['serverUpdate'], serverUpdate.toString());
 
-        if (typeof serverStateUpdateFunction === 'function') {
-          const serverStateUpdateFunctionReturn = produce(
-            serverState,
-            serverStateUpdateFunction(request),
-          );
+        const requestResponseReturn = requestResponse(serverState, request);
 
-          updateServerState(serverStateUpdateFunctionReturn);
+        logInfo(['requestResponseReturn'], requestResponseReturn);
 
-          broadcast('updateServerState', serverState);
-        }
+        const newServerState = produce(serverState, serverUpdate(request));
 
-        res.end(JSON.stringify(requestResponseFunctionReturn));
+        updateServerState(newServerState);
+
+        broadcast('updateServerState', serverState);
+
+        res.end(JSON.stringify(requestResponseReturn));
       } else {
         const file = readFileSync(`${process.cwd()}/build${url}`);
 

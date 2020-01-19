@@ -1,6 +1,6 @@
 {
   "name": "proxy-moxy",
-  "version": "0.33.1",
+  "version": "0.33.2",
   "description": "Proxy server for mocking client application",
   "main": "server/index.ts",
   "repository": "git@github.com:G3F4/proxy-moxy.git",
