@@ -1,11 +1,9 @@
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ServerState } from '../interfaces';
 import { Endpoint, ServerEvent } from '../sharedTypes';
 import './App.css';
-import PanelLayout from './layouts/PanelLayout';
-import TabsLayout from './layouts/TabsLayout';
+import Layout from './layouts/Layout';
 
-const LazyHeader = lazy(() => import('./modules/header/Header'));
 const socketUrl =
   process.env.NODE_ENV === 'production' ? `wss://${window.location.host}` : 'ws://localhost:5000';
 
@@ -18,7 +16,7 @@ function initialEndpoint(): Endpoint[] {
   return [];
 }
 
-export type ViewMode = 'tabs' | 'panels';
+export type ViewMode = 'tabs' | 'panels' | 'board';
 
 export const AppStateContext = React.createContext({
   activeTab: 1,
@@ -177,11 +175,7 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <AppStateContext.Provider value={contextValue}>
-        <Suspense fallback="Loading header...">
-          <LazyHeader />
-        </Suspense>
-        {viewMode === 'tabs' && <TabsLayout />}
-        {viewMode === 'panels' && <PanelLayout />}
+        <Layout />
       </AppStateContext.Provider>
     </div>
   );

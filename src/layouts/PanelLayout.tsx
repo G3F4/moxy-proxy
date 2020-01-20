@@ -1,3 +1,4 @@
+import { Divider } from '@material-ui/core';
 import React, { lazy, Suspense } from 'react';
 
 const LazyEndpoints = lazy(() => import('../modules/endpoints/Endpoints'));
@@ -10,9 +11,11 @@ export default function PanelLayout() {
       <Suspense fallback="Loading server state...">
         <LazyServerState />
       </Suspense>
+      <Divider style={{ margin: 8 }} />
       <Suspense fallback="Loading state interface...">
         <LazyStateInterface />
       </Suspense>
+      <Divider style={{ margin: 8 }} />
       <Suspense fallback="Loading endpoints...">
         <LazyEndpoints />
       </Suspense>

@@ -1,9 +1,12 @@
+import { FormControl } from '@material-ui/core';
 import AppBar from '@material-ui/core/AppBar';
-import Button from '@material-ui/core/Button';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { AppStateContext, ViewMode } from '../../App';
 import AddEndpoint from '../add-endpoint/AddEndpoint';
 
@@ -20,18 +23,21 @@ const useStyles = makeStyles((theme: Theme) =>
     },
   }),
 );
-const viewModeButtonLabel: Record<ViewMode, string> = {
-  panels: 'Tabs view',
-  tabs: 'Panels view',
+const viewModeOptions: Record<ViewMode, string> = {
+  panels: 'Panels view',
+  tabs: 'Tabs view',
+  board: 'Board view',
 };
 
 export default function Header() {
   const classes = useStyles();
   const { viewMode, changeViewMode } = useContext(AppStateContext);
+  const inputLabel = useRef<HTMLLabelElement>(null);
+  const [labelWidth, setLabelWidth] = useState(0);
 
-  function handleViewModeToggle() {
-    changeViewMode(viewMode === 'tabs' ? 'panels' : 'tabs');
-  }
+  useEffect(() => {
+    setLabelWidth(inputLabel.current!.offsetWidth);
+  }, []);
 
   return (
     <div className={classes.root}>
@@ -40,7 +46,30 @@ export default function Header() {
           <Typography className={classes.title} variant="h6">
             Moxy Proxy
           </Typography>
-          <Button onClick={handleViewModeToggle}>{viewModeButtonLabel[viewMode]}</Button>
+          <FormControl
+            style={{
+              margin: 8,
+              minWidth: 120,
+            }}
+            variant="outlined"
+          >
+            <InputLabel id="demo-simple-select-outlined-label" ref={inputLabel}>
+              View mode
+            </InputLabel>
+            <Select
+              id="demo-simple-select-outlined"
+              labelId="demo-simple-select-outlined-label"
+              labelWidth={labelWidth}
+              value={viewMode}
+              onChange={event => {
+                changeViewMode(event.target.value as ViewMode);
+              }}
+            >
+              {Object.keys(viewModeOptions).map(key => (
+                <MenuItem value={key}>{viewModeOptions[key as ViewMode]}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <AddEndpoint />
         </Toolbar>
       </AppBar>
