@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { ServerState } from '../interfaces';
-import { Endpoint, ServerEvent } from '../sharedTypes';
+import {
+  ClientEvent,
+  Endpoint,
+  ServerAction,
+  ServerStateScenario,
+  ServerStateScenarioId,
+} from '../sharedTypes';
 import './App.css';
 import Layout from './layouts/Layout';
 
@@ -20,14 +26,18 @@ export type ViewMode = 'tabs' | 'panels' | 'board';
 
 export const AppStateContext = React.createContext({
   activeTab: 1,
+  activeServerStateScenarioId: 'default' as ServerStateScenarioId,
   viewMode: 'tabs' as ViewMode,
   serverState: initialServerState(),
   endpoints: initialEndpoint(),
   serverStateInterface: '',
+  serverStateScenarios: [] as ServerStateScenario[],
 
   changeViewMode(_viewMode: ViewMode) {},
   changeActiveTab(_tabIndex: number) {},
-  updateServerState(_serverState: unknown) {},
+  addServerStateScenario(_serverStateScenario: ServerStateScenario) {},
+  changeServerStateScenario(_serverStateScenarioId: ServerStateScenarioId) {},
+  updateServerState(_serverState: ServerState) {},
   resetServerState() {},
   addEndpoint(_endpoint: Endpoint) {},
   deleteEndpoint(_endpointId: string) {},
@@ -37,7 +47,7 @@ export const AppStateContext = React.createContext({
   },
 });
 
-function parseMessage(message: string): { action: ServerEvent; payload: unknown } {
+function parseMessage(message: string): { action: ServerAction; payload: unknown } {
   const { action, payload } = JSON.parse(message);
 
   return { action, payload };
@@ -46,12 +56,20 @@ function parseMessage(message: string): { action: ServerEvent; payload: unknown 
 const socket = new WebSocket(socketUrl);
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState(1);
+  const [activeServerStateScenarioId, setActiveServerStateScenarioId] = useState(
+    'default' as ServerStateScenarioId,
+  );
   const [viewMode, setViewMode] = useState<ViewMode>('tabs');
   const [serverState, setServerState] = useState(initialServerState);
+  const [serverStateScenarios, setServerStateScenarios] = useState([{
+    name: 'Default',
+    id: 'default',
+    state: serverState,
+  }] as ServerStateScenario[]);
   const [serverStateInterface, setServerStateInterface] = useState('');
   const [endpoints, setEndpoints] = useState(initialEndpoint);
 
-  function sendEvent(event: any) {
+  function sendEvent(event: ClientEvent) {
     console.log(['sendEvent'], event);
     try {
       socket.send(JSON.stringify(event));
@@ -105,7 +123,6 @@ const App: React.FC = () => {
   function handleResetServerState() {
     sendEvent({
       action: 'resetServerState',
-      payload: null,
     });
   }
 
@@ -155,13 +172,21 @@ const App: React.FC = () => {
       payload: updatedServerState,
     });
   }
+  
+  function handleAddServerStateScenario(serverStateScenario: ServerStateScenario) {
+    setServerStateScenarios(scenarios => [...scenarios, serverStateScenario])
+  }
 
   const contextValue = {
     activeTab,
+    activeServerStateScenarioId,
     endpoints,
     serverState,
     serverStateInterface,
+    serverStateScenarios,
     viewMode,
+    addServerStateScenario: handleAddServerStateScenario,
+    changeServerStateScenario: setActiveServerStateScenarioId,
     changeViewMode: setViewMode,
     changeActiveTab: setActiveTab,
     updateServerState: handleServerStateChange,

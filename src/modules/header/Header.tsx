@@ -7,8 +7,10 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import { ServerStateScenarioId } from '../../../sharedTypes';
 import { AppStateContext, ViewMode } from '../../App';
 import AddEndpoint from '../add-endpoint/AddEndpoint';
+import AddServerScenario from '../add-server-scenario/AddServerScenario';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -31,7 +33,13 @@ const viewModeOptions: Record<ViewMode, string> = {
 
 export default function Header() {
   const classes = useStyles();
-  const { viewMode, changeViewMode } = useContext(AppStateContext);
+  const {
+    viewMode,
+    activeServerStateScenarioId,
+    serverStateScenarios,
+    changeServerStateScenario,
+    changeViewMode,
+  } = useContext(AppStateContext);
   const inputLabel = useRef<HTMLLabelElement>(null);
   const [labelWidth, setLabelWidth] = useState(0);
 
@@ -53,12 +61,11 @@ export default function Header() {
             }}
             variant="outlined"
           >
-            <InputLabel id="demo-simple-select-outlined-label" ref={inputLabel}>
+            <InputLabel id="view-mode-select" ref={inputLabel}>
               View mode
             </InputLabel>
             <Select
-              id="demo-simple-select-outlined"
-              labelId="demo-simple-select-outlined-label"
+              labelId="view-mode-select"
               labelWidth={labelWidth}
               value={viewMode}
               onChange={event => {
@@ -66,10 +73,34 @@ export default function Header() {
               }}
             >
               {Object.keys(viewModeOptions).map(key => (
-                <MenuItem value={key}>{viewModeOptions[key as ViewMode]}</MenuItem>
+                <MenuItem key={key} value={key}>{viewModeOptions[key as ViewMode]}</MenuItem>
               ))}
             </Select>
           </FormControl>
+          <FormControl
+            style={{
+              margin: 8,
+              minWidth: 120,
+            }}
+            variant="outlined"
+          >
+            <InputLabel id="state-scenario-select" ref={inputLabel}>
+              State scenario
+            </InputLabel>
+            <Select
+              labelId="state-scenario-select"
+              labelWidth={labelWidth}
+              value={activeServerStateScenarioId}
+              onChange={event => {
+                changeServerStateScenario(event.target.value as ServerStateScenarioId);
+              }}
+            >
+              {serverStateScenarios.map(({ id, name }) => (
+                <MenuItem key={id} value={id}>{name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <AddServerScenario />
           <AddEndpoint />
         </Toolbar>
       </AppBar>

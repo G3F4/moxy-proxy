@@ -1,6 +1,6 @@
 import { Typography } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
-import { JsonEditor as Editor } from 'jsoneditor-react';
+import { JsonEditor } from 'jsoneditor-react';
 import 'jsoneditor-react/es/editor.min.css';
 import React, { useContext, useState } from 'react';
 import ReactJson from 'react-json-view';
@@ -38,7 +38,7 @@ export default function ServerState() {
         </div>
       </div>
       {!editing && <ReactJson name="state" src={serverState} />}
-      {editing && <Editor value={editorState} onChange={setEditorState} />}
+      {editing && <JsonEditor value={editorState} onChange={setEditorState} />}
     </>
   );
 }

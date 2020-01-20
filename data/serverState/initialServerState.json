@@ -1,11 +1,10 @@
 {
-  "requestCount": 1,
+  "requestCount": 0,
   "data": {
     "test": [
       "test",
       "test2"
-    ],
-    "a": 123
+    ]
   },
   "modified": false
 }

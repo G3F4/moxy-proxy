@@ -5,14 +5,16 @@ import * as util from 'util';
 import { App, WebSocket } from 'uWebSockets.js';
 import { PORT } from '../constans';
 import { ServerState } from '../interfaces';
-import { ClientEvent, Endpoint, EndpointMapping, Method, ServerEvent } from '../sharedTypes';
+import { ClientAction, Endpoint, EndpointMapping, Method, ServerEvent } from '../sharedTypes';
 import createFolderIfNotExists from './utils/createFolderIfNotExists';
 import { logError, logInfo } from './utils/logger';
 import { readJsonAsync } from './utils/readJson';
 
-const initialServerStateDataPath = `${process.cwd()}/data/initialServerState.json`;
+const initialServerStateDataRelativePath = 'data/serverState/initialServerState.json';
+const initialServerStateDataPath = `${process.cwd()}/${initialServerStateDataRelativePath}`;
 const endpointsMapPath = `${process.cwd()}/data/endpointsMap.json`;
-const serverStateInterfacePath = `${process.cwd()}/interfaces.ts`;
+const serverStateInterfaceFileName = 'interfaces.ts';
+const serverStateInterfacePath = `${process.cwd()}/${serverStateInterfaceFileName}`;
 const initialServerState = loadInitialServerState();
 let endpointMappings: EndpointMapping[] = JSON.parse(readFileSync(endpointsMapPath, 'utf8'));
 let serverState = loadInitialServerState();
@@ -80,7 +82,7 @@ function saveEndpointToFile(endpoint: Endpoint) {
   folders.forEach((item, index, arr) => {
     const absolutePath = `${process.cwd()}/endpoints/${arr.slice(0, index + 1).join('/')}`;
 
-    createFolderIfNotExists(absolutePath)
+    createFolderIfNotExists(absolutePath);
   });
 
   const path = handlerPath(endpoint);
@@ -157,9 +159,9 @@ function deleteEndpoint(endpointId: string) {
   logInfo(['deleteEndpoint'], endpointId);
 }
 
-function sendEvent(socket: WebSocket, action: ServerEvent, payload: unknown): void {
+function sendEvent(socket: WebSocket, event: ServerEvent): void {
   try {
-    socket.send(JSON.stringify({ action, payload }));
+    socket.send(JSON.stringify(event));
     // logInfo(['sendEvent'], { action, payload });
   } catch (e) {
     logError(e);
@@ -176,12 +178,12 @@ function clearSocket(socketId: string) {
   Sockets.filter(({ id }) => id === socketId);
 }
 
-function broadcast(action: ServerEvent, payload: unknown) {
-  logInfo(['broadcast'], action, payload);
+function broadcast(event: ServerEvent) {
+  logInfo(['broadcast'], event);
 
   Sockets.forEach(socket => {
     try {
-      socket.send(JSON.stringify({ action, payload }));
+      socket.send(JSON.stringify(event));
     } catch (e) {
       logError(e);
       clearSocket(socket.id);
@@ -193,17 +195,17 @@ const execPromised = util.promisify(exec);
 
 async function makeTypesFromInitialServerState() {
   const { stdout, stderr } = await execPromised(
-    'make_types -i interfaces.ts -p proxies.ts data/initialServerState.json ServerState',
+    `make_types -i ${serverStateInterfaceFileName} ${initialServerStateDataRelativePath} ServerState`,
   );
 
   logInfo(['makeTypesFromInitialServerState'], stdout, stderr);
 
   serverStateInterface = loadServerStateInterface();
 
-  broadcast('updateServerStateInterface', serverStateInterface);
+  broadcast({ action: 'updateServerStateInterface', payload: serverStateInterface });
 }
 
-function parseMessage(message: ArrayBuffer): { action: ClientEvent; payload: unknown } {
+function parseMessage(message: ArrayBuffer): { action: ClientAction; payload: unknown } {
   const { action, payload } = JSON.parse(
     // @ts-ignore
     String.fromCharCode.apply(null, new Uint8Array(message)),
@@ -219,36 +221,36 @@ App()
 
       if (action === 'addEndpoint') {
         addEndpoint(payload as Endpoint);
-        sendEvent(ws, 'updateEndpoints', endpoints);
+        sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
       }
 
       if (action === 'updateEndpoint') {
         updateEndpoint(payload as Endpoint);
-        sendEvent(ws, 'updateEndpoints', endpoints);
+        sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
       }
 
       if (action === 'deleteEndpoint') {
         deleteEndpoint(payload as string);
-        sendEvent(ws, 'updateEndpoints', endpoints);
+        sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
       }
 
       if (action === 'clientUpdatedServer') {
         updateServerState(payload as ServerState);
-        broadcast('updateServerState', serverState);
+        broadcast({ action: 'updateServerState', payload: serverState });
       }
 
       if (action === 'resetServerState') {
         resetServerState();
-        sendEvent(ws, 'updateServerState', serverState);
+        sendEvent(ws, { action: 'updateServerState', payload: serverState });
       }
     },
     open: (ws: WebSocket) => {
       ws.id = Date.now();
       Sockets.push(ws);
 
-      sendEvent(ws, 'updateServerState', serverState);
-      sendEvent(ws, 'updateServerStateInterface', serverStateInterface);
-      sendEvent(ws, 'updateEndpoints', endpoints);
+      sendEvent(ws, { action: 'updateServerState', payload: serverState });
+      sendEvent(ws, { action: 'updateServerStateInterface', payload: serverStateInterface });
+      sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
     },
     close: (ws: WebSocket) => {
       Sockets = Sockets.filter(socket => socket.id === ws.id);
@@ -285,7 +287,7 @@ App()
 
         updateServerState(newServerState);
 
-        broadcast('updateServerState', serverState);
+        broadcast({ action: 'updateServerState', payload: serverState });
 
         res.end(JSON.stringify(requestResponseReturn));
       } else {
