@@ -9,7 +9,7 @@ import React, { useContext, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { Endpoint } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
-import CodeEditor from '../common/CodeEditor';
+import CodeEditor from '../../common/CodeEditor';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

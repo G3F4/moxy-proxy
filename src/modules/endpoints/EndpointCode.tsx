@@ -1,6 +1,6 @@
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import React from 'react';
-import CodeEditor from '../common/CodeEditor';
+import CodeEditor from '../../common/CodeEditor';
 
 export default function EndpointCode({
   responseCode,

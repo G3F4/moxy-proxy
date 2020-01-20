@@ -9,7 +9,7 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import React, { useState } from 'react';
 import { Method, Endpoint } from '../../../sharedTypes';
-import CodeEditor from '../common/CodeEditor';
+import CodeEditor from '../../common/CodeEditor';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
