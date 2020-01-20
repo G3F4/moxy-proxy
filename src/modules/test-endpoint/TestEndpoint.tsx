@@ -21,7 +21,6 @@ const useStyles = makeStyles((theme: Theme) =>
     },
   }),
 );
-
 const emptyJsonString = `
 {}
 `;
@@ -69,7 +68,7 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
         onClose={handleClose}
       >
         <DialogTitle disableTypography id="max-width-dialog-title">
-          <Typography variant="h6" style={{ marginRight: 40 }}>{`Test endpoint ${endpoint.method}:${endpoint.url}`}</Typography>
+          <Typography style={{ marginRight: 40 }} variant="h6">{`Test endpoint ${endpoint.method}:${endpoint.url}`}</Typography>
           <IconButton aria-label="close" className={classes.closeButton} onClick={handleClose}>
             <Close />
           </IconButton>

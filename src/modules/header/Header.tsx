@@ -1,12 +1,10 @@
-import { Paper } from '@material-ui/core';
 import AppBar from '@material-ui/core/AppBar';
+import Button from '@material-ui/core/Button';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
-import Tab from '@material-ui/core/Tab';
-import Tabs from '@material-ui/core/Tabs';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import React, { useContext } from 'react';
-import { AppStateContext } from '../../App';
+import { AppStateContext, ViewMode } from '../../App';
 import AddEndpoint from '../add-endpoint/AddEndpoint';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -22,13 +20,18 @@ const useStyles = makeStyles((theme: Theme) =>
     },
   }),
 );
+const viewModeButtonLabel: Record<ViewMode, string> = {
+  panels: 'Tabs view',
+  tabs: 'Panels view',
+};
 
 export default function Header() {
   const classes = useStyles();
-  const { activeTab, changeActiveTab } = useContext(AppStateContext);
-  const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
-    changeActiveTab(newValue);
-  };
+  const { viewMode, changeViewMode } = useContext(AppStateContext);
+
+  function handleViewModeToggle() {
+    changeViewMode(viewMode === 'tabs' ? 'panels' : 'tabs');
+  }
 
   return (
     <div className={classes.root}>
@@ -37,22 +40,10 @@ export default function Header() {
           <Typography className={classes.title} variant="h6">
             Moxy Proxy
           </Typography>
+          <Button onClick={handleViewModeToggle}>{viewModeButtonLabel[viewMode]}</Button>
           <AddEndpoint />
         </Toolbar>
       </AppBar>
-      <Paper className={classes.root}>
-        <Tabs
-          centered
-          indicatorColor="primary"
-          textColor="primary"
-          value={activeTab}
-          onChange={handleChange}
-        >
-          <Tab label="State interface" />
-          <Tab label="Server state" />
-          <Tab label="Endpoints" />
-        </Tabs>
-      </Paper>
     </div>
   );
 }

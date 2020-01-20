@@ -2,11 +2,10 @@ import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { ServerState } from '../interfaces';
 import { Endpoint, ServerEvent } from '../sharedTypes';
 import './App.css';
+import PanelLayout from './layouts/PanelLayout';
+import TabsLayout from './layouts/TabsLayout';
 
 const LazyHeader = lazy(() => import('./modules/header/Header'));
-const LazyEndpoints = lazy(() => import('./modules/endpoints/Endpoints'));
-const LazyServerState = lazy(() => import('./modules/server-state/ServerState'));
-const LazyStateInterface = lazy(() => import('./modules/state-interface/StateInterface'));
 const socketUrl =
   process.env.NODE_ENV === 'production' ? `wss://${window.location.host}` : 'ws://localhost:5000';
 
@@ -19,12 +18,16 @@ function initialEndpoint(): Endpoint[] {
   return [];
 }
 
+export type ViewMode = 'tabs' | 'panels';
+
 export const AppStateContext = React.createContext({
   activeTab: 1,
+  viewMode: 'tabs' as ViewMode,
   serverState: initialServerState(),
   endpoints: initialEndpoint(),
   serverStateInterface: '',
 
+  changeViewMode(_viewMode: ViewMode) {},
   changeActiveTab(_tabIndex: number) {},
   updateServerState(_serverState: unknown) {},
   resetServerState() {},
@@ -45,6 +48,7 @@ function parseMessage(message: string): { action: ServerEvent; payload: unknown 
 const socket = new WebSocket(socketUrl);
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState(1);
+  const [viewMode, setViewMode] = useState<ViewMode>('tabs');
   const [serverState, setServerState] = useState(initialServerState);
   const [serverStateInterface, setServerStateInterface] = useState('');
   const [endpoints, setEndpoints] = useState(initialEndpoint);
@@ -159,6 +163,8 @@ const App: React.FC = () => {
     endpoints,
     serverState,
     serverStateInterface,
+    viewMode,
+    changeViewMode: setViewMode,
     changeActiveTab: setActiveTab,
     updateServerState: handleServerStateChange,
     resetServerState: handleResetServerState,
@@ -174,21 +180,8 @@ const App: React.FC = () => {
         <Suspense fallback="Loading header...">
           <LazyHeader />
         </Suspense>
-        {activeTab === 0 && (
-          <Suspense fallback="Loading state interface...">
-            <LazyStateInterface />
-          </Suspense>
-        )}
-        {activeTab === 1 && (
-          <Suspense fallback="Loading server state...">
-            <LazyServerState />
-          </Suspense>
-        )}
-        {activeTab === 2 && (
-          <Suspense fallback="Loading endpoints...">
-            <LazyEndpoints endpoints={endpoints || []} />
-          </Suspense>
-        )}
+        {viewMode === 'tabs' && <TabsLayout />}
+        {viewMode === 'panels' && <PanelLayout />}
       </AppStateContext.Provider>
     </div>
   );

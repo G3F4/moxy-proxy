@@ -6,7 +6,6 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { useContext } from 'react';
-import { Endpoint } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
 import AddEndpoint from '../add-endpoint/AddEndpoint';
 import TestEndpoint from '../test-endpoint/TestEndpoint';
@@ -24,9 +23,9 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export default function Endpoints({ endpoints }: { endpoints: Endpoint[] }) {
+export default function Endpoints() {
   const classes = useStyles();
-  const { updateEndpoint, deleteEndpoint } = useContext(AppStateContext);
+  const { endpoints, updateEndpoint, deleteEndpoint } = useContext(AppStateContext);
 
   return (
     <div className={classes.root}>
