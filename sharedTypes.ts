@@ -1,6 +1,10 @@
 export type Method = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
-export type ServerAction = 'updateServerState' | 'updateServerStateInterface' | 'updateEndpoints';
+export type ServerAction =
+  | 'updateServerState'
+  | 'updateServerStateInterface'
+  | 'updateEndpoints'
+  | 'updateServerStateScenarios';
 
 interface SocketEvent {
   payload?: unknown;
@@ -10,7 +14,14 @@ export interface ServerEvent extends SocketEvent {
   action: ServerAction;
 }
 
-export type ClientAction = 'ping' | 'addEndpoint' | 'updateEndpoint' | 'deleteEndpoint' | 'clientUpdatedServer' | 'resetServerState';
+export type ClientAction =
+  | 'ping'
+  | 'addEndpoint'
+  | 'updateEndpoint'
+  | 'deleteEndpoint'
+  | 'clientUpdatedServer'
+  | 'resetServerState'
+  | 'addServerStateScenario';
 
 export interface ClientEvent extends SocketEvent {
   action: ClientAction;
@@ -33,7 +44,13 @@ export interface EndpointMapping {
 export type ServerStateScenarioId = 'default' | string;
 
 export interface ServerStateScenario {
-  id: ServerStateScenarioId;
+  id?: ServerStateScenarioId;
   name: string;
   state: unknown;
+}
+
+export interface ServerStateScenarioMapping {
+  id: ServerStateScenarioId;
+  name: string;
+  path: string;
 }

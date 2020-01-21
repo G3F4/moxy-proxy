@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1",
+    "name": "default",
+    "path": "data/serverState/default.json"
+  },
+  {
+    "id": "2",
+    "name": "test",
+    "path": "data/serverState/test.json"
+  },
+  {
+    "name": "zxc",
+    "id": "1579645648099",
+    "path": "/Users/kamil.grabek/Documents/own-projects/proxy-moxy/data/serverState/zxc.json"
+  }
+]

@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { existsSync, readFileSync, watchFile, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import produce from 'immer';
 import * as util from 'util';
 import { App, HttpRequest, HttpResponse, WebSocket } from 'uWebSockets.js';
@@ -7,19 +7,22 @@ import { PORT } from '../constans';
 import { ServerState } from '../interfaces';
 import {
   ClientAction,
-  ClientEvent,
   Endpoint,
   EndpointMapping,
   Method,
   ServerEvent,
+  ServerStateScenario,
+  ServerStateScenarioMapping,
 } from '../sharedTypes';
 import createFolderIfNotExists from './utils/createFolderIfNotExists';
 import { logError, logInfo } from './utils/logger';
+import { nocache } from './utils/nocache';
 import { readJsonAsync } from './utils/readJson';
 
-const initialServerStateDataRelativePath = 'data/serverState/initialServerState.json';
+const initialServerStateDataRelativePath = 'data/serverState/default.json';
 const initialServerStateDataPath = `${process.cwd()}/${initialServerStateDataRelativePath}`;
-const endpointsMapPath = `${process.cwd()}/data/endpointsMap.json`;
+const endpointsMapPath = `${process.cwd()}/data/endpoints.json`;
+const serverStateScenariosMapPath = `${process.cwd()}/data/serverStateScenarios.json`;
 const serverStateInterfaceFileName = 'interfaces.ts';
 const serverStateInterfacePath = `${process.cwd()}/${serverStateInterfaceFileName}`;
 const initialServerState = loadInitialServerState();
@@ -28,6 +31,16 @@ let serverState = loadInitialServerState();
 let endpoints: Endpoint[] = [];
 let Sockets: WebSocket[] = [];
 let serverStateInterface = loadServerStateInterface();
+let serverStateScenarioMappings = loadServerStateScenariosMappings();
+
+// Handler
+export type RequestResponse = (state: ServerState, request: unknown) => unknown;
+export type ServerUpdate = (request: unknown) => (state: ServerState) => void;
+
+export interface Handler {
+  requestResponse: RequestResponse;
+  serverUpdate: ServerUpdate;
+}
 
 function handlerPath({ url, method }: Endpoint | EndpointMapping) {
   return `${process.cwd()}/endpoints/${url}/${method}.js`;
@@ -51,12 +64,69 @@ function loadHandler(endpoint: Endpoint | EndpointMapping): Handler {
   return require(path);
 }
 
-function loadInitialServerState() {
+// Creating types
+const execPromised = util.promisify(exec);
+
+async function makeTypesFromInitialServerState() {
+  const { stdout, stderr } = await execPromised(
+    `make_types -i ${serverStateInterfaceFileName} ${initialServerStateDataRelativePath} ServerState`,
+  );
+
+  logInfo(['makeTypesFromInitialServerState'], stdout, stderr);
+
+  serverStateInterface = loadServerStateInterface();
+
+  broadcast({ action: 'updateServerStateInterface', payload: serverStateInterface });
+}
+
+// State related
+function loadInitialServerState(): ServerState {
   return JSON.parse(readFileSync(initialServerStateDataPath, 'utf8'));
 }
 
-function loadServerStateInterface() {
+function loadServerStateInterface(): string {
   return readFileSync(serverStateInterfacePath, 'utf8').toString();
+}
+
+function loadServerStateScenariosMappings(): ServerStateScenarioMapping[] {
+  return JSON.parse(readFileSync(serverStateScenariosMapPath, 'utf8'));
+}
+
+function getServerStateScenarioDataPath(scenario: ServerStateScenario) {
+  return `${process.cwd()}/data/serverState/${scenario.name}.json`;
+}
+
+function saveServerStateScenario(scenario: ServerStateScenario) {
+  const serverStateScenarioDataPath = getServerStateScenarioDataPath(scenario);
+
+  writeFileSync(serverStateScenarioDataPath, JSON.stringify(scenario.state, null, 2), 'utf-8');
+}
+
+function saveServerStateScenarioMappings(scenarios: ServerStateScenarioMapping[]) {
+  writeFileSync(serverStateScenariosMapPath, JSON.stringify(scenarios, null, 2), 'utf-8');
+}
+
+function saveServerStateToFile(data: ServerState) {
+  writeFileSync(initialServerStateDataPath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+function updateServerState(serverStateUpdate: Partial<ServerState>) {
+  logInfo(['updateServerState'], serverStateUpdate);
+
+  serverState = {
+    ...serverState,
+    ...serverStateUpdate,
+  };
+
+  saveServerStateToFile(serverState);
+  makeTypesFromInitialServerState().then(() => {
+    logInfo(['makeTypesFromInitialServerState'], 'done');
+  });
+}
+
+function resetServerState() {
+  logInfo(['resetServerState'], initialServerState);
+  updateServerState(initialServerState);
 }
 
 function loadEndpoints(): Endpoint[] {
@@ -74,14 +144,7 @@ function loadEndpoints(): Endpoint[] {
   });
 }
 
-export type RequestResponse = (state: ServerState, request: unknown) => unknown;
-export type ServerUpdate = (request: unknown) => (state: ServerState) => void;
-
-export interface Handler {
-  requestResponse: RequestResponse;
-  serverUpdate: ServerUpdate;
-}
-
+// Endpoints
 function saveEndpointToFile(endpoint: Endpoint) {
   const code = handlerTemplate(endpoint);
   const folders = endpoint.url.split('/');
@@ -102,31 +165,8 @@ function saveEndpointToFile(endpoint: Endpoint) {
   }
 }
 
-function saveServerStateToFile(data: unknown) {
-  writeFileSync(initialServerStateDataPath, JSON.stringify(data, null, 2), 'utf-8');
-}
-
-function saveEndpointMappings(data: unknown) {
+function saveEndpointMappings(data: EndpointMapping[]) {
   writeFileSync(endpointsMapPath, JSON.stringify(data, null, 2), 'utf-8');
-}
-
-function updateServerState(serverStateUpdate: Partial<typeof serverState>) {
-  logInfo(['updateServerState'], serverStateUpdate);
-
-  serverState = {
-    ...serverState,
-    ...serverStateUpdate,
-  };
-
-  saveServerStateToFile(serverState);
-  makeTypesFromInitialServerState().then(() => {
-    logInfo(['makeTypesFromInitialServerState'], 'done');
-  });
-}
-
-function resetServerState() {
-  logInfo(['resetServerState'], initialServerState);
-  updateServerState(initialServerState);
 }
 
 function addEndpoint(endpoint: Endpoint) {
@@ -166,6 +206,7 @@ function deleteEndpoint(endpointId: string) {
   logInfo(['deleteEndpoint'], endpointId);
 }
 
+// Sockets
 function sendEvent(socket: WebSocket, event: ServerEvent): void {
   try {
     socket.send(JSON.stringify(event));
@@ -173,12 +214,6 @@ function sendEvent(socket: WebSocket, event: ServerEvent): void {
   } catch (e) {
     logError(e);
   }
-}
-
-function nocache(module: string) {
-  watchFile(require('path').resolve(module), () => {
-    delete require.cache[require.resolve(module)];
-  });
 }
 
 function clearSocket(socketId: string) {
@@ -198,20 +233,6 @@ function broadcast(event: ServerEvent) {
   });
 }
 
-const execPromised = util.promisify(exec);
-
-async function makeTypesFromInitialServerState() {
-  const { stdout, stderr } = await execPromised(
-    `make_types -i ${serverStateInterfaceFileName} ${initialServerStateDataRelativePath} ServerState`,
-  );
-
-  logInfo(['makeTypesFromInitialServerState'], stdout, stderr);
-
-  serverStateInterface = loadServerStateInterface();
-
-  broadcast({ action: 'updateServerStateInterface', payload: serverStateInterface });
-}
-
 function parseMessage(message: ArrayBuffer): { action: ClientAction; payload: unknown } {
   const { action, payload } = JSON.parse(
     // @ts-ignore
@@ -226,7 +247,18 @@ const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) 
     addEndpoint(payload as Endpoint);
     sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
   },
-  addServerStateScenario(ws: WebSocket, payload: Endpoint) {},
+  addServerStateScenario(ws: WebSocket, payload: ServerStateScenario) {
+    console.log(['addServerStateScenario'], payload);
+    saveServerStateScenario(payload);
+
+    serverStateScenarioMappings = [
+      ...serverStateScenarioMappings,
+      { name: payload.name, id: Date.now().toString(), path: getServerStateScenarioDataPath(payload) },
+    ];
+
+    saveServerStateScenarioMappings(serverStateScenarioMappings);
+    broadcast({ action: 'updateServerStateScenarios', payload: serverStateScenarioMappings });
+  },
   clientUpdatedServer(ws: WebSocket, payload: ServerState) {
     updateServerState(payload);
     broadcast({ action: 'updateServerState', payload: serverState });
@@ -259,6 +291,7 @@ function openHandler(ws: WebSocket) {
 
   sendEvent(ws, { action: 'updateServerState', payload: serverState });
   sendEvent(ws, { action: 'updateServerStateInterface', payload: serverStateInterface });
+  sendEvent(ws, { action: 'updateServerStateScenarios', payload: serverStateScenarioMappings });
   sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
 }
 
@@ -266,6 +299,13 @@ function closeHandler(ws: WebSocket) {
   Sockets = Sockets.filter(socket => socket.id === ws.id);
 }
 
+const webSocketBehavior = {
+  message: messageHandler,
+  open: openHandler,
+  close: closeHandler,
+};
+
+// Http
 async function httpHandler(res: HttpResponse, req: HttpRequest) {
   try {
     const method = req.getMethod() as Method;
@@ -323,12 +363,7 @@ async function startServerHandler(listenSocket: any) {
   await makeTypesFromInitialServerState();
 }
 
-const webSocketBehavior = {
-  message: messageHandler,
-  open: openHandler,
-  close: closeHandler,
-};
-
+// Application
 App()
   .ws('/*', webSocketBehavior)
   .any('/*', httpHandler)

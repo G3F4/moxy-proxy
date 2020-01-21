@@ -43,6 +43,8 @@ export default function Header() {
   const inputLabel = useRef<HTMLLabelElement>(null);
   const [labelWidth, setLabelWidth] = useState(0);
 
+  console.log(['Header.serverStateScenarios'], serverStateScenarios)
+
   useEffect(() => {
     setLabelWidth(inputLabel.current!.offsetWidth);
   }, []);
@@ -96,7 +98,7 @@ export default function Header() {
               }}
             >
               {serverStateScenarios.map(({ id, name }) => (
-                <MenuItem key={id} value={id}>{name}</MenuItem>
+                <MenuItem key={id} value={name}>{name}</MenuItem>
               ))}
             </Select>
           </FormControl>

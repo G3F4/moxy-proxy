@@ -3,7 +3,7 @@ import { ServerState } from '../interfaces';
 import {
   ClientEvent,
   Endpoint,
-  ServerAction,
+  ServerAction, ServerEvent,
   ServerStateScenario,
   ServerStateScenarioId,
 } from '../sharedTypes';
@@ -78,6 +78,26 @@ const App: React.FC = () => {
     }
   }
 
+  function messageHandler(event: ServerEvent) {
+    const { action, payload } = event;
+    const handlers: Record<ServerAction, (payload: any) => void> = {
+      updateEndpoints(payload: Endpoint[]) {
+        setEndpoints(payload);
+      },
+      updateServerState(payload: ServerState) {
+        setServerState(payload);
+      },
+      updateServerStateInterface(payload: string) {
+        setServerStateInterface(payload);
+      },
+      updateServerStateScenarios(payload: ServerStateScenario[]) {
+        setServerStateScenarios(payload);
+      },
+    };
+
+    handlers[action](payload);
+  }
+
   useEffect(() => {
     socket.onopen = event => {
       console.log(['WebSocket.onopen'], event);
@@ -89,20 +109,7 @@ const App: React.FC = () => {
 
     socket.onmessage = event => {
       console.log(['WebSocket.onmessage'], JSON.parse(event.data));
-
-      const { action, payload } = parseMessage(event.data);
-
-      if (action === 'updateEndpoints') {
-        setEndpoints(payload as Endpoint[]);
-      }
-
-      if (action === 'updateServerState') {
-        setServerState(payload as ServerState);
-      }
-
-      if (action === 'updateServerStateInterface') {
-        setServerStateInterface(payload as string);
-      }
+      messageHandler(parseMessage(event.data));
     };
 
     socket.onerror = event => {
@@ -172,9 +179,13 @@ const App: React.FC = () => {
       payload: updatedServerState,
     });
   }
-  
+
   function handleAddServerStateScenario(serverStateScenario: ServerStateScenario) {
-    setServerStateScenarios(scenarios => [...scenarios, serverStateScenario])
+    setServerStateScenarios(scenarios => [...scenarios, serverStateScenario]);
+    sendEvent({
+      action: 'addServerStateScenario',
+      payload: serverStateScenario,
+    });
   }
 
   const contextValue = {
