@@ -2,10 +2,17 @@ import { exec } from 'child_process';
 import { existsSync, readFileSync, watchFile, writeFileSync } from 'fs';
 import produce from 'immer';
 import * as util from 'util';
-import { App, WebSocket } from 'uWebSockets.js';
+import { App, HttpRequest, HttpResponse, WebSocket } from 'uWebSockets.js';
 import { PORT } from '../constans';
 import { ServerState } from '../interfaces';
-import { ClientAction, Endpoint, EndpointMapping, Method, ServerEvent } from '../sharedTypes';
+import {
+  ClientAction,
+  ClientEvent,
+  Endpoint,
+  EndpointMapping,
+  Method,
+  ServerEvent,
+} from '../sharedTypes';
 import createFolderIfNotExists from './utils/createFolderIfNotExists';
 import { logError, logInfo } from './utils/logger';
 import { readJsonAsync } from './utils/readJson';
@@ -214,103 +221,118 @@ function parseMessage(message: ArrayBuffer): { action: ClientAction; payload: un
   return { action, payload };
 }
 
+const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) => void> = {
+  addEndpoint(ws: WebSocket, payload: Endpoint) {
+    addEndpoint(payload as Endpoint);
+    sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
+  },
+  addServerStateScenario(ws: WebSocket, payload: Endpoint) {},
+  clientUpdatedServer(ws: WebSocket, payload: ServerState) {
+    updateServerState(payload);
+    broadcast({ action: 'updateServerState', payload: serverState });
+  },
+  deleteEndpoint(ws: WebSocket, payload: string) {
+    deleteEndpoint(payload);
+    sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
+  },
+  ping(ws: WebSocket, _payload: unknown) {},
+  resetServerState(ws: WebSocket, _payload: undefined) {
+    resetServerState();
+    sendEvent(ws, { action: 'updateServerState', payload: serverState });
+  },
+  updateEndpoint(ws: WebSocket, payload: Endpoint) {
+    updateEndpoint(payload);
+    sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
+  },
+};
+
+function messageHandler(ws: WebSocket, message: ArrayBuffer) {
+  const { action, payload } = parseMessage(message);
+  const handler = clientMessageHandlers[action];
+
+  handler(ws, payload);
+}
+
+function openHandler(ws: WebSocket) {
+  ws.id = Date.now();
+  Sockets.push(ws);
+
+  sendEvent(ws, { action: 'updateServerState', payload: serverState });
+  sendEvent(ws, { action: 'updateServerStateInterface', payload: serverStateInterface });
+  sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
+}
+
+function closeHandler(ws: WebSocket) {
+  Sockets = Sockets.filter(socket => socket.id === ws.id);
+}
+
+async function httpHandler(res: HttpResponse, req: HttpRequest) {
+  try {
+    const method = req.getMethod() as Method;
+    const url = req.getUrl() !== '/' ? req.getUrl() : '/index.html';
+    const urlLastChar = url[url.length - 1];
+    const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
+    const endpoint = endpoints.find(
+      endpoint => `/${endpoint.url}` === rawUrl && endpoint.method === method,
+    );
+
+    logInfo(['url'], url);
+    logInfo(['method'], method);
+
+    if (endpoint) {
+      const requestBody = await readJsonAsync(res);
+      const request = {
+        body: requestBody,
+      };
+      const { requestResponse, serverUpdate } = loadHandler(endpoint);
+
+      logInfo(['requestResponse'], requestResponse.toString());
+      logInfo(['serverUpdate'], serverUpdate.toString());
+
+      const requestResponseReturn = requestResponse(serverState, request);
+
+      logInfo(['requestResponseReturn'], requestResponseReturn);
+
+      const newServerState = produce(serverState, serverUpdate(request));
+
+      updateServerState(newServerState);
+
+      broadcast({ action: 'updateServerState', payload: serverState });
+
+      res.end(JSON.stringify(requestResponseReturn));
+    } else {
+      const file = readFileSync(`${process.cwd()}/build${url}`);
+
+      res.end(file);
+    }
+  } catch (e) {
+    logError(`error: ${e.toString()}`);
+    res.writeStatus('404');
+    res.end();
+    logError(['error'], e);
+  }
+}
+
+async function startServerHandler(listenSocket: any) {
+  if (listenSocket) {
+    logError(`Listening to port: ${PORT}`);
+  }
+
+  endpoints = loadEndpoints();
+
+  await makeTypesFromInitialServerState();
+}
+
+const webSocketBehavior = {
+  message: messageHandler,
+  open: openHandler,
+  close: closeHandler,
+};
+
 App()
-  .ws('/*', {
-    message: (ws, message) => {
-      const { action, payload } = parseMessage(message);
-
-      if (action === 'addEndpoint') {
-        addEndpoint(payload as Endpoint);
-        sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
-      }
-
-      if (action === 'updateEndpoint') {
-        updateEndpoint(payload as Endpoint);
-        sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
-      }
-
-      if (action === 'deleteEndpoint') {
-        deleteEndpoint(payload as string);
-        sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
-      }
-
-      if (action === 'clientUpdatedServer') {
-        updateServerState(payload as ServerState);
-        broadcast({ action: 'updateServerState', payload: serverState });
-      }
-
-      if (action === 'resetServerState') {
-        resetServerState();
-        sendEvent(ws, { action: 'updateServerState', payload: serverState });
-      }
-    },
-    open: (ws: WebSocket) => {
-      ws.id = Date.now();
-      Sockets.push(ws);
-
-      sendEvent(ws, { action: 'updateServerState', payload: serverState });
-      sendEvent(ws, { action: 'updateServerStateInterface', payload: serverStateInterface });
-      sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
-    },
-    close: (ws: WebSocket) => {
-      Sockets = Sockets.filter(socket => socket.id === ws.id);
-    },
-  })
-  .any('/*', async (res, req) => {
-    try {
-      const method = req.getMethod() as Method;
-      const url = req.getUrl() !== '/' ? req.getUrl() : '/index.html';
-      const urlLastChar = url[url.length - 1];
-      const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
-      const endpoint = endpoints.find(
-        endpoint => `/${endpoint.url}` === rawUrl && endpoint.method === method,
-      );
-
-      logInfo(['url'], url);
-      logInfo(['method'], method);
-
-      if (endpoint) {
-        const requestBody = await readJsonAsync(res);
-        const request = {
-          body: requestBody,
-        };
-        const { requestResponse, serverUpdate } = loadHandler(endpoint);
-
-        logInfo(['requestResponse'], requestResponse.toString());
-        logInfo(['serverUpdate'], serverUpdate.toString());
-
-        const requestResponseReturn = requestResponse(serverState, request);
-
-        logInfo(['requestResponseReturn'], requestResponseReturn);
-
-        const newServerState = produce(serverState, serverUpdate(request));
-
-        updateServerState(newServerState);
-
-        broadcast({ action: 'updateServerState', payload: serverState });
-
-        res.end(JSON.stringify(requestResponseReturn));
-      } else {
-        const file = readFileSync(`${process.cwd()}/build${url}`);
-
-        res.end(file);
-      }
-    } catch (e) {
-      logError(`error: ${e.toString()}`);
-      res.writeStatus('404');
-      res.end();
-      logError(['error'], e);
-    }
-  })
-  .listen(PORT, async listenSocket => {
-    if (listenSocket) {
-      logError(`Listening to port: ${PORT}`);
-    }
-
-    endpoints = loadEndpoints();
-
-    await makeTypesFromInitialServerState();
-  });
+  .ws('/*', webSocketBehavior)
+  .any('/*', httpHandler)
+  .listen(PORT, startServerHandler);
 
 // curl -i --header "Content-Type: application/json" --request GET  http://localhost:5000/test
 // curl -i --header "Content-Type: application/json" --request PUT  http://localhost:5000/test
