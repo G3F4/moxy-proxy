@@ -7,7 +7,6 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { ServerStateScenarioId } from '../../../sharedTypes';
 import { AppStateContext, ViewMode } from '../../App';
 import AddEndpoint from '../add-endpoint/AddEndpoint';
 import AddServerScenario from '../add-server-scenario/AddServerScenario';
@@ -94,11 +93,11 @@ export default function Header() {
               labelWidth={labelWidth}
               value={activeServerStateScenarioId}
               onChange={event => {
-                changeServerStateScenario(event.target.value as ServerStateScenarioId);
+                changeServerStateScenario(event.target.value as string);
               }}
             >
               {serverStateScenarios.map(({ id, name }) => (
-                <MenuItem key={id} value={name}>{name}</MenuItem>
+                <MenuItem key={id} value={id}>{name}</MenuItem>
               ))}
             </Select>
           </FormControl>

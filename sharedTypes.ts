@@ -21,6 +21,7 @@ export type ClientAction =
   | 'deleteEndpoint'
   | 'clientUpdatedServer'
   | 'resetServerState'
+  | 'changeServerStateScenario'
   | 'addServerStateScenario';
 
 export interface ClientEvent extends SocketEvent {
@@ -41,16 +42,14 @@ export interface EndpointMapping {
   method: Method;
 }
 
-export type ServerStateScenarioId = 'default' | string;
-
 export interface ServerStateScenario {
-  id?: ServerStateScenarioId;
+  id?: string;
   name: string;
   state: unknown;
 }
 
 export interface ServerStateScenarioMapping {
-  id: ServerStateScenarioId;
+  id: string;
   name: string;
   path: string;
 }

@@ -3,9 +3,9 @@ import { ServerState } from '../interfaces';
 import {
   ClientEvent,
   Endpoint,
-  ServerAction, ServerEvent,
+  ServerAction,
+  ServerEvent,
   ServerStateScenario,
-  ServerStateScenarioId,
 } from '../sharedTypes';
 import './App.css';
 import Layout from './layouts/Layout';
@@ -26,7 +26,7 @@ export type ViewMode = 'tabs' | 'panels' | 'board';
 
 export const AppStateContext = React.createContext({
   activeTab: 1,
-  activeServerStateScenarioId: 'default' as ServerStateScenarioId,
+  activeServerStateScenarioId: 'default',
   viewMode: 'tabs' as ViewMode,
   serverState: initialServerState(),
   endpoints: initialEndpoint(),
@@ -36,7 +36,7 @@ export const AppStateContext = React.createContext({
   changeViewMode(_viewMode: ViewMode) {},
   changeActiveTab(_tabIndex: number) {},
   addServerStateScenario(_serverStateScenario: ServerStateScenario) {},
-  changeServerStateScenario(_serverStateScenarioId: ServerStateScenarioId) {},
+  changeServerStateScenario(_serverStateScenarioId: string) {},
   updateServerState(_serverState: ServerState) {},
   resetServerState() {},
   addEndpoint(_endpoint: Endpoint) {},
@@ -56,16 +56,10 @@ function parseMessage(message: string): { action: ServerAction; payload: unknown
 const socket = new WebSocket(socketUrl);
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState(1);
-  const [activeServerStateScenarioId, setActiveServerStateScenarioId] = useState(
-    'default' as ServerStateScenarioId,
-  );
+  const [activeServerStateScenarioId, setActiveServerStateScenarioId] = useState('default');
   const [viewMode, setViewMode] = useState<ViewMode>('tabs');
   const [serverState, setServerState] = useState(initialServerState);
-  const [serverStateScenarios, setServerStateScenarios] = useState([{
-    name: 'Default',
-    id: 'default',
-    state: serverState,
-  }] as ServerStateScenario[]);
+  const [serverStateScenarios, setServerStateScenarios] = useState([] as ServerStateScenario[]);
   const [serverStateInterface, setServerStateInterface] = useState('');
   const [endpoints, setEndpoints] = useState(initialEndpoint);
 
@@ -188,6 +182,14 @@ const App: React.FC = () => {
     });
   }
 
+  function handleChangeServerStateScenario(serverStateScenarioId: string) {
+    sendEvent({
+      action: 'changeServerStateScenario',
+      payload: serverStateScenarioId,
+    });
+    setActiveServerStateScenarioId(serverStateScenarioId);
+  }
+
   const contextValue = {
     activeTab,
     activeServerStateScenarioId,
@@ -197,7 +199,7 @@ const App: React.FC = () => {
     serverStateScenarios,
     viewMode,
     addServerStateScenario: handleAddServerStateScenario,
-    changeServerStateScenario: setActiveServerStateScenarioId,
+    changeServerStateScenario: handleChangeServerStateScenario,
     changeViewMode: setViewMode,
     changeActiveTab: setActiveTab,
     updateServerState: handleServerStateChange,

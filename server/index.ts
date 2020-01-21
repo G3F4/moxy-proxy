@@ -25,9 +25,9 @@ const endpointsMapPath = `${process.cwd()}/data/endpoints.json`;
 const serverStateScenariosMapPath = `${process.cwd()}/data/serverStateScenarios.json`;
 const serverStateInterfaceFileName = 'interfaces.ts';
 const serverStateInterfacePath = `${process.cwd()}/${serverStateInterfaceFileName}`;
-const initialServerState = loadInitialServerState();
+const initialServerState = loadServerState(initialServerStateDataPath);
 let endpointMappings: EndpointMapping[] = JSON.parse(readFileSync(endpointsMapPath, 'utf8'));
-let serverState = loadInitialServerState();
+let serverState = loadServerState(initialServerStateDataPath);
 let endpoints: Endpoint[] = [];
 let Sockets: WebSocket[] = [];
 let serverStateInterface = loadServerStateInterface();
@@ -80,8 +80,8 @@ async function makeTypesFromInitialServerState() {
 }
 
 // State related
-function loadInitialServerState(): ServerState {
-  return JSON.parse(readFileSync(initialServerStateDataPath, 'utf8'));
+function loadServerState(path: string): ServerState {
+  return JSON.parse(readFileSync(path, 'utf8'));
 }
 
 function loadServerStateInterface(): string {
@@ -119,6 +119,7 @@ function updateServerState(serverStateUpdate: Partial<ServerState>) {
   };
 
   saveServerStateToFile(serverState);
+  broadcast({ action: 'updateServerState', payload: serverState });
   makeTypesFromInitialServerState().then(() => {
     logInfo(['makeTypesFromInitialServerState'], 'done');
   });
@@ -259,6 +260,15 @@ const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) 
     saveServerStateScenarioMappings(serverStateScenarioMappings);
     broadcast({ action: 'updateServerStateScenarios', payload: serverStateScenarioMappings });
   },
+  changeServerStateScenario(ws: WebSocket, payload: string) {
+    const mapping = serverStateScenarioMappings.find(({ id }) => id === payload);
+
+    if (mapping) {
+      const state = loadServerState(mapping.path);
+
+      sendEvent(ws, { action: 'updateServerState', payload: state });
+    }
+  },
   clientUpdatedServer(ws: WebSocket, payload: ServerState) {
     updateServerState(payload);
     broadcast({ action: 'updateServerState', payload: serverState });
@@ -336,8 +346,6 @@ async function httpHandler(res: HttpResponse, req: HttpRequest) {
       const newServerState = produce(serverState, serverUpdate(request));
 
       updateServerState(newServerState);
-
-      broadcast({ action: 'updateServerState', payload: serverState });
 
       res.end(JSON.stringify(requestResponseReturn));
     } else {
