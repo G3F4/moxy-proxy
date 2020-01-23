@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import produce from 'immer';
 import * as util from 'util';
 import { App, HttpRequest, HttpResponse, WebSocket } from 'uWebSockets.js';
@@ -8,21 +8,18 @@ import { ServerState } from '../interfaces';
 import {
   ClientAction,
   Endpoint,
-  EndpointMapping,
   Method,
   ServerEvent,
   ServerStateScenario,
   ServerStateScenarioMapping,
 } from '../sharedTypes';
-import { fileService } from './FileService';
-import createFolderIfNotExists from './utils/createFolderIfNotExists';
+import EndpointsService from './services/endpoints-service/EndpointsService';
+import FileService from './services/file-service/FileService';
 import { logError, logInfo } from './utils/logger';
-import { nocache } from './utils/nocache';
 import { readJsonAsync } from './utils/readJson';
 
-const endpointsMapPath = 'data/endpoints.json';
-let endpointMappings = fileService.readJSON<EndpointMapping[]>(endpointsMapPath);
-let endpoints: Endpoint[] = [];
+const fileService = new FileService(process.cwd(), readFileSync, writeFileSync, existsSync);
+const endpointsService = new EndpointsService(fileService);
 
 let activeServerStateScenarioId = 'default';
 const initialServerStatePath = `data/serverState/${activeServerStateScenarioId}.json`;
@@ -38,37 +35,6 @@ let serverStateInterface = fileService.readText(serverStateInterfacePath);
 let serverStateScenarioMappings = fileService.readJSON<ServerStateScenarioMapping[]>(
   serverStateScenariosMapPath,
 );
-
-// Handler
-export type RequestResponse = (state: ServerState, request: unknown) => unknown;
-export type ServerUpdate = (request: unknown) => (state: ServerState) => void;
-
-export interface Handler {
-  requestResponse: RequestResponse;
-  serverUpdate: ServerUpdate;
-}
-
-function handlerPath({ url, method }: Endpoint | EndpointMapping) {
-  return `${fileService.cwd}/endpoints/${url}/${method}.js`;
-}
-
-function handlerTemplate(endpoint: Endpoint) {
-  return (
-    `
-export ${endpoint.responseCode.trim()}
-
-export ${endpoint.serverStateUpdateCode.trim()}
-`.trim() + '\n'
-  );
-}
-
-function loadHandler(endpoint: Endpoint | EndpointMapping): Handler {
-  const path = handlerPath(endpoint);
-
-  nocache(path);
-
-  return require(path);
-}
 
 // Creating types
 const execPromised = util.promisify(exec);
@@ -143,83 +109,6 @@ function resetServerState(serverStateScenarioId: string) {
   });
 }
 
-function loadEndpoints(): Endpoint[] {
-  return endpointMappings.map((endpointMapping: EndpointMapping) => {
-    const { id, method, url } = endpointMapping;
-    const handler = loadHandler(endpointMapping);
-
-    return {
-      id,
-      method,
-      url,
-      responseCode: handler.requestResponse.toString(),
-      serverStateUpdateCode: handler.serverUpdate.toString(),
-    };
-  });
-}
-
-// Endpoints
-function saveEndpointToFile(endpoint: Endpoint) {
-  const code = handlerTemplate(endpoint);
-  const folders = endpoint.url.split('/');
-
-  folders.forEach((item, index, arr) => {
-    const absolutePath = `endpoints/${arr.slice(0, index + 1).join('/')}`;
-
-    createFolderIfNotExists(absolutePath);
-  });
-
-  const path = handlerPath(endpoint);
-  const fileExists = fileService.checkIfExist(path);
-
-  if (fileExists) {
-    fileService.saveText(path, code);
-  } else {
-    fileService.saveText(path, code, { openToAppend: true });
-  }
-}
-
-function saveEndpointMappings(data: EndpointMapping[]) {
-  fileService.saveJSON(endpointsMapPath, data);
-}
-
-function addEndpoint(endpoint: Endpoint) {
-  logInfo(['addEndpoint'], endpoint);
-
-  const endpointMapping: EndpointMapping = {
-    id: Date.now().toString(),
-    method: endpoint.method,
-    url: endpoint.url,
-  };
-
-  endpoints = [...endpoints, endpoint];
-  endpointMappings = [...endpointMappings, endpointMapping];
-
-  saveEndpointMappings(endpointMappings);
-  saveEndpointToFile(endpoint);
-}
-
-function updateEndpoint(endpoint: Endpoint) {
-  const endpointIndex = endpoints.findIndex(
-    ({ url, method }) => endpoint.url === url && endpoint.method === method,
-  );
-
-  // @ts-ignore
-  endpoints[endpointIndex] = endpoint;
-
-  logInfo(['updateEndpoint'], endpoint);
-
-  saveEndpointToFile(endpoint);
-}
-
-function deleteEndpoint(endpointId: string) {
-  endpoints = endpoints.filter(({ id }) => id !== endpointId);
-  endpointMappings = endpointMappings.filter(({ id }) => id !== endpointId);
-
-  saveEndpointMappings(endpointMappings);
-  logInfo(['deleteEndpoint'], endpointId);
-}
-
 // Sockets
 function sendEvent(socket: WebSocket, event: ServerEvent): void {
   try {
@@ -258,9 +147,18 @@ function parseMessage(message: ArrayBuffer): { action: ClientAction; payload: un
 
 const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) => void> = {
   addEndpoint(ws: WebSocket, payload: Endpoint) {
-    addEndpoint(payload as Endpoint);
-    sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
+    endpointsService.addEndpoint(payload);
+    sendEvent(ws, { action: 'updateEndpoints', payload: endpointsService.getEndpoints() });
   },
+  updateEndpoint(ws: WebSocket, payload: Endpoint) {
+    endpointsService.updateEndpoint(payload);
+    sendEvent(ws, { action: 'updateEndpoints', payload: endpointsService.getEndpoints() });
+  },
+  deleteEndpoint(ws: WebSocket, payload: string) {
+    endpointsService.deleteEndpoint(payload);
+    sendEvent(ws, { action: 'updateEndpoints', payload: endpointsService.getEndpoints() });
+  },
+
   addServerStateScenario(ws: WebSocket, payload: ServerStateScenario) {
     console.log(['addServerStateScenario'], payload);
     saveServerStateScenario(payload);
@@ -302,19 +200,12 @@ const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) 
     updateServerState(payload);
     broadcast({ action: 'updateServerState', payload: serverState });
   },
-  deleteEndpoint(ws: WebSocket, payload: string) {
-    deleteEndpoint(payload);
-    sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
-  },
-  ping(ws: WebSocket, _payload: unknown) {},
   resetServerState(ws: WebSocket, payload: string) {
     resetServerState(payload);
     sendEvent(ws, { action: 'updateServerState', payload: serverState });
   },
-  updateEndpoint(ws: WebSocket, payload: Endpoint) {
-    updateEndpoint(payload);
-    sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
-  },
+
+  ping(ws: WebSocket, _payload: unknown) {},
 };
 
 function messageHandler(ws: WebSocket, message: ArrayBuffer) {
@@ -331,7 +222,7 @@ function openHandler(ws: WebSocket) {
   sendEvent(ws, { action: 'updateServerState', payload: serverState });
   sendEvent(ws, { action: 'updateServerStateInterface', payload: serverStateInterface });
   sendEvent(ws, { action: 'updateServerStateScenarios', payload: serverStateScenarioMappings });
-  sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
+  sendEvent(ws, { action: 'updateEndpoints', payload: endpointsService.getEndpoints() });
 }
 
 function closeHandler(ws: WebSocket) {
@@ -351,19 +242,17 @@ async function httpHandler(res: HttpResponse, req: HttpRequest) {
     const url = req.getUrl() !== '/' ? req.getUrl() : '/index.html';
     const urlLastChar = url[url.length - 1];
     const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
-    const endpoint = endpoints.find(
-      endpoint => `/${endpoint.url}` === rawUrl && endpoint.method === method,
-    );
+    const handler = endpointsService.getHandler({ url: rawUrl, method });
 
     logInfo(['url'], url);
     logInfo(['method'], method);
 
-    if (endpoint) {
+    if (handler) {
       const requestBody = await readJsonAsync(res);
       const request = {
         body: requestBody,
       };
-      const { requestResponse, serverUpdate } = loadHandler(endpoint);
+      const { requestResponse, serverUpdate } = handler;
       const requestResponseReturn = requestResponse(serverState, request);
       const state = produce(serverState, serverUpdate(request));
 
@@ -390,8 +279,6 @@ async function startServerHandler(listenSocket: any) {
   if (listenSocket) {
     logError(`Listening to port: ${PORT}`);
   }
-
-  endpoints = loadEndpoints();
 
   await makeTypesFromInitialServerState();
 }

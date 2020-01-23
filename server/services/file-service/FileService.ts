@@ -17,7 +17,7 @@ export default class FileService {
     return JSON.parse(this.readSync(`${this.cwd}/${path}`, 'utf8'));
   }
 
-  saveJSON(path: string, data: unknown) {
+  saveJSON(path: string, data: unknown): void {
     this.writeSync(`${this.cwd}/${path}`, JSON.stringify(data, null, 2), 'utf-8');
   }
 
@@ -25,7 +25,7 @@ export default class FileService {
     return this.readSync(`${this.cwd}/${path}`, 'utf8');
   }
 
-  saveText(path: string, text: string, options: { openToAppend?: boolean } = {}) {
+  saveText(path: string, text: string, options: { openToAppend?: boolean } = {}): void {
     if (options.openToAppend) {
       this.writeSync(`${this.cwd}/${path}`, text, { flag: 'wx' });
     } else {
@@ -33,5 +33,3 @@ export default class FileService {
     }
   }
 }
-
-export const fileService = new FileService(process.cwd(), readFileSync, writeFileSync, existsSync);
