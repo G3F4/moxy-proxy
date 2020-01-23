@@ -166,11 +166,14 @@ const App: React.FC = () => {
     });
   }
 
-  function handleServerStateChange(updatedServerState: any) {
+  function handleServerStateChange(updatedServerState: ServerState) {
     setServerState(updatedServerState);
     sendEvent({
       action: 'clientUpdatedServer',
-      payload: updatedServerState,
+      payload: {
+        serverStateScenarioId: activeServerStateScenarioId,
+        state: updatedServerState,
+      },
     });
   }
 

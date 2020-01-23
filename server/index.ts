@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import produce from 'immer';
 import * as util from 'util';
 import { App, HttpRequest, HttpResponse, WebSocket } from 'uWebSockets.js';
@@ -14,24 +14,30 @@ import {
   ServerStateScenario,
   ServerStateScenarioMapping,
 } from '../sharedTypes';
+import { fileService } from './FileService';
 import createFolderIfNotExists from './utils/createFolderIfNotExists';
 import { logError, logInfo } from './utils/logger';
 import { nocache } from './utils/nocache';
 import { readJsonAsync } from './utils/readJson';
 
-const initialServerStateDataRelativePath = 'data/serverState/default.json';
-const initialServerStateDataPath = `${process.cwd()}/${initialServerStateDataRelativePath}`;
-const endpointsMapPath = `${process.cwd()}/data/endpoints.json`;
-const serverStateScenariosMapPath = `${process.cwd()}/data/serverStateScenarios.json`;
-const serverStateInterfaceFileName = 'interfaces.ts';
-const serverStateInterfacePath = `${process.cwd()}/${serverStateInterfaceFileName}`;
-const initialServerState = loadServerState(initialServerStateDataPath);
-let endpointMappings: EndpointMapping[] = JSON.parse(readFileSync(endpointsMapPath, 'utf8'));
-let serverState = loadServerState(initialServerStateDataPath);
+const endpointsMapPath = 'data/endpoints.json';
+let endpointMappings = fileService.readJSON<EndpointMapping[]>(endpointsMapPath);
 let endpoints: Endpoint[] = [];
+
+let activeServerStateScenarioId = 'default';
+const initialServerStatePath = `data/serverState/${activeServerStateScenarioId}.json`;
+const serverStateScenariosMapPath = 'data/serverStateScenarios.json';
+const serverStateInterfaceFileName = 'interfaces.ts';
+const serverStateInterfacePath = 'interfaces.ts';
+const initialServerStates: Record<string, ServerState> = {
+  default: loadServerState(initialServerStatePath),
+};
+let serverState = fileService.readJSON<ServerState>(initialServerStatePath);
 let Sockets: WebSocket[] = [];
-let serverStateInterface = loadServerStateInterface();
-let serverStateScenarioMappings = loadServerStateScenariosMappings();
+let serverStateInterface = fileService.readText(serverStateInterfacePath);
+let serverStateScenarioMappings = fileService.readJSON<ServerStateScenarioMapping[]>(
+  serverStateScenariosMapPath,
+);
 
 // Handler
 export type RequestResponse = (state: ServerState, request: unknown) => unknown;
@@ -43,7 +49,7 @@ export interface Handler {
 }
 
 function handlerPath({ url, method }: Endpoint | EndpointMapping) {
-  return `${process.cwd()}/endpoints/${url}/${method}.js`;
+  return `${fileService.cwd}/endpoints/${url}/${method}.js`;
 }
 
 function handlerTemplate(endpoint: Endpoint) {
@@ -69,65 +75,72 @@ const execPromised = util.promisify(exec);
 
 async function makeTypesFromInitialServerState() {
   const { stdout, stderr } = await execPromised(
-    `make_types -i ${serverStateInterfaceFileName} ${initialServerStateDataRelativePath} ServerState`,
+    `make_types -i ${serverStateInterfaceFileName} ${initialServerStatePath} ServerState`,
   );
 
   logInfo(['makeTypesFromInitialServerState'], stdout, stderr);
 
-  serverStateInterface = loadServerStateInterface();
+  serverStateInterface = fileService.readText(serverStateInterfacePath);
 
   broadcast({ action: 'updateServerStateInterface', payload: serverStateInterface });
 }
 
 // State related
-function loadServerState(path: string): ServerState {
-  return JSON.parse(readFileSync(path, 'utf8'));
-}
-
-function loadServerStateInterface(): string {
-  return readFileSync(serverStateInterfacePath, 'utf8').toString();
-}
-
-function loadServerStateScenariosMappings(): ServerStateScenarioMapping[] {
-  return JSON.parse(readFileSync(serverStateScenariosMapPath, 'utf8'));
+function loadServerState(path: string) {
+  return fileService.readJSON<ServerState>(path);
 }
 
 function getServerStateScenarioDataPath(scenario: ServerStateScenario) {
-  return `${process.cwd()}/data/serverState/${scenario.name}.json`;
+  return `data/serverState/${scenario.name}.json`;
 }
 
 function saveServerStateScenario(scenario: ServerStateScenario) {
   const serverStateScenarioDataPath = getServerStateScenarioDataPath(scenario);
 
-  writeFileSync(serverStateScenarioDataPath, JSON.stringify(scenario.state, null, 2), 'utf-8');
+  fileService.saveJSON(serverStateScenarioDataPath, scenario.state);
 }
 
 function saveServerStateScenarioMappings(scenarios: ServerStateScenarioMapping[]) {
-  writeFileSync(serverStateScenariosMapPath, JSON.stringify(scenarios, null, 2), 'utf-8');
+  fileService.saveJSON(serverStateScenariosMapPath, scenarios);
 }
 
-function saveServerStateToFile(data: ServerState) {
-  writeFileSync(initialServerStateDataPath, JSON.stringify(data, null, 2), 'utf-8');
+function saveServerStateToFile(serverStateScenarioId: string, data: ServerState) {
+  const serverStateScenarioMapping = serverStateScenarioMappings.find(
+    scenario => scenario.id === serverStateScenarioId,
+  );
+
+  if (serverStateScenarioMapping) {
+    fileService.saveJSON(serverStateScenarioMapping.path, data);
+  }
 }
 
-function updateServerState(serverStateUpdate: Partial<ServerState>) {
-  logInfo(['updateServerState'], serverStateUpdate);
+function updateServerState({
+  state,
+  serverStateScenarioId,
+}: {
+  state: ServerState;
+  serverStateScenarioId: string;
+}) {
+  logInfo(['updateServerState'], serverStateScenarioId);
 
   serverState = {
     ...serverState,
-    ...serverStateUpdate,
+    ...state,
   };
 
-  saveServerStateToFile(serverState);
+  saveServerStateToFile(serverStateScenarioId, serverState);
   broadcast({ action: 'updateServerState', payload: serverState });
   makeTypesFromInitialServerState().then(() => {
     logInfo(['makeTypesFromInitialServerState'], 'done');
   });
 }
 
-function resetServerState() {
-  logInfo(['resetServerState'], initialServerState);
-  updateServerState(initialServerState);
+function resetServerState(serverStateScenarioId: string) {
+  logInfo(['resetServerState'], initialServerStates);
+  updateServerState({
+    serverStateScenarioId,
+    state: initialServerStates[serverStateScenarioId],
+  });
 }
 
 function loadEndpoints(): Endpoint[] {
@@ -151,23 +164,23 @@ function saveEndpointToFile(endpoint: Endpoint) {
   const folders = endpoint.url.split('/');
 
   folders.forEach((item, index, arr) => {
-    const absolutePath = `${process.cwd()}/endpoints/${arr.slice(0, index + 1).join('/')}`;
+    const absolutePath = `endpoints/${arr.slice(0, index + 1).join('/')}`;
 
     createFolderIfNotExists(absolutePath);
   });
 
   const path = handlerPath(endpoint);
-  const fileExists = existsSync(path);
+  const fileExists = fileService.checkIfExist(path);
 
   if (fileExists) {
-    writeFileSync(path, code);
+    fileService.saveText(path, code);
   } else {
-    writeFileSync(path, code, { flag: 'wx' });
+    fileService.saveText(path, code, { openToAppend: true });
   }
 }
 
 function saveEndpointMappings(data: EndpointMapping[]) {
-  writeFileSync(endpointsMapPath, JSON.stringify(data, null, 2), 'utf-8');
+  fileService.saveJSON(endpointsMapPath, data);
 }
 
 function addEndpoint(endpoint: Endpoint) {
@@ -254,7 +267,11 @@ const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) 
 
     serverStateScenarioMappings = [
       ...serverStateScenarioMappings,
-      { name: payload.name, id: Date.now().toString(), path: getServerStateScenarioDataPath(payload) },
+      {
+        name: payload.name,
+        id: Date.now().toString(),
+        path: getServerStateScenarioDataPath(payload),
+      },
     ];
 
     saveServerStateScenarioMappings(serverStateScenarioMappings);
@@ -264,12 +281,24 @@ const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) 
     const mapping = serverStateScenarioMappings.find(({ id }) => id === payload);
 
     if (mapping) {
-      const state = loadServerState(mapping.path);
+      activeServerStateScenarioId = payload;
 
-      sendEvent(ws, { action: 'updateServerState', payload: state });
+      const state = fileService.readJSON<ServerState>(mapping.path);
+
+      if (!initialServerStates[mapping.id]) {
+        initialServerStates[mapping.id] = state;
+      }
+
+      updateServerState({
+        state,
+        serverStateScenarioId: mapping.id,
+      });
     }
   },
-  clientUpdatedServer(ws: WebSocket, payload: ServerState) {
+  clientUpdatedServer(
+    ws: WebSocket,
+    payload: { state: ServerState; serverStateScenarioId: string },
+  ) {
     updateServerState(payload);
     broadcast({ action: 'updateServerState', payload: serverState });
   },
@@ -278,8 +307,8 @@ const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) 
     sendEvent(ws, { action: 'updateEndpoints', payload: endpoints });
   },
   ping(ws: WebSocket, _payload: unknown) {},
-  resetServerState(ws: WebSocket, _payload: undefined) {
-    resetServerState();
+  resetServerState(ws: WebSocket, payload: string) {
+    resetServerState(payload);
     sendEvent(ws, { action: 'updateServerState', payload: serverState });
   },
   updateEndpoint(ws: WebSocket, payload: Endpoint) {
@@ -335,21 +364,17 @@ async function httpHandler(res: HttpResponse, req: HttpRequest) {
         body: requestBody,
       };
       const { requestResponse, serverUpdate } = loadHandler(endpoint);
-
-      logInfo(['requestResponse'], requestResponse.toString());
-      logInfo(['serverUpdate'], serverUpdate.toString());
-
       const requestResponseReturn = requestResponse(serverState, request);
+      const state = produce(serverState, serverUpdate(request));
 
-      logInfo(['requestResponseReturn'], requestResponseReturn);
-
-      const newServerState = produce(serverState, serverUpdate(request));
-
-      updateServerState(newServerState);
+      updateServerState({
+        serverStateScenarioId: activeServerStateScenarioId,
+        state,
+      });
 
       res.end(JSON.stringify(requestResponseReturn));
     } else {
-      const file = readFileSync(`${process.cwd()}/build${url}`);
+      const file = fileService.readText(`build${url}`);
 
       res.end(file);
     }
