@@ -38,6 +38,22 @@ const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) 
       payload: endpointsService.getEndpoints(),
     });
   },
+  suspendEndpoint(ws: WebSocket, payload: { endpointId: string, status: number }) {
+    endpointsService.suspendEndpoint(payload);
+    socketsService.broadcastEvent({
+      action: 'updateEndpoints',
+      payload: endpointsService.getEndpoints(),
+    });
+  },
+  unsuspendEndpoint(ws: WebSocket, payload: string) {
+    endpointsService.unsuspendEndpoint(payload);
+    socketsService.broadcastEvent({
+      action: 'updateEndpoints',
+      payload: endpointsService.getEndpoints(),
+    });
+  },
+
+
 
   addServerStateScenario(ws: WebSocket, payload: ServerStateScenario) {
     serverStateService.addServerStateScenario(payload);
@@ -120,6 +136,16 @@ async function httpHandler(res: HttpResponse, req: HttpRequest) {
     const url = req.getUrl() !== '/' ? req.getUrl() : '/index.html';
     const urlLastChar = url[url.length - 1];
     const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
+    const suspenseStatus = endpointsService.getEndpointSuspenseStatus({ url: rawUrl, method });
+
+    logInfo(['suspenseStatus'], suspenseStatus);
+
+    if (suspenseStatus) {
+      res.writeStatus(suspenseStatus.toString());
+
+      return res.end();
+    }
+
     const handler = endpointsService.getHandler({ url: rawUrl, method });
 
     logInfo(['url'], url);
@@ -139,11 +165,11 @@ async function httpHandler(res: HttpResponse, req: HttpRequest) {
         state,
       });
 
-      res.end(JSON.stringify(requestResponseReturn));
+      return res.end(JSON.stringify(requestResponseReturn));
     } else {
       const file = fileService.readText(`build${url}`);
 
-      res.end(file);
+      return res.end(file);
     }
   } catch (e) {
     logError(`error: ${e.toString()}`);

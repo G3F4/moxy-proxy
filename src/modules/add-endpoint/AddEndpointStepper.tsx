@@ -122,6 +122,7 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
     id: Date.now().toString(),
     url: '',
     method: 'get',
+    suspenseStatus: null,
     responseCode: initialResponseCode,
     serverStateUpdateCode: initialServerStateUpdateCode,
   });

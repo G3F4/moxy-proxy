@@ -30,7 +30,9 @@ export default class EndpointsService {
   }
 
   public deleteEndpoint(endpointId: string) {
-    const endpoint = this.endpoints.find(it => it.id === endpointId) || this.endpointMappings.find(it => it.id === endpointId);
+    const endpoint =
+      this.endpoints.find(it => it.id === endpointId) ||
+      this.endpointMappings.find(it => it.id === endpointId);
 
     this.endpoints = this.endpoints.filter(({ id }) => id !== endpointId);
     this.endpointMappings = this.endpointMappings.filter(({ id }) => id !== endpointId);
@@ -59,6 +61,32 @@ export default class EndpointsService {
     this.saveEndpointToFile(endpoint);
   }
 
+  public suspendEndpoint({ endpointId, status }: { endpointId: string; status: number }) {
+    const endpointIndex = this.endpoints.findIndex(({ id }) => id === endpointId);
+    const endpoint = this.endpoints[endpointIndex];
+
+    endpoint.suspenseStatus = status;
+
+    this.endpoints[endpointIndex] = endpoint;
+
+    logInfo(['suspendEndpoint'], endpoint);
+
+    this.saveEndpointToFile(endpoint);
+  }
+
+  public unsuspendEndpoint(endpointId: string) {
+    const endpointIndex = this.endpoints.findIndex(({ id }) => id === endpointId);
+    const endpoint = this.endpoints[endpointIndex];
+
+    endpoint.suspenseStatus = null;
+
+    this.endpoints[endpointIndex] = endpoint;
+
+    logInfo(['unsuspendEndpoint'], endpoint);
+
+    this.saveEndpointToFile(endpoint);
+  }
+
   public getHandler({ method, url }: { method: Method; url: string }) {
     const endpoint = this.endpoints.find(
       endpoint => `/${endpoint.url}` === url && endpoint.method === method,
@@ -67,6 +95,18 @@ export default class EndpointsService {
     if (endpoint) {
       return this.loadHandler(endpoint);
     }
+  }
+
+  public getEndpointSuspenseStatus({ method, url }: { method: Method; url: string }) {
+    const endpoint = this.endpoints.find(
+      endpoint => `/${endpoint.url}` === url && endpoint.method === method,
+    );
+
+    if (endpoint) {
+      return endpoint.suspenseStatus;
+    }
+
+    return null;
   }
 
   private getEndpointPath(endpoint: Endpoint | EndpointMapping) {
@@ -92,6 +132,7 @@ export default class EndpointsService {
             id,
             method,
             url,
+            suspenseStatus: null,
             responseCode: handler.requestResponse.toString(),
             serverStateUpdateCode: handler.serverUpdate.toString(),
           },

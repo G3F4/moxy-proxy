@@ -25,7 +25,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export default function Endpoints() {
   const classes = useStyles();
-  const { endpoints, updateEndpoint, deleteEndpoint } = useContext(AppStateContext);
+  const { endpoints, updateEndpoint, deleteEndpoint, suspendEndpoint, unsuspendEndpoint } = useContext(AppStateContext);
 
   return (
     <div className={classes.root}>
@@ -52,29 +52,42 @@ export default function Endpoints() {
           <ExpansionPanelDetails>
             <Button onClick={() => deleteEndpoint(endpoint.id)}>Delete</Button>
             <TestEndpoint endpoint={endpoint} />
+            {endpoint.suspenseStatus ? (
+              <Button onClick={() => unsuspendEndpoint(endpoint.id)}>Stop suspension</Button>
+            ) : (
+              <Button onClick={() => suspendEndpoint(endpoint.id, 503)}>Suspend</Button>
+            )}
           </ExpansionPanelDetails>
-          <EndpointCode
-            responseCode={endpoint.responseCode}
-            serverStateUpdateCode={endpoint.serverStateUpdateCode}
-            onResponseCodeSave={(code: string) => {
-              updateEndpoint({
-                id: endpoint.id,
-                url: endpoint.url,
-                method: endpoint.method,
-                responseCode: code,
-                serverStateUpdateCode: endpoint.serverStateUpdateCode,
-              });
-            }}
-            onServerStateUpdateCodeSave={(code: string) => {
-              updateEndpoint({
-                id: endpoint.id,
-                url: endpoint.url,
-                method: endpoint.method,
-                responseCode: endpoint.responseCode,
-                serverStateUpdateCode: code,
-              });
-            }}
-          />
+          {endpoint.suspenseStatus ? (
+            <ExpansionPanelDetails>
+              {`Endpoint suspended with status ${endpoint.suspenseStatus}`}
+            </ExpansionPanelDetails>
+          ) : (
+            <EndpointCode
+              responseCode={endpoint.responseCode}
+              serverStateUpdateCode={endpoint.serverStateUpdateCode}
+              onResponseCodeSave={(code: string) => {
+                updateEndpoint({
+                  id: endpoint.id,
+                  url: endpoint.url,
+                  method: endpoint.method,
+                  suspenseStatus: endpoint.suspenseStatus,
+                  responseCode: code,
+                  serverStateUpdateCode: endpoint.serverStateUpdateCode,
+                });
+              }}
+              onServerStateUpdateCodeSave={(code: string) => {
+                updateEndpoint({
+                  id: endpoint.id,
+                  url: endpoint.url,
+                  method: endpoint.method,
+                  suspenseStatus: endpoint.suspenseStatus,
+                  responseCode: endpoint.responseCode,
+                  serverStateUpdateCode: code,
+                });
+              }}
+            />
+          )}
         </ExpansionPanel>
       ))}
     </div>

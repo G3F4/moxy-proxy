@@ -41,6 +41,8 @@ export const AppStateContext = React.createContext({
   resetServerState() {},
   addEndpoint(_endpoint: Endpoint) {},
   deleteEndpoint(_endpointId: string) {},
+  suspendEndpoint(_endpointId: string, _status: number) {},
+  unsuspendEndpoint(_endpointId: string) {},
   updateEndpoint(_endpoint: Endpoint) {},
   testEndpoint(_endpoint: Endpoint, _requestBody: string) {
     return Promise.resolve(new Response(''));
@@ -193,6 +195,23 @@ const App: React.FC = () => {
     setActiveServerStateScenarioId(serverStateScenarioId);
   }
 
+  function handleSuspendEndpoint(endpointId: string, status: number) {
+    sendEvent({
+      action: 'suspendEndpoint',
+      payload: {
+        endpointId,
+        status,
+      },
+    });
+  }
+
+  function handleUnsuspendEndpoint(endpointId: string) {
+    sendEvent({
+      action: 'unsuspendEndpoint',
+      payload: endpointId,
+    });
+  }
+
   const contextValue = {
     activeTab,
     activeServerStateScenarioId,
@@ -201,6 +220,8 @@ const App: React.FC = () => {
     serverStateInterface,
     serverStateScenarios,
     viewMode,
+    suspendEndpoint: handleSuspendEndpoint,
+    unsuspendEndpoint: handleUnsuspendEndpoint,
     addServerStateScenario: handleAddServerStateScenario,
     changeServerStateScenario: handleChangeServerStateScenario,
     changeViewMode: setViewMode,

@@ -22,6 +22,8 @@ export type ClientAction =
   | 'clientUpdatedServer'
   | 'resetServerState'
   | 'changeServerStateScenario'
+  | 'suspendEndpoint'
+  | 'unsuspendEndpoint'
   | 'addServerStateScenario';
 
 export interface ClientEvent extends SocketEvent {
@@ -34,6 +36,7 @@ export interface Endpoint {
   method: Method;
   responseCode: string;
   serverStateUpdateCode: string;
+  suspenseStatus: number | null;
 }
 
 export interface EndpointMapping {
