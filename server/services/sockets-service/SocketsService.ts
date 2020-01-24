@@ -36,7 +36,7 @@ export default class SocketsService {
         socket.send(JSON.stringify(event));
       } catch (e) {
         logError(e);
-        clearSocket(socket.id);
+        this.clearSocket(socket.id);
       }
     });
   }
