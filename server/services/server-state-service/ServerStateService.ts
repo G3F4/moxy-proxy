@@ -1,9 +1,10 @@
 import { exec } from 'child_process';
 import * as util from 'util';
 import { ServerState } from '../../../interfaces';
-import { ServerEvent, ServerStateScenario, ServerStateScenarioMapping } from '../../../sharedTypes';
+import { ServerStateScenario, ServerStateScenarioMapping } from '../../../sharedTypes';
 import { logInfo } from '../../utils/logger';
 import FileService from '../file-service/FileService';
+import SocketsService from '../sockets-service/SocketsService';
 
 const execPromised = util.promisify(exec);
 
@@ -33,7 +34,7 @@ export default class ServerStateService {
     return this.serverStateScenarioMappings;
   }
 
-  constructor(readonly fileService: FileService, readonly broadcast: (event: ServerEvent) => void) {
+  constructor(readonly fileService: FileService, readonly socketsService: SocketsService) {
     this.serverState = fileService.readJSON(this.initialServerStatePath);
     this.serverStateInterface = fileService.readText(this.serverStateInterfaceFileName);
     this.serverStateScenarioMappings = fileService.readJSON(this.serverStateScenariosMapPath);
@@ -57,7 +58,7 @@ export default class ServerStateService {
     };
 
     this.saveServerStateToFile(serverStateScenarioId, this.serverState);
-    this.broadcast({ action: 'updateServerState', payload: this.serverState });
+    this.socketsService.broadcastEvent({ action: 'updateServerState', payload: this.serverState });
     this.makeTypesFromInitialServerState().then(() => {
       logInfo(['makeTypesFromInitialServerState'], 'done');
     });
@@ -128,7 +129,7 @@ export default class ServerStateService {
 
     this.serverStateInterface = this.fileService.readText(this.serverStateInterfaceFileName);
 
-    this.broadcast({ action: 'updateServerStateInterface', payload: this.serverStateInterface });
+    this.socketsService.broadcastEvent({ action: 'updateServerStateInterface', payload: this.serverStateInterface });
   }
 
   private saveServerStateScenario(scenario: ServerStateScenario) {
