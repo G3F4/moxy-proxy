@@ -1,3 +1,4 @@
+import { FSWatcher } from 'fs';
 import { ServerState } from '../../../interfaces';
 import { Endpoint, EndpointMapping, Method } from '../../../sharedTypes';
 import createFolderIfNotExists from '../../utils/createFolderIfNotExists';
@@ -18,6 +19,7 @@ export default class EndpointsService {
   private endpointMappings: EndpointMapping[] = [];
   private dir: string = 'endpoints';
   private endpointMappingsFileName: string = 'endpoints.json';
+  private handlersWatcher: Record<string, FSWatcher> = {};
 
   constructor(readonly fileService: FileService) {
     this.loadEndpoints();
@@ -28,11 +30,21 @@ export default class EndpointsService {
   }
 
   public deleteEndpoint(endpointId: string) {
+    const endpoint = this.endpoints.find(it => it.id === endpointId) || this.endpointMappings.find(it => it.id === endpointId);
+
     this.endpoints = this.endpoints.filter(({ id }) => id !== endpointId);
     this.endpointMappings = this.endpointMappings.filter(({ id }) => id !== endpointId);
 
     this.saveEndpointMappings();
-    logInfo(['deleteEndpoint'], endpointId);
+
+    if (this.handlersWatcher[endpointId]) {
+      this.handlersWatcher[endpointId].close();
+      delete this.handlersWatcher[endpointId];
+    }
+
+    if (endpoint) {
+      this.fileService.deleteFile(this.getEndpointPath(endpoint));
+    }
   }
 
   public updateEndpoint(endpoint: Endpoint) {
@@ -57,6 +69,10 @@ export default class EndpointsService {
     }
   }
 
+  private getEndpointPath(endpoint: Endpoint | EndpointMapping) {
+    return `/${this.dir}/${endpoint.url}/${endpoint.method}.js`;
+  }
+
   private getEndpointMappingsPath() {
     return `${this.dir}/${this.endpointMappingsFileName}`;
   }
@@ -65,7 +81,6 @@ export default class EndpointsService {
     this.endpointMappings = this.fileService.readJSON<EndpointMapping[]>(
       this.getEndpointMappingsPath(),
     );
-    //@ts-ignore
     this.endpoints = this.endpointMappings.reduce<EndpointMapping[]>((acc, endpointMapping) => {
       const { id, method, url } = endpointMapping;
       const handler = this.loadHandler(endpointMapping);
@@ -82,9 +97,11 @@ export default class EndpointsService {
           },
         ];
       } else {
-        this.deleteEndpoint(id);
+        this.deleteEndpoint(endpointMapping.id);
+
+        return acc;
       }
-    }, []);
+    }, []) as Endpoint[];
   }
 
   public addEndpoint(endpoint: Endpoint) {
@@ -109,22 +126,9 @@ export default class EndpointsService {
 
   private saveEndpointToFile(endpoint: Endpoint) {
     const code = this.handlerTemplate(endpoint);
-    const folders = endpoint.url.split('/');
 
-    folders.forEach((item, index, arr) => {
-      const path = `${this.dir}/${arr.slice(0, index + 1).join('/')}`;
-
-      createFolderIfNotExists(path);
-    });
-
-    const path = this.handlerPath(endpoint);
-    const fileExists = this.fileService.checkIfExist(path);
-
-    if (fileExists) {
-      this.fileService.saveText(path, code);
-    } else {
-      this.fileService.saveText(path, code, { openToAppend: true });
-    }
+    this.fileService.checkFolder(`${this.dir}/${endpoint.url}`);
+    this.fileService.saveText(this.handlerPath(endpoint), code);
   }
 
   private handlerTemplate(endpoint: Endpoint) {
@@ -145,7 +149,12 @@ export ${endpoint.serverStateUpdateCode.trim()}
       return null;
     }
 
-    nocache(path);
+    const watcher = nocache(`${this.fileService.cwd}/${path}`);
+
+    this.handlersWatcher = {
+      ...this.handlersWatcher,
+      [endpoint.id]: watcher,
+    };
 
     return require(`${this.fileService.cwd}/${path}`);
   }

@@ -20,7 +20,6 @@ import { readJsonAsync } from './utils/readJson';
 
 const fileService = new FileService(process.cwd(), readFileSync, writeFileSync, existsSync);
 const endpointsService = new EndpointsService(fileService);
-
 let activeServerStateScenarioId = 'default';
 const initialServerStatePath = `data/serverState/${activeServerStateScenarioId}.json`;
 const serverStateScenariosMapPath = 'data/serverStateScenarios.json';
@@ -35,7 +34,6 @@ let serverStateInterface = fileService.readText(serverStateInterfacePath);
 let serverStateScenarioMappings = fileService.readJSON<ServerStateScenarioMapping[]>(
   serverStateScenariosMapPath,
 );
-
 // Creating types
 const execPromised = util.promisify(exec);
 
