@@ -5,8 +5,6 @@ import { logError, logInfo } from '../../utils/logger';
 export default class SocketsService {
   sockets: WebSocket[] = [];
 
-  constructor() {}
-
   addSocket(socket: WebSocket) {
     this.sockets.push(socket);
   }

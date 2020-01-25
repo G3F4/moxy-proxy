@@ -24,6 +24,7 @@ export default class FileService {
 
   deleteFile(path: string) {
     logInfo(['deleteFile'], path);
+
     const absolutePath = `${this.cwd}${path}`;
 
     rimraf(absolutePath, (error: Error) => {

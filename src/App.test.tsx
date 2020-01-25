@@ -1,5 +1,4 @@
 import puppeteer from 'puppeteer';
-import React from 'react';
 
 test('renders ok', async () => {
   const url = 'http://localhost:5000/';

@@ -3,6 +3,7 @@ import { ServerState } from '../interfaces';
 import {
   ClientEvent,
   Endpoint,
+  HttpStatus,
   ServerAction,
   ServerEvent,
   ServerStateScenario,
@@ -41,8 +42,7 @@ export const AppStateContext = React.createContext({
   resetServerState() {},
   addEndpoint(_endpoint: Endpoint) {},
   deleteEndpoint(_endpointId: string) {},
-  suspendEndpoint(_endpointId: string, _status: number) {},
-  unsuspendEndpoint(_endpointId: string) {},
+  changeEndpointResponseStatus(_endpointId: string, _status: HttpStatus | null) {},
   updateEndpoint(_endpoint: Endpoint) {},
   testEndpoint(_endpoint: Endpoint, _requestBody: string) {
     return Promise.resolve(new Response(''));
@@ -195,20 +195,13 @@ const App: React.FC = () => {
     setActiveServerStateScenarioId(serverStateScenarioId);
   }
 
-  function handleSuspendEndpoint(endpointId: string, status: number) {
+  function handleChangeEndpointResponseStatus(endpointId: string, status: HttpStatus | null) {
     sendEvent({
-      action: 'suspendEndpoint',
+      action: 'changeEndpointResponseStatus',
       payload: {
         endpointId,
         status,
       },
-    });
-  }
-
-  function handleUnsuspendEndpoint(endpointId: string) {
-    sendEvent({
-      action: 'unsuspendEndpoint',
-      payload: endpointId,
     });
   }
 
@@ -220,8 +213,7 @@ const App: React.FC = () => {
     serverStateInterface,
     serverStateScenarios,
     viewMode,
-    suspendEndpoint: handleSuspendEndpoint,
-    unsuspendEndpoint: handleUnsuspendEndpoint,
+    changeEndpointResponseStatus: handleChangeEndpointResponseStatus,
     addServerStateScenario: handleAddServerStateScenario,
     changeServerStateScenario: handleChangeServerStateScenario,
     changeViewMode: setViewMode,

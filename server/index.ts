@@ -3,7 +3,7 @@ import produce from 'immer';
 import { App, HttpRequest, HttpResponse, WebSocket } from 'uWebSockets.js';
 import { PORT } from '../constans';
 import { ServerState } from '../interfaces';
-import { ClientAction, Endpoint, Method, ServerStateScenario } from '../sharedTypes';
+import { ClientAction, Endpoint, HttpStatus, Method, ServerStateScenario } from '../sharedTypes';
 import EndpointsService from './services/endpoints-service/EndpointsService';
 import FileService from './services/file-service/FileService';
 import ServerStateService from './services/server-state-service/ServerStateService';
@@ -15,7 +15,6 @@ const socketsService = new SocketsService();
 const fileService = new FileService(process.cwd(), readFileSync, writeFileSync, existsSync);
 const endpointsService = new EndpointsService(fileService);
 const serverStateService = new ServerStateService(fileService, socketsService);
-
 const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) => void> = {
   addEndpoint(ws: WebSocket, payload: Endpoint) {
     endpointsService.addEndpoint(payload);
@@ -38,22 +37,13 @@ const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) 
       payload: endpointsService.getEndpoints(),
     });
   },
-  suspendEndpoint(ws: WebSocket, payload: { endpointId: string, status: number }) {
-    endpointsService.suspendEndpoint(payload);
+  changeEndpointResponseStatus(ws: WebSocket, payload: { endpointId: string, status: HttpStatus | null }) {
+    endpointsService.changeEndpointResponseStatus(payload);
     socketsService.broadcastEvent({
       action: 'updateEndpoints',
       payload: endpointsService.getEndpoints(),
     });
   },
-  unsuspendEndpoint(ws: WebSocket, payload: string) {
-    endpointsService.unsuspendEndpoint(payload);
-    socketsService.broadcastEvent({
-      action: 'updateEndpoints',
-      payload: endpointsService.getEndpoints(),
-    });
-  },
-
-
 
   addServerStateScenario(ws: WebSocket, payload: ServerStateScenario) {
     serverStateService.addServerStateScenario(payload);

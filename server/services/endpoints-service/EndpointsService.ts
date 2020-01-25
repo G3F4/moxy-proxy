@@ -1,7 +1,6 @@
 import { FSWatcher } from 'fs';
 import { ServerState } from '../../../interfaces';
-import { Endpoint, EndpointMapping, Method } from '../../../sharedTypes';
-import createFolderIfNotExists from '../../utils/createFolderIfNotExists';
+import { Endpoint, EndpointMapping, HttpStatus, Method } from '../../../sharedTypes';
 import { logInfo } from '../../utils/logger';
 import { nocache } from '../../utils/nocache';
 import FileService from '../file-service/FileService';
@@ -61,28 +60,15 @@ export default class EndpointsService {
     this.saveEndpointToFile(endpoint);
   }
 
-  public suspendEndpoint({ endpointId, status }: { endpointId: string; status: number }) {
+  public changeEndpointResponseStatus({ endpointId, status }: { endpointId: string; status: HttpStatus | null }) {
     const endpointIndex = this.endpoints.findIndex(({ id }) => id === endpointId);
     const endpoint = this.endpoints[endpointIndex];
 
-    endpoint.suspenseStatus = status;
+    endpoint.responseStatus = status;
 
     this.endpoints[endpointIndex] = endpoint;
 
     logInfo(['suspendEndpoint'], endpoint);
-
-    this.saveEndpointToFile(endpoint);
-  }
-
-  public unsuspendEndpoint(endpointId: string) {
-    const endpointIndex = this.endpoints.findIndex(({ id }) => id === endpointId);
-    const endpoint = this.endpoints[endpointIndex];
-
-    endpoint.suspenseStatus = null;
-
-    this.endpoints[endpointIndex] = endpoint;
-
-    logInfo(['unsuspendEndpoint'], endpoint);
 
     this.saveEndpointToFile(endpoint);
   }
@@ -103,7 +89,7 @@ export default class EndpointsService {
     );
 
     if (endpoint) {
-      return endpoint.suspenseStatus;
+      return endpoint.responseStatus;
     }
 
     return null;

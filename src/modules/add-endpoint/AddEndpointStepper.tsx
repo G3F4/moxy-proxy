@@ -36,8 +36,8 @@ function getSteps() {
 function UrlPatternStep({ url, onUrlChange }: { url: string; onUrlChange: any }) {
   return (
     <TextField
-      name="url"
       label="URL pattern"
+      name="url"
       value={url}
       onChange={event => onUrlChange(event.target.value)}
     />
@@ -122,7 +122,7 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
     id: Date.now().toString(),
     url: '',
     method: 'get',
-    suspenseStatus: null,
+    responseStatus: null,
     responseCode: initialResponseCode,
     serverStateUpdateCode: initialServerStateUpdateCode,
   });

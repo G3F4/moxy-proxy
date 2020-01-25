@@ -3,14 +3,24 @@ import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import React, { useContext } from 'react';
+import { HttpStatus, HttpStatusOption } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
+import { httpStatuses } from '../../common/httpStatuses';
 import AddEndpoint from '../add-endpoint/AddEndpoint';
 import TestEndpoint from '../test-endpoint/TestEndpoint';
 import EndpointCode from './EndpointCode';
 
+const httpStatusOptions: HttpStatusOption[] = Object.keys(
+  httpStatuses,
+).map(key => ({
+  value: key as unknown as HttpStatus,
+  text: httpStatuses[(key as unknown) as HttpStatus],
+}));
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
@@ -25,7 +35,12 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export default function Endpoints() {
   const classes = useStyles();
-  const { endpoints, updateEndpoint, deleteEndpoint, suspendEndpoint, unsuspendEndpoint } = useContext(AppStateContext);
+  const {
+    endpoints,
+    updateEndpoint,
+    deleteEndpoint,
+    changeEndpointResponseStatus,
+  } = useContext(AppStateContext);
 
   return (
     <div className={classes.root}>
@@ -49,45 +64,55 @@ export default function Endpoints() {
               {`${endpoint.method.toUpperCase()}: ${endpoint.url}`}
             </Typography>
           </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
-            <Button onClick={() => deleteEndpoint(endpoint.id)}>Delete</Button>
-            <TestEndpoint endpoint={endpoint} />
-            {endpoint.suspenseStatus ? (
-              <Button onClick={() => unsuspendEndpoint(endpoint.id)}>Stop suspension</Button>
-            ) : (
-              <Button onClick={() => suspendEndpoint(endpoint.id, 503)}>Suspend</Button>
-            )}
+          <ExpansionPanelDetails
+            style={{ display: 'flex', justifyContent: 'space-between', alignContent: 'center' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', marginTop: 12 }}>
+              <Button onClick={() => deleteEndpoint(endpoint.id)}>Delete</Button>
+              <TestEndpoint endpoint={endpoint} />
+            </div>
+            <div>
+              <Autocomplete
+                getOptionLabel={option => `${option.value} ${option.text}`}
+                options={httpStatusOptions}
+                renderInput={params => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    label="Select server suspense status"
+                    variant="standard"
+                  />
+                )}
+                style={{ width: 300 }}
+                value={{ text: endpoint.responseStatus ? httpStatuses[endpoint.responseStatus] : 'default', value: endpoint.responseStatus || 200 } as any}
+                onChange={((_event: any, option: HttpStatusOption) => changeEndpointResponseStatus(endpoint.id, option.value)) as any}
+              />
+            </div>
           </ExpansionPanelDetails>
-          {endpoint.suspenseStatus ? (
-            <ExpansionPanelDetails>
-              {`Endpoint suspended with status ${endpoint.suspenseStatus}`}
-            </ExpansionPanelDetails>
-          ) : (
-            <EndpointCode
-              responseCode={endpoint.responseCode}
-              serverStateUpdateCode={endpoint.serverStateUpdateCode}
-              onResponseCodeSave={(code: string) => {
-                updateEndpoint({
-                  id: endpoint.id,
-                  url: endpoint.url,
-                  method: endpoint.method,
-                  suspenseStatus: endpoint.suspenseStatus,
-                  responseCode: code,
-                  serverStateUpdateCode: endpoint.serverStateUpdateCode,
-                });
-              }}
-              onServerStateUpdateCodeSave={(code: string) => {
-                updateEndpoint({
-                  id: endpoint.id,
-                  url: endpoint.url,
-                  method: endpoint.method,
-                  suspenseStatus: endpoint.suspenseStatus,
-                  responseCode: endpoint.responseCode,
-                  serverStateUpdateCode: code,
-                });
-              }}
-            />
-          )}
+          <EndpointCode
+            responseCode={endpoint.responseCode}
+            serverStateUpdateCode={endpoint.serverStateUpdateCode}
+            onResponseCodeSave={(code: string) => {
+              updateEndpoint({
+                id: endpoint.id,
+                url: endpoint.url,
+                method: endpoint.method,
+                responseStatus: endpoint.responseStatus,
+                responseCode: code,
+                serverStateUpdateCode: endpoint.serverStateUpdateCode,
+              });
+            }}
+            onServerStateUpdateCodeSave={(code: string) => {
+              updateEndpoint({
+                id: endpoint.id,
+                url: endpoint.url,
+                method: endpoint.method,
+                responseStatus: endpoint.responseStatus,
+                responseCode: endpoint.responseCode,
+                serverStateUpdateCode: code,
+              });
+            }}
+          />
         </ExpansionPanel>
       ))}
     </div>
