@@ -1,10 +1,5 @@
-import { ButtonGroup, TextField } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
-import FormControl from '@material-ui/core/FormControl';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
 import Paper from '@material-ui/core/Paper';
-import Select from '@material-ui/core/Select';
 import Step from '@material-ui/core/Step';
 import StepContent from '@material-ui/core/StepContent';
 import StepLabel from '@material-ui/core/StepLabel';
@@ -13,8 +8,12 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import produce from 'immer';
 import React, { useState } from 'react';
-import { Endpoint, EndpointParameter, Method } from '../../../sharedTypes';
-import CodeEditor from '../../common/CodeEditor';
+import { Endpoint, EndpointParameter } from '../../../sharedTypes';
+import ParametersStep from './steps/ParametersStep';
+import RequestMethodStep from './steps/RequestMethodStep';
+import ResponseStep, { initialResponseCode } from './steps/ResponseStep';
+import UpdateServerStateStep, { initialServerStateUpdateCode } from './steps/UpdateServerStateStep';
+import UrlPatternStep from './steps/UrlPatternStep';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -42,158 +41,6 @@ function getSteps() {
     'Define response',
     'Update server state',
   ];
-}
-
-function UrlPatternStep({ url, onUrlChange }: { url: string; onUrlChange: any }) {
-  return (
-    <TextField
-      label="URL pattern"
-      name="url"
-      value={url}
-      onChange={event => onUrlChange(event.target.value)}
-    />
-  );
-}
-
-function RequestMethodStep({
-  method,
-  onMethodChange,
-}: {
-  method: Method;
-  onMethodChange: (value: Method) => void;
-}) {
-  return (
-    <ButtonGroup aria-label="text primary button group" color="primary" variant="text">
-      <Button
-        variant={method === 'get' ? 'outlined' : undefined}
-        onClick={() => onMethodChange('get')}
-      >
-        Get
-      </Button>
-      <Button
-        variant={method === 'post' ? 'outlined' : undefined}
-        onClick={() => onMethodChange('post')}
-      >
-        Post
-      </Button>
-      <Button
-        variant={method === 'put' ? 'outlined' : undefined}
-        onClick={() => onMethodChange('put')}
-      >
-        Put
-      </Button>
-      <Button
-        variant={method === 'patch' ? 'outlined' : undefined}
-        onClick={() => onMethodChange('patch')}
-      >
-        Patch
-      </Button>
-      <Button
-        variant={method === 'delete' ? 'outlined' : undefined}
-        onClick={() => onMethodChange('delete')}
-      >
-        Delete
-      </Button>
-    </ButtonGroup>
-  );
-}
-
-export const parametersTypes = [
-  { text: 'String', value: 'string' },
-  { text: 'Number', value: 'number' },
-  { text: 'Boolean', value: 'boolean' },
-  { text: 'String array', value: 'stringArray' },
-  { text: 'Number array', value: 'numberArray' },
-  { text: 'Object', value: 'object' },
-] as const;
-
-function ParametersStep({
-  parameters,
-  onParametersChange,
-  addParameter,
-}: {
-  parameters: EndpointParameter[];
-
-  onParametersChange(parameter: EndpointParameter): void;
-  addParameter(parameter: EndpointParameter): void;
-}) {
-  function handleAddParameter() {
-    addParameter({ id: (parameters.length + 1).toString(), name: '', type: '' });
-  }
-
-  return (
-    <>
-      {parameters.map(({ id, name, type }) => (
-        <div key={id}>
-          <FormControl
-            style={{
-              margin: 8,
-              minWidth: 120,
-            }}
-          >
-            <TextField
-              label="Parameter name"
-              value={name}
-              onChange={event => onParametersChange({ name: event.target.value, type, id })}
-            />
-          </FormControl>
-          <FormControl
-            style={{
-              margin: 8,
-              minWidth: 160,
-            }}
-          >
-            <InputLabel id="parameter-typ-label">Parameter type</InputLabel>
-            <Select
-              id="parameter-type-select"
-              labelId="parameter-typ-label"
-              value={type}
-              onChange={event =>
-                onParametersChange({ id, type: event.target.value as string, name })
-              }
-            >
-              {parametersTypes.map(({ text, value }) => (
-                <MenuItem key={value} value={value}>
-                  {text}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </div>
-      ))}
-      <div>
-        <Button onClick={handleAddParameter}>Add parameter</Button>
-      </div>
-    </>
-  );
-}
-
-const initialResponseCode = `
-function requestResponse(state, request) {
-    return state;
-}
-`;
-
-function ResponseStep({ code, onChange }: { code: string; onChange: (code: string) => void }) {
-  return <CodeEditor code={code} onSave={onChange} />;
-}
-
-const initialServerStateUpdateCode = `
-function serverUpdate(request) {
-    return function (state) {
-      state.modified = true;
-    };
-}
-`;
-
-function UpdateServerStateStep({
-  code,
-  onChange,
-}: {
-  code: string;
-  onChange: (code: string) => void;
-}) {
-  return <CodeEditor code={code} onSave={onChange} />;
 }
 
 export default function AddEndpointStepper({ onDone }: { onDone: any }) {

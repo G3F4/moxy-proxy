@@ -12,7 +12,7 @@ import { HttpStatus, HttpStatusOption } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
 import { httpStatuses } from '../../common/httpStatuses';
 import AddEndpoint from '../add-endpoint/AddEndpoint';
-import { parametersTypes } from '../add-endpoint/AddEndpointStepper';
+import { parametersTypes } from '../add-endpoint/steps/ParametersStep';
 import TestEndpoint from '../test-endpoint/TestEndpoint';
 import EndpointCode from './EndpointCode';
 

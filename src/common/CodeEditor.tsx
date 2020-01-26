@@ -71,7 +71,7 @@ export default function CodeEditor({
   }
 
   return (
-    <div style={{ width: '95%' }}>
+    <div style={{ width: '90%' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <Typography variant="body1">{title}</Typography>
         {editing ? (
@@ -86,7 +86,7 @@ export default function CodeEditor({
         {editing ? (
           <Editor code={code} onReady={handleEditorReady} onSave={onSave} />
         ) : (
-          <SyntaxHighlighter customStyle={{ width: '100%' }} language={language}>
+          <SyntaxHighlighter language={language}>
             {code.trim()}
           </SyntaxHighlighter>
         )}

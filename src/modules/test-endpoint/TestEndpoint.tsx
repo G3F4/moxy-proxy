@@ -1,6 +1,7 @@
 import { IconButton, useMediaQuery } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
+import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { createStyles, makeStyles, Theme, useTheme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
@@ -73,17 +74,19 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
             <Close />
           </IconButton>
         </DialogTitle>
-        <CodeEditor
-          code={requestBody}
-          language="json"
-          title="Request body"
-          onSave={setRequestBody}
-        />
-        <Button onClick={handleTest}>Test</Button>
-        <Typography variant="body1">Response</Typography>
-        <SyntaxHighlighter customStyle={{ width: '100%' }} language="json">
-          {responseJson.trim()}
-        </SyntaxHighlighter>
+        <DialogContent>
+          <CodeEditor
+            code={requestBody}
+            language="json"
+            title="Request body"
+            onSave={setRequestBody}
+          />
+          <Button onClick={handleTest}>Test</Button>
+          <Typography variant="body1">Response</Typography>
+          <SyntaxHighlighter language="json">
+            {responseJson.trim()}
+          </SyntaxHighlighter>
+        </DialogContent>
       </Dialog>
     </div>
   );
