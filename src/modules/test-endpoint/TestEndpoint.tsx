@@ -1,6 +1,7 @@
 import { IconButton, useMediaQuery } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { createStyles, makeStyles, Theme, useTheme } from '@material-ui/core/styles';
@@ -29,7 +30,7 @@ const emptyJsonString = `
 export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   const [open, setOpen] = useState(false);
   const [requestBody, setRequestBody] = useState(emptyJsonString);
-  const [responseJson, setResponseJson] = useState(emptyJsonString);
+  const [responseJson, setResponseJson] = useState('');
   const theme = useTheme();
   const classes = useStyles();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
@@ -69,7 +70,10 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
         onClose={handleClose}
       >
         <DialogTitle disableTypography id="max-width-dialog-title">
-          <Typography style={{ marginRight: 40 }} variant="h6">{`Test endpoint ${endpoint.method}:${endpoint.url}`}</Typography>
+          <Typography
+            style={{ marginRight: 40 }}
+            variant="h6"
+          >{`Test endpoint ${endpoint.method}:${endpoint.url}`}</Typography>
           <IconButton aria-label="close" className={classes.closeButton} onClick={handleClose}>
             <Close />
           </IconButton>
@@ -81,12 +85,16 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
             title="Request body"
             onSave={setRequestBody}
           />
-          <Button onClick={handleTest}>Test</Button>
-          <Typography variant="body1">Response</Typography>
-          <SyntaxHighlighter language="json">
-            {responseJson.trim()}
-          </SyntaxHighlighter>
+          {responseJson && (
+            <>
+              <Typography variant="body1">Response</Typography>
+              <SyntaxHighlighter language="json">{responseJson.trim()}</SyntaxHighlighter>
+            </>
+          )}
         </DialogContent>
+        <DialogActions>
+          <Button onClick={handleTest}>Test</Button>
+        </DialogActions>
       </Dialog>
     </div>
   );
