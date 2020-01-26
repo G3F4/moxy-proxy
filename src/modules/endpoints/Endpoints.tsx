@@ -12,6 +12,7 @@ import { HttpStatus, HttpStatusOption } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
 import { httpStatuses } from '../../common/httpStatuses';
 import AddEndpoint from '../add-endpoint/AddEndpoint';
+import { parametersTypes } from '../add-endpoint/AddEndpointStepper';
 import TestEndpoint from '../test-endpoint/TestEndpoint';
 import EndpointCode from './EndpointCode';
 
@@ -100,6 +101,7 @@ export default function Endpoints() {
                 responseStatus: endpoint.responseStatus,
                 responseCode: code,
                 serverStateUpdateCode: endpoint.serverStateUpdateCode,
+                parameters: endpoint.parameters,
               });
             }}
             onServerStateUpdateCodeSave={(code: string) => {
@@ -110,9 +112,29 @@ export default function Endpoints() {
                 responseStatus: endpoint.responseStatus,
                 responseCode: endpoint.responseCode,
                 serverStateUpdateCode: code,
+                parameters: endpoint.parameters,
               });
             }}
           />
+          <ExpansionPanelDetails style={{ display: 'flex', flexDirection: 'column' }}>
+            {endpoint.parameters.length > 0 && (
+              <Typography className={classes.heading} style={{ marginBottom: 16 }}>Parameters</Typography>
+            )}
+            <div>
+              {endpoint.parameters.map(({ id, name, type }) => {
+                const parameter = parametersTypes.find(parameter => type === parameter.value);
+                let text = null;
+
+                if (parameter) {
+                  text = parameter.text;
+                }
+
+                return (
+                  <Typography key={id} variant="body2"><b>{`${name}: `}</b>{text}</Typography>
+                );
+              })}
+            </div>
+          </ExpansionPanelDetails>
         </ExpansionPanel>
       ))}
     </div>

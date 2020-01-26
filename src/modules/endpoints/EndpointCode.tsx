@@ -10,8 +10,8 @@ export default function EndpointCode({
 }: {
   responseCode: string;
   serverStateUpdateCode: string;
-  onResponseCodeSave: any;
-  onServerStateUpdateCodeSave: any;
+  onResponseCodeSave(_code: string): void;
+  onServerStateUpdateCodeSave(_code: string): void ;
 }) {
   return (
     <>

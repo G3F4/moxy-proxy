@@ -1,14 +1,19 @@
 import { ButtonGroup, TextField } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
 import Paper from '@material-ui/core/Paper';
+import Select from '@material-ui/core/Select';
 import Step from '@material-ui/core/Step';
 import StepContent from '@material-ui/core/StepContent';
 import StepLabel from '@material-ui/core/StepLabel';
 import Stepper from '@material-ui/core/Stepper';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
+import produce from 'immer';
 import React, { useState } from 'react';
-import { Method, Endpoint } from '../../../sharedTypes';
+import { Endpoint, EndpointParameter, Method } from '../../../sharedTypes';
 import CodeEditor from '../../common/CodeEditor';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -30,7 +35,13 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 function getSteps() {
-  return ['URL pattern', 'Select request type', 'Define response', 'Update server state'];
+  return [
+    'URL pattern',
+    'Select request type',
+    'Add parameters',
+    'Define response',
+    'Update server state',
+  ];
 }
 
 function UrlPatternStep({ url, onUrlChange }: { url: string; onUrlChange: any }) {
@@ -87,6 +98,76 @@ function RequestMethodStep({
   );
 }
 
+export const parametersTypes = [
+  { text: 'String', value: 'string' },
+  { text: 'Number', value: 'number' },
+  { text: 'Boolean', value: 'boolean' },
+  { text: 'String array', value: 'stringArray' },
+  { text: 'Number array', value: 'numberArray' },
+  { text: 'Object', value: 'object' },
+] as const;
+
+function ParametersStep({
+  parameters,
+  onParametersChange,
+  addParameter,
+}: {
+  parameters: EndpointParameter[];
+
+  onParametersChange(parameter: EndpointParameter): void;
+  addParameter(parameter: EndpointParameter): void;
+}) {
+  function handleAddParameter() {
+    addParameter({ id: (parameters.length + 1).toString(), name: '', type: '' });
+  }
+
+  return (
+    <>
+      {parameters.map(({ id, name, type }) => (
+        <div key={id}>
+          <FormControl
+            style={{
+              margin: 8,
+              minWidth: 120,
+            }}
+          >
+            <TextField
+              label="Parameter name"
+              value={name}
+              onChange={event => onParametersChange({ name: event.target.value, type, id })}
+            />
+          </FormControl>
+          <FormControl
+            style={{
+              margin: 8,
+              minWidth: 160,
+            }}
+          >
+            <InputLabel id="parameter-typ-label">Parameter type</InputLabel>
+            <Select
+              id="parameter-type-select"
+              labelId="parameter-typ-label"
+              value={type}
+              onChange={event =>
+                onParametersChange({ id, type: event.target.value as string, name })
+              }
+            >
+              {parametersTypes.map(({ text, value }) => (
+                <MenuItem key={value} value={value}>
+                  {text}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </div>
+      ))}
+      <div>
+        <Button onClick={handleAddParameter}>Add parameter</Button>
+      </div>
+    </>
+  );
+}
+
 const initialResponseCode = `
 function requestResponse(state, request) {
     return state;
@@ -122,6 +203,7 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
     id: Date.now().toString(),
     url: '',
     method: 'get',
+    parameters: [],
     responseStatus: null,
     responseCode: initialResponseCode,
     serverStateUpdateCode: initialServerStateUpdateCode,
@@ -157,6 +239,40 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
       }
       case 2: {
         return (
+          <ParametersStep
+            addParameter={parameter => {
+              setEndpoint(endpoint => ({
+                ...endpoint,
+                parameters: [...endpoint.parameters, parameter],
+              }));
+            }}
+            parameters={endpoint.parameters}
+            onParametersChange={parameter => {
+              function updateParameters(
+                parameters: EndpointParameter[],
+                parameter: EndpointParameter,
+              ) {
+                return produce(parameters, draft => {
+                  const parameterIndex = parameters.findIndex(({ id }) => id === parameter.id);
+
+                  if (!(parameterIndex < 0)) {
+                    draft[parameterIndex] = parameter;
+                  }
+                });
+              }
+
+              const parameters = updateParameters(endpoint.parameters, parameter);
+
+              setEndpoint(endpoint => ({
+                ...endpoint,
+                parameters,
+              }));
+            }}
+          />
+        );
+      }
+      case 3: {
+        return (
           <ResponseStep
             code={endpoint.responseCode}
             onChange={responseCode =>
@@ -168,7 +284,7 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
           />
         );
       }
-      case 3: {
+      case 4: {
         return (
           <UpdateServerStateStep
             code={endpoint.serverStateUpdateCode}

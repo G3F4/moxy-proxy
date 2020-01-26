@@ -20,15 +20,55 @@ export default class EndpointsService {
   private endpointMappingsFileName: string = 'endpoints.json';
   private handlersWatcher: Record<string, FSWatcher> = {};
 
+  getEndpoints() {
+    return this.endpoints;
+  }
+
+  getHandler({ method, url }: { method: Method; url: string }) {
+    const endpoint = this.endpoints.find(
+      endpoint => `/${endpoint.url}` === url && endpoint.method === method,
+    );
+
+    if (endpoint) {
+      return this.loadHandler(endpoint);
+    }
+  }
+
+  getEndpointSuspenseStatus({ method, url }: { method: Method; url: string }) {
+    const endpoint = this.endpoints.find(
+      endpoint => `/${endpoint.url}` === url && endpoint.method === method,
+    );
+
+    if (endpoint) {
+      return endpoint.responseStatus;
+    }
+
+    return null;
+  }
+
   constructor(readonly fileService: FileService) {
     this.loadEndpoints();
   }
 
-  public getEndpoints() {
-    return this.endpoints;
+  addEndpoint(endpoint: Endpoint) {
+    logInfo(['addEndpoint'], endpoint);
+
+    const endpointMapping: EndpointMapping = {
+      id: Date.now().toString(),
+      method: endpoint.method,
+      url: endpoint.url,
+      parameters: endpoint.parameters,
+      responseStatus: endpoint.responseStatus,
+    };
+
+    this.endpoints = [...this.endpoints, endpoint];
+    this.endpointMappings = [...this.endpointMappings, endpointMapping];
+
+    this.saveEndpointMappings();
+    this.saveEndpointToFile(endpoint);
   }
 
-  public deleteEndpoint(endpointId: string) {
+  deleteEndpoint(endpointId: string) {
     const endpoint =
       this.endpoints.find(it => it.id === endpointId) ||
       this.endpointMappings.find(it => it.id === endpointId);
@@ -48,7 +88,7 @@ export default class EndpointsService {
     }
   }
 
-  public updateEndpoint(endpoint: Endpoint) {
+  updateEndpoint(endpoint: Endpoint) {
     const endpointIndex = this.endpoints.findIndex(
       ({ url, method }) => endpoint.url === url && endpoint.method === method,
     );
@@ -60,39 +100,37 @@ export default class EndpointsService {
     this.saveEndpointToFile(endpoint);
   }
 
-  public changeEndpointResponseStatus({ endpointId, status }: { endpointId: string; status: HttpStatus | null }) {
+  changeEndpointResponseStatus({
+    endpointId,
+    status,
+  }: {
+    endpointId: string;
+    status: HttpStatus | null;
+  }) {
     const endpointIndex = this.endpoints.findIndex(({ id }) => id === endpointId);
     const endpoint = this.endpoints[endpointIndex];
 
     endpoint.responseStatus = status;
-
     this.endpoints[endpointIndex] = endpoint;
-
-    logInfo(['suspendEndpoint'], endpoint);
-
     this.saveEndpointToFile(endpoint);
   }
 
-  public getHandler({ method, url }: { method: Method; url: string }) {
-    const endpoint = this.endpoints.find(
-      endpoint => `/${endpoint.url}` === url && endpoint.method === method,
-    );
+  loadHandler(endpoint: Endpoint | EndpointMapping): Handler | null {
+    const path = this.handlerPath(endpoint);
+    const handlerExists = this.fileService.checkIfExist(path);
 
-    if (endpoint) {
-      return this.loadHandler(endpoint);
-    }
-  }
-
-  public getEndpointSuspenseStatus({ method, url }: { method: Method; url: string }) {
-    const endpoint = this.endpoints.find(
-      endpoint => `/${endpoint.url}` === url && endpoint.method === method,
-    );
-
-    if (endpoint) {
-      return endpoint.responseStatus;
+    if (!handlerExists) {
+      return null;
     }
 
-    return null;
+    const watcher = nocache(`${this.fileService.cwd}/${path}`);
+
+    this.handlersWatcher = {
+      ...this.handlersWatcher,
+      [endpoint.id]: watcher,
+    };
+
+    return require(`${this.fileService.cwd}/${path}`);
   }
 
   private getEndpointPath(endpoint: Endpoint | EndpointMapping) {
@@ -108,43 +146,27 @@ export default class EndpointsService {
       this.getEndpointMappingsPath(),
     );
     this.endpoints = this.endpointMappings.reduce<EndpointMapping[]>((acc, endpointMapping) => {
-      const { id, method, url } = endpointMapping;
+      const { id, method, url, responseStatus, parameters } = endpointMapping;
       const handler = this.loadHandler(endpointMapping);
 
       if (handler) {
-        return [
-          ...acc,
-          {
-            id,
-            method,
-            url,
-            suspenseStatus: null,
-            responseCode: handler.requestResponse.toString(),
-            serverStateUpdateCode: handler.serverUpdate.toString(),
-          },
-        ];
+        const endpoint: Endpoint = {
+          id,
+          method,
+          url,
+          responseStatus,
+          parameters,
+          responseCode: handler.requestResponse.toString(),
+          serverStateUpdateCode: handler.serverUpdate.toString(),
+        };
+
+        return [...acc, endpoint];
       } else {
         this.deleteEndpoint(endpointMapping.id);
 
         return acc;
       }
     }, []) as Endpoint[];
-  }
-
-  public addEndpoint(endpoint: Endpoint) {
-    logInfo(['addEndpoint'], endpoint);
-
-    const endpointMapping: EndpointMapping = {
-      id: Date.now().toString(),
-      method: endpoint.method,
-      url: endpoint.url,
-    };
-
-    this.endpoints = [...this.endpoints, endpoint];
-    this.endpointMappings = [...this.endpointMappings, endpointMapping];
-
-    this.saveEndpointMappings();
-    this.saveEndpointToFile(endpoint);
   }
 
   private saveEndpointMappings() {
@@ -166,24 +188,6 @@ export ${endpoint.responseCode.trim()}
 export ${endpoint.serverStateUpdateCode.trim()}
 `.trim() + '\n'
     );
-  }
-
-  public loadHandler(endpoint: Endpoint | EndpointMapping): Handler | null {
-    const path = this.handlerPath(endpoint);
-    const handlerExists = this.fileService.checkIfExist(path);
-
-    if (!handlerExists) {
-      return null;
-    }
-
-    const watcher = nocache(`${this.fileService.cwd}/${path}`);
-
-    this.handlersWatcher = {
-      ...this.handlersWatcher,
-      [endpoint.id]: watcher,
-    };
-
-    return require(`${this.fileService.cwd}/${path}`);
   }
 
   private handlerPath({ url, method }: Endpoint | EndpointMapping) {

@@ -29,19 +29,23 @@ export interface ClientEvent extends SocketEvent {
   action: ClientAction;
 }
 
-export interface Endpoint {
+export interface EndpointParameter {
   id: string;
-  url: string;
-  method: Method;
+  name: string;
+  type: string;
+}
+
+export interface Endpoint extends EndpointMapping {
   responseCode: string;
   serverStateUpdateCode: string;
-  responseStatus: HttpStatus | null;
 }
 
 export interface EndpointMapping {
   id: string;
   url: string;
   method: Method;
+  responseStatus: HttpStatus | null;
+  parameters: EndpointParameter[];
 }
 
 export interface ServerStateScenario {

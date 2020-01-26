@@ -2,26 +2,42 @@
   {
     "id": "1",
     "url": "test",
-    "method": "get"
+    "method": "get",
+    "responseStatus": null,
+    "parameters": [
+      {
+        "id": "1",
+        "name": "test",
+        "type": "string"
+      }
+    ]
   },
   {
     "id": "2",
     "method": "put",
-    "url": "test"
+    "url": "test",
+    "responseStatus": null,
+    "parameters": []
   },
   {
     "id": "3",
     "method": "delete",
-    "url": "test"
+    "url": "test",
+    "responseStatus": null,
+    "parameters": []
   },
   {
     "id": "4",
     "url": "test",
-    "method": "post"
+    "method": "post",
+    "responseStatus": null,
+    "parameters": []
   },
   {
     "id": "5",
     "url": "test",
-    "method": "patch"
+    "method": "patch",
+    "responseStatus": null,
+    "parameters": []
   }
 ]
