@@ -44,7 +44,7 @@ export const AppStateContext = React.createContext({
   deleteEndpoint(_endpointId: string) {},
   changeEndpointResponseStatus(_endpointId: string, _status: HttpStatus | null) {},
   updateEndpoint(_endpoint: Endpoint) {},
-  testEndpoint(_endpoint: Endpoint, _requestBody: string) {
+  testEndpoint(_endpoint: Endpoint, _queryString: string, _requestBody: string) {
     return Promise.resolve(new Response(''));
   },
 });
@@ -150,9 +150,9 @@ const App: React.FC = () => {
     });
   }
 
-  async function handleTestEndpoint({ url, method }: Endpoint, requestBody: string) {
+  async function handleTestEndpoint({ url, method }: Endpoint, queryParams: string, requestBody: string) {
     const parsedBody = JSON.parse(requestBody);
-    const isEmpty = Object.keys(parsedBody).length === 0;
+    const isEmpty = method === 'get' || Object.keys(parsedBody).length === 0;
     const body = isEmpty ? undefined : JSON.stringify(parsedBody);
     const headers = isEmpty
       ? undefined
@@ -161,7 +161,7 @@ const App: React.FC = () => {
           'Content-Type': 'application/json',
         };
 
-    return await fetch(`${url}`, {
+    return await fetch(`${url}?${queryParams}`, {
       body,
       method,
       headers,

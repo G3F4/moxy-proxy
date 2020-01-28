@@ -71,7 +71,7 @@ export default function CodeEditor({
   }
 
   return (
-    <div style={{ width: '90%' }}>
+    <div style={{ width: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <Typography variant="body1">{title}</Typography>
         {editing ? (

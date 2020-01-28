@@ -64,7 +64,7 @@ export default function AddServerScenario() {
         open={open}
         onClose={handleClose}
       >
-        <DialogTitle disableTypography id="max-width-dialog-title">
+        <DialogTitle disableTypography id="max-width-dialog-title" style={{ minWidth: 500 }}>
           <Typography variant="h6">Add server scenario</Typography>
           <IconButton aria-label="close" className={classes.closeButton} onClick={handleClose}>
             <Close />

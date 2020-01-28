@@ -1,4 +1,4 @@
-import { IconButton, useMediaQuery } from '@material-ui/core';
+import { IconButton, TextField, useMediaQuery } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -30,7 +30,10 @@ const emptyJsonString = `
 export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   const [open, setOpen] = useState(false);
   const [requestBody, setRequestBody] = useState(emptyJsonString);
+  const [showRequestBody, setShowRequestBody] = useState(false);
   const [responseJson, setResponseJson] = useState('');
+  const [queryString, setQueryString] = useState('');
+  const [showQueryString, setShowQueryString] = useState(false);
   const theme = useTheme();
   const classes = useStyles();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
@@ -45,7 +48,7 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   }
 
   async function handleTest() {
-    const response = await testEndpoint(endpoint, requestBody);
+    const response = await testEndpoint(endpoint, queryString, requestBody);
 
     if (response.status < 300) {
       try {
@@ -69,7 +72,7 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
         open={open}
         onClose={handleClose}
       >
-        <DialogTitle disableTypography id="max-width-dialog-title">
+        <DialogTitle disableTypography id="max-width-dialog-title" style={{ minWidth: 500 }}>
           <Typography
             style={{ marginRight: 40 }}
             variant="h6"
@@ -79,12 +82,30 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
           </IconButton>
         </DialogTitle>
         <DialogContent>
-          <CodeEditor
-            code={requestBody}
-            language="json"
-            title="Request body"
-            onSave={setRequestBody}
-          />
+          {showQueryString ? (
+            <TextField
+              fullWidth
+              label="Query string"
+              value={queryString}
+              onChange={event => setQueryString(event.target.value)}
+            />
+          ) : (
+            <Button onClick={() => setShowQueryString(true)}>Add query string</Button>
+          )}
+        </DialogContent>
+        <DialogContent>
+          {showRequestBody ? (
+            <CodeEditor
+              code={requestBody}
+              language="json"
+              title="Request body"
+              onSave={setRequestBody}
+            />
+          ) : (
+            <Button onClick={() => setShowRequestBody(true)}>Add request body</Button>
+          )}
+        </DialogContent>
+        <DialogContent>
           {responseJson && (
             <>
               <Typography variant="body1">Response</Typography>

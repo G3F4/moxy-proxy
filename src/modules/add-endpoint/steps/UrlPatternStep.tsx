@@ -5,7 +5,6 @@ export default function UrlPatternStep({ url, onUrlChange }: { url: string; onUr
   return (
     <TextField
       label="URL pattern"
-      name="url"
       value={url}
       onChange={event => onUrlChange(event.target.value)}
     />
