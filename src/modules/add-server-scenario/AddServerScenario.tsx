@@ -8,9 +8,9 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import { createStyles, makeStyles, Theme, useTheme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import { Close } from '@material-ui/icons';
-import { JsonEditor } from 'jsoneditor-react';
 import React, { ChangeEvent, useContext, useState } from 'react';
 import { AppStateContext } from '../../App';
+import { Editor } from '../../common/Editor';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -53,6 +53,12 @@ export default function AddServerScenario() {
     setOpen(false);
   }
 
+  function handleSave(code: string) {
+    setScenarioServerState(JSON.parse(code));
+  }
+
+  const code = JSON.stringify(scenarioServerState, null, 2);
+
   return (
     <div>
       <Button onClick={handleClickOpen}>Add server scenario</Button>
@@ -80,7 +86,7 @@ export default function AddServerScenario() {
         </DialogContent>
         <DialogContent>
           <DialogContentText>Modify copy of state before adding</DialogContentText>
-          <JsonEditor value={scenarioServerState} onChange={setScenarioServerState} />
+          <Editor code={code} onSave={handleSave} language="json" autoHeight />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleSubmit}>Submit scenario</Button>

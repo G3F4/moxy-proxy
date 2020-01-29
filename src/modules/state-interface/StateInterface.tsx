@@ -1,5 +1,4 @@
 import { Typography } from '@material-ui/core';
-import 'jsoneditor-react/es/editor.min.css';
 import React, { useContext } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { AppStateContext } from '../../App';

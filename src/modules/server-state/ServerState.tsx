@@ -1,25 +1,25 @@
 import { Typography } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
-import { JsonEditor } from 'jsoneditor-react';
-import 'jsoneditor-react/es/editor.min.css';
 import React, { useContext, useState } from 'react';
 import ReactJson from 'react-json-view';
+import { ServerState as ServerStateInterface } from '../../../interfaces';
 import { AppStateContext } from '../../App';
+import { Editor } from '../../common/Editor';
 
 export default function ServerState() {
-  const { serverState, resetServerState, updateServerState } = useContext(
-    AppStateContext,
-  );
+  const { serverState, resetServerState, updateServerState } = useContext(AppStateContext);
   const [editing, setEditing] = useState(false);
-  const [editorState, setEditorState] = useState(serverState);
 
-  function startEditing() {
+  function handleStartEditing() {
     setEditing(true);
   }
 
-  function doneEditing() {
+  function handleDoneEditing() {
     setEditing(false);
-    updateServerState(editorState);
+  }
+
+  function handleSave(code: string) {
+    updateServerState(JSON.parse(code) as ServerStateInterface);
   }
 
   return (
@@ -30,15 +30,22 @@ export default function ServerState() {
         </Typography>
         <div>
           {editing ? (
-            <Button onClick={doneEditing}>Done</Button>
+            <Button onClick={handleDoneEditing}>Done</Button>
           ) : (
-            <Button onClick={startEditing}>Edit</Button>
+            <Button onClick={handleStartEditing}>Edit</Button>
           )}
           <Button onClick={resetServerState}>Reset server</Button>
         </div>
       </div>
       {!editing && <ReactJson name="state" src={serverState} />}
-      {editing && <JsonEditor value={editorState} onChange={setEditorState} />}
+      {editing && (
+        <Editor
+          code={JSON.stringify(serverState, null, 2)}
+          onSave={handleSave}
+          language="json"
+          autoHeight
+        />
+      )}
     </>
   );
 }
