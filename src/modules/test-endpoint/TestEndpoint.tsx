@@ -44,21 +44,16 @@ function CopyCurl({
       <Button onClick={handleClick}>Copy CURL to clipboard</Button>
       <Snackbar
         action={
-          <>
-            <Button color="secondary" size="small" onClick={handleClose}>
-              UNDO
-            </Button>
-            <IconButton aria-label="close" color="inherit" size="small" onClick={handleClose}>
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </>
+          <IconButton aria-label="close" color="inherit" size="small" onClick={handleClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
         }
         anchorOrigin={{
           vertical: 'bottom',
           horizontal: 'left',
         }}
         autoHideDuration={6000}
-        message="Note archived"
+        message="CURL copied to clipboard!"
         open={open}
         onClose={handleClose}
       />
