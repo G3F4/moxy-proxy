@@ -29,6 +29,8 @@ export default class EndpointsService {
       endpoint => `/${endpoint.url}` === url && endpoint.method === method,
     );
 
+    console.log(['getHandler'], endpoint)
+
     if (endpoint) {
       return this.loadHandler(endpoint);
     }

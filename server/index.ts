@@ -37,7 +37,10 @@ const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) 
       payload: endpointsService.getEndpoints(),
     });
   },
-  changeEndpointResponseStatus(ws: WebSocket, payload: { endpointId: string, status: HttpStatus | null }) {
+  changeEndpointResponseStatus(
+    ws: WebSocket,
+    payload: { endpointId: string; status: HttpStatus | null },
+  ) {
     endpointsService.changeEndpointResponseStatus(payload);
     socketsService.broadcastEvent({
       action: 'updateEndpoints',
@@ -121,19 +124,32 @@ const webSocketBehavior = {
 
 // Http
 async function httpHandler(res: HttpResponse, req: HttpRequest) {
+  res.writeHeader('Access-Control-Allow-Origin', req.getHeader('origin'));
+  res.writeHeader('Access-Control-Allow-Credentials', 'true');
+  res.writeHeader('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
+  res.writeHeader('Access-Control-Max-Age', '86400');
+  res.writeHeader(
+    'Access-Control-Allow-Headers',
+    'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept',
+  );
+
   try {
     const method = req.getMethod() as Method;
     const url = req.getUrl() !== '/' ? req.getUrl() : '/index.html';
     const urlLastChar = url[url.length - 1];
     const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
     const suspenseStatus = endpointsService.getEndpointSuspenseStatus({ url: rawUrl, method });
+    const contentType = req.getHeader('content-type');
 
+    if (contentType) {
+      res.writeHeader('content-type', contentType)
+    }
+
+    logInfo(['Content-Type'], contentType);
     logInfo(['suspenseStatus'], suspenseStatus);
 
     if (suspenseStatus) {
       res.writeStatus(suspenseStatus.toString());
-
-      return res.end();
     }
 
     const handler = endpointsService.getHandler({ url: rawUrl, method });
@@ -180,6 +196,19 @@ async function startServerHandler(listenSocket: any) {
 // Application
 App()
   .ws('/*', webSocketBehavior)
+  .options('/*', (res: HttpResponse, req: HttpRequest) => {
+    res.writeHeader('Access-Control-Allow-Origin', req.getHeader('origin'));
+    res.writeHeader('Access-Control-Allow-Credentials', 'true');
+    res.writeHeader('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
+    res.writeHeader('Access-Control-Max-Age', '86400');
+    res.writeHeader(
+      'Access-Control-Allow-Headers',
+      'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept',
+    );
+    res.writeStatus('200');
+
+    res.end();
+  })
   .any('/*', httpHandler)
   .listen(PORT, startServerHandler);
 

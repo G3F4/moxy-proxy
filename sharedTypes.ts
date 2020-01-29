@@ -1,4 +1,4 @@
-export type Method = 'get' | 'post' | 'put' | 'patch' | 'delete';
+export type Method = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'options';
 
 export type ServerAction =
   | 'updateServerState'
