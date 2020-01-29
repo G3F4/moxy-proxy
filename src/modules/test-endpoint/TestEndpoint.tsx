@@ -4,14 +4,67 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import Snackbar from '@material-ui/core/Snackbar';
 import { createStyles, makeStyles, Theme, useTheme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import { Close } from '@material-ui/icons';
-import React, { useContext, useState } from 'react';
+import CloseIcon from '@material-ui/icons/Close';
+import React, { SyntheticEvent, useContext, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { Endpoint } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
 import CodeEditor from '../../common/CodeEditor';
+
+function CopyCurl({
+  endpoint,
+  queryString,
+  requestBody,
+}: {
+  endpoint: Endpoint;
+  queryString: string;
+  requestBody: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const handleClick = async () => {
+    setOpen(true);
+    await navigator.clipboard.writeText(
+      `curl -i --header "Content-Type: application/json" --request ${endpoint.method.toLocaleUpperCase()} --data '${JSON.stringify(JSON.parse(requestBody))}' ${window.location.origin}/${endpoint.url}?${queryString}`,
+    );
+  };
+  const handleClose = (event: SyntheticEvent | MouseEvent, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setOpen(false);
+  };
+
+  return (
+    <div>
+      <Button onClick={handleClick}>Copy CURL to clipboard</Button>
+      <Snackbar
+        action={
+          <>
+            <Button color="secondary" size="small" onClick={handleClose}>
+              UNDO
+            </Button>
+            <IconButton aria-label="close" color="inherit" size="small" onClick={handleClose}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </>
+        }
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        autoHideDuration={6000}
+        message="Note archived"
+        open={open}
+        onClose={handleClose}
+      />
+    </div>
+  );
+}
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -114,6 +167,7 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
           )}
         </DialogContent>
         <DialogActions>
+          <CopyCurl endpoint={endpoint} queryString={queryString} requestBody={requestBody} />
           <Button onClick={handleTest}>Test</Button>
         </DialogActions>
       </Dialog>

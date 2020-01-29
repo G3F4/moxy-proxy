@@ -1,4 +1,6 @@
+import { DialogActions } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
+import DialogContent from '@material-ui/core/DialogContent';
 import Paper from '@material-ui/core/Paper';
 import Step from '@material-ui/core/Step';
 import StepContent from '@material-ui/core/StepContent';
@@ -17,9 +19,6 @@ import UrlPatternStep from './steps/UrlPatternStep';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
-    root: {
-      width: '100%',
-    },
     button: {
       marginTop: theme.spacing(1),
       marginRight: theme.spacing(1),
@@ -161,7 +160,7 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
   };
 
   return (
-    <div className={classes.root}>
+    <>
       <Stepper activeStep={activeStep} orientation="vertical">
         {steps.map((label, index) => (
           <Step key={label}>
@@ -192,16 +191,22 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
         ))}
       </Stepper>
       {activeStep === steps.length && (
-        <Paper square className={classes.resetContainer} elevation={0}>
-          <Typography>Endpoint ready to submit</Typography>
-          <Button className={classes.button} onClick={handleBack}>
-            Back
-          </Button>
-          <Button className={classes.button} color="primary" onClick={handleSubmit}>
-            Submit
-          </Button>
-        </Paper>
+        <>
+          <DialogContent>
+            <Typography>Endpoint ready to submit</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Paper square className={classes.resetContainer} elevation={0}>
+              <Button className={classes.button} onClick={handleBack}>
+                Back
+              </Button>
+              <Button className={classes.button} color="primary" onClick={handleSubmit}>
+                Submit
+              </Button>
+            </Paper>
+          </DialogActions>
+        </>
       )}
-    </div>
+    </>
   );
 }

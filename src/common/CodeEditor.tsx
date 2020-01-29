@@ -41,11 +41,11 @@ export default function CodeEditor({
       <div>
         {editing ? (
           <Editor
+            autoHeight
             code={code}
+            language={language}
             onReady={handleEditorReady}
             onSave={onSave}
-            language={language}
-            autoHeight
           />
         ) : (
           <SyntaxHighlighter language={language}>{code.trim()}</SyntaxHighlighter>

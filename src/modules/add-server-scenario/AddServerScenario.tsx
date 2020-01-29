@@ -78,18 +78,21 @@ export default function AddServerScenario() {
         </DialogTitle>
         <DialogContent>
           <TextField
-            id="outlined-basic"
+            autoFocus
+            fullWidth
+            id="name"
             label="Scenario name"
-            variant="outlined"
+            margin="dense"
+            value={name}
             onChange={handleNameChange}
           />
         </DialogContent>
         <DialogContent>
           <DialogContentText>Modify copy of state before adding</DialogContentText>
-          <Editor code={code} onSave={handleSave} language="json" autoHeight />
+          <Editor autoHeight code={code} language="json" onSave={handleSave} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleSubmit}>Submit scenario</Button>
+          <Button onClick={handleSubmit}>Submit</Button>
         </DialogActions>
       </Dialog>
     </div>

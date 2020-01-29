@@ -40,10 +40,10 @@ export default function ServerState() {
       {!editing && <ReactJson name="state" src={serverState} />}
       {editing && (
         <Editor
-          code={JSON.stringify(serverState, null, 2)}
-          onSave={handleSave}
-          language="json"
           autoHeight
+          code={JSON.stringify(serverState, null, 2)}
+          language="json"
+          onSave={handleSave}
         />
       )}
     </>
