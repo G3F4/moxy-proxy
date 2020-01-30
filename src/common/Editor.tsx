@@ -41,7 +41,7 @@ export function Editor({
     editorRef.current = valueGetter;
   }
 
-  const linesCount = code.split(/\r\n|\r|\n/).length;
+  const linesCount = code.split(/\r\n|\r|\n/).length + 3;
   const height = autoHeight ? `${linesCount * lineHeight}px` : '500px';
 
   return (

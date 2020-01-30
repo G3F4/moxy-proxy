@@ -8,18 +8,16 @@ import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import React, { useContext } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { HttpStatus, HttpStatusOption } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
 import { httpStatuses } from '../../common/httpStatuses';
 import AddEndpoint from '../add-endpoint/AddEndpoint';
-import { parametersTypes } from '../add-endpoint/steps/ParametersStep';
 import TestEndpoint from '../test-endpoint/TestEndpoint';
 import EndpointCode from './EndpointCode';
 
-const httpStatusOptions: HttpStatusOption[] = Object.keys(
-  httpStatuses,
-).map(key => ({
-  value: key as unknown as HttpStatus,
+const httpStatusOptions: HttpStatusOption[] = Object.keys(httpStatuses).map(key => ({
+  value: (key as unknown) as HttpStatus,
   text: httpStatuses[(key as unknown) as HttpStatus],
 }));
 const useStyles = makeStyles((theme: Theme) =>
@@ -36,12 +34,9 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export default function Endpoints() {
   const classes = useStyles();
-  const {
-    endpoints,
-    updateEndpoint,
-    deleteEndpoint,
-    changeEndpointResponseStatus,
-  } = useContext(AppStateContext);
+  const { endpoints, updateEndpoint, deleteEndpoint, changeEndpointResponseStatus } = useContext(
+    AppStateContext,
+  );
 
   return (
     <div className={classes.root}>
@@ -85,8 +80,18 @@ export default function Endpoints() {
                   />
                 )}
                 style={{ width: 300 }}
-                value={{ text: endpoint.responseStatus ? httpStatuses[endpoint.responseStatus] : 'default', value: endpoint.responseStatus || 200 } as any}
-                onChange={((_event: any, option: HttpStatusOption) => changeEndpointResponseStatus(endpoint.id, option.value)) as any}
+                value={
+                  {
+                    text: endpoint.responseStatus
+                      ? httpStatuses[endpoint.responseStatus]
+                      : 'default',
+                    value: endpoint.responseStatus || 200,
+                  } as any
+                }
+                onChange={
+                  ((_event: any, option: HttpStatusOption) =>
+                    changeEndpointResponseStatus(endpoint.id, option.value)) as any
+                }
               />
             </div>
           </ExpansionPanelDetails>
@@ -118,22 +123,22 @@ export default function Endpoints() {
           />
           <ExpansionPanelDetails style={{ display: 'flex', flexDirection: 'column' }}>
             {endpoint.parameters.length > 0 && (
-              <Typography className={classes.heading} style={{ marginBottom: 16 }}>Parameters</Typography>
+              <>
+                <Typography className={classes.heading} style={{ marginBottom: 16 }}>
+                  Parameters
+                </Typography>
+                <SyntaxHighlighter language="json">
+                  {JSON.stringify(
+                    endpoint.parameters.reduce(
+                      (acc, { name, type }) => ({ ...acc, [name]: type }),
+                      {},
+                    ),
+                    null,
+                    2,
+                  )}
+                </SyntaxHighlighter>
+              </>
             )}
-            <div>
-              {endpoint.parameters.map(({ id, name, type }) => {
-                const parameter = parametersTypes.find(parameter => type === parameter.value);
-                let text = null;
-
-                if (parameter) {
-                  text = parameter.text;
-                }
-
-                return (
-                  <Typography key={id} variant="body2"><b>{`${name}: `}</b>{text}</Typography>
-                );
-              })}
-            </div>
           </ExpansionPanelDetails>
         </ExpansionPanel>
       ))}
