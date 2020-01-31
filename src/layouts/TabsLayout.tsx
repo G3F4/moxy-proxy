@@ -1,17 +1,39 @@
 import { Paper } from '@material-ui/core';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
-import React, { lazy, Suspense, useContext } from 'react';
+import React, { ChangeEvent, lazy, Suspense, useContext } from 'react';
 import { AppStateContext } from '../App';
 
 const LazyEndpoints = lazy(() => import('../modules/endpoints/Endpoints'));
 const LazyServerState = lazy(() => import('../modules/server-state/ServerState'));
 const LazyStateInterface = lazy(() => import('../modules/state-interface/StateInterface'));
 
+export type TabKey = 'serverInterface' | 'serverState' | 'endpoints';
+
+export interface Tab {
+  label: string;
+  value: TabKey;
+}
+
+const TabsConfig: Tab[] = [
+  {
+    value: 'serverInterface',
+    label: 'State interface',
+  },
+  {
+    value: 'serverState',
+    label: 'State state',
+  },
+  {
+    value: 'endpoints',
+    label: 'Endpoints',
+  },
+];
+
 export default function TabsLayout() {
   const { activeTab, changeActiveTab } = useContext(AppStateContext);
 
-  function handleActiveTabChange(event: React.ChangeEvent<{}>, newValue: number) {
+  function handleActiveTabChange(event: ChangeEvent<{}>, newValue: TabKey) {
     changeActiveTab(newValue);
   }
 
@@ -25,22 +47,22 @@ export default function TabsLayout() {
           value={activeTab}
           onChange={handleActiveTabChange}
         >
-          <Tab label="State interface" />
-          <Tab label="Server state" />
-          <Tab label="Endpoints" />
+          {TabsConfig.map(({ value, label }) => (
+            <Tab key={value} label={label} value={value} />
+          ))}
         </Tabs>
       </Paper>
-      {activeTab === 0 && (
+      {activeTab === 'serverInterface' && (
         <Suspense fallback="Loading state interface...">
           <LazyStateInterface />
         </Suspense>
       )}
-      {activeTab === 1 && (
+      {activeTab === 'serverState' && (
         <Suspense fallback="Loading server state...">
           <LazyServerState />
         </Suspense>
       )}
-      {activeTab === 2 && (
+      {activeTab === 'endpoints' && (
         <Suspense fallback="Loading endpoints...">
           <LazyEndpoints />
         </Suspense>

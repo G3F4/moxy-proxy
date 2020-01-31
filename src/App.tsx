@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 import { ServerState } from '../interfaces';
 import {
   ClientEvent,
@@ -9,7 +9,9 @@ import {
   ServerStateScenario,
 } from '../sharedTypes';
 import './App.css';
+import useLocalstorage from './common/hooks/useLocalstorage';
 import Layout from './layouts/Layout';
+import { TabKey } from './layouts/TabsLayout';
 
 const socketUrl =
   process.env.NODE_ENV === 'production' ? `wss://${window.location.host}` : 'ws://localhost:5000';
@@ -25,8 +27,8 @@ function initialEndpoint(): Endpoint[] {
 
 export type ViewMode = 'tabs' | 'panels' | 'board';
 
-export const AppStateContext = React.createContext({
-  activeTab: 1,
+export const AppStateContext = createContext({
+  activeTab: 'serverState' as TabKey,
   activeServerStateScenarioId: 'default',
   viewMode: 'tabs' as ViewMode,
   serverState: initialServerState(),
@@ -35,7 +37,7 @@ export const AppStateContext = React.createContext({
   serverStateScenarios: [] as ServerStateScenario[],
 
   changeViewMode(_viewMode: ViewMode) {},
-  changeActiveTab(_tabIndex: number) {},
+  changeActiveTab(_tabKey: TabKey) {},
   addServerStateScenario(_serverStateScenario: ServerStateScenario) {},
   changeServerStateScenario(_serverStateScenarioId: string) {},
   updateServerState(_serverState: ServerState) {},
@@ -56,10 +58,14 @@ function parseMessage(message: string): { action: ServerAction; payload: unknown
 }
 
 const socket = new WebSocket(socketUrl);
-const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState(1);
-  const [activeServerStateScenarioId, setActiveServerStateScenarioId] = useState('default');
-  const [viewMode, setViewMode] = useState<ViewMode>('tabs');
+
+function App() {
+  const [activeTab, setActiveTab] = useLocalstorage<TabKey>('activeTab', 'serverState');
+  const [activeServerStateScenarioId, setActiveServerStateScenarioId] = useLocalstorage(
+    'activeServerStateScenarioId',
+    'default',
+  );
+  const [viewMode, setViewMode] = useLocalstorage<ViewMode>('viewMode', 'tabs');
   const [serverState, setServerState] = useState(initialServerState);
   const [serverStateScenarios, setServerStateScenarios] = useState([] as ServerStateScenario[]);
   const [serverStateInterface, setServerStateInterface] = useState('');
@@ -150,7 +156,11 @@ const App: React.FC = () => {
     });
   }
 
-  async function handleTestEndpoint({ url, method }: Endpoint, queryParams: string, requestBody: string) {
+  async function handleTestEndpoint(
+    { url, method }: Endpoint,
+    queryParams: string,
+    requestBody: string,
+  ) {
     const parsedBody = JSON.parse(requestBody);
     const isEmpty = method === 'get' || Object.keys(parsedBody).length === 0;
     const body = isEmpty ? undefined : JSON.stringify(parsedBody);
@@ -192,6 +202,7 @@ const App: React.FC = () => {
       action: 'changeServerStateScenario',
       payload: serverStateScenarioId,
     });
+    // @ts-ignore
     setActiveServerStateScenarioId(serverStateScenarioId);
   }
 
@@ -206,7 +217,7 @@ const App: React.FC = () => {
   }
 
   const contextValue = {
-    activeTab,
+    activeTab: activeTab as TabKey,
     activeServerStateScenarioId,
     endpoints,
     serverState,
@@ -233,6 +244,6 @@ const App: React.FC = () => {
       </AppStateContext.Provider>
     </div>
   );
-};
+}
 
 export default App;
