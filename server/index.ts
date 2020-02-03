@@ -15,7 +15,7 @@ const socketsService = new SocketsService();
 const fileService = new FileService(process.cwd(), readFileSync, writeFileSync, existsSync);
 const endpointsService = new EndpointsService(fileService);
 const serverStateService = new ServerStateService(fileService, socketsService);
-const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) => void> = {
+const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: unknown) => void> = {
   addEndpoint(ws: WebSocket, payload: Endpoint) {
     endpointsService.addEndpoint(payload);
     socketsService.broadcastEvent({

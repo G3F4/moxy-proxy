@@ -22,6 +22,20 @@ export default function ServerState() {
     updateServerState(JSON.parse(code) as ServerStateInterface);
   }
 
+  async function handleUpdateWithClipboard() {
+    const serverState = await navigator.clipboard.readText();
+
+    try {
+      updateServerState(JSON.parse(serverState));
+    } catch (e) {
+      console.error(['handleUpdateWithClipboard.error'], e.toString());
+    }
+  }
+
+  async function handleCopyToClipboard() {
+    await navigator.clipboard.writeText(JSON.stringify(serverState, null, 2));
+  }
+
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -35,6 +49,8 @@ export default function ServerState() {
             <Button onClick={handleStartEditing}>Edit</Button>
           )}
           <Button onClick={resetServerState}>Reset server</Button>
+          <Button onClick={handleCopyToClipboard}>Copy to clipboard</Button>
+          <Button onClick={handleUpdateWithClipboard}>Update with clipboard</Button>
         </div>
       </div>
       {!editing && <ReactJson name="state" src={serverState} />}
