@@ -8,10 +8,10 @@ export default function useLocalstorage<T>(key: string, initialValue: T) {
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
       console.log(error);
+
       return initialValue;
     }
   });
-
   const setValue = (value: T) => {
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
