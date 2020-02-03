@@ -1,3 +1,4 @@
+import { Paper } from '@material-ui/core';
 import MuiExpansionPanel from '@material-ui/core/ExpansionPanel';
 import MuiExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
@@ -71,33 +72,35 @@ export default function Endpoints() {
       <Typography style={{ margin: 8 }} variant="h5">
         Endpoints
       </Typography>
-      {endpoints.length === 0 && (
-        <>
-          <Typography variant="caption">No endpoint defined.</Typography>
-          <AddEndpoint />
-        </>
-      )}
-      {Object.entries(groupedEndpoints).map(([url, endpoints]) => {
-        if (endpoints.length > 1) {
+      <Paper>
+        {endpoints.length === 0 && (
+          <>
+            <Typography variant="caption">No endpoint defined.</Typography>
+            <AddEndpoint />
+          </>
+        )}
+        {Object.entries(groupedEndpoints).map(([url, endpoints]) => {
+          if (endpoints.length > 1) {
+            return (
+              <ExpansionPanel square expanded={expandedEndpoint === url} onChange={handleChange(url)}>
+                <ExpansionPanelSummary>
+                  <Typography>{`Group URL: ${url}`}</Typography>
+                </ExpansionPanelSummary>
+                <EndpointGroup endpoints={endpoints} url={url} />
+              </ExpansionPanel>
+            );
+          }
+
           return (
             <ExpansionPanel square expanded={expandedEndpoint === url} onChange={handleChange(url)}>
               <ExpansionPanelSummary>
-                <Typography>{`Group URL: ${url}`}</Typography>
+                <Typography>{`${endpoints[0].method.toUpperCase()}: ${url}`}</Typography>
               </ExpansionPanelSummary>
-              <EndpointGroup endpoints={endpoints} url={url} />
+              <Endpoint endpoint={endpoints[0]} />
             </ExpansionPanel>
           );
-        }
-
-        return (
-          <ExpansionPanel square expanded={expandedEndpoint === url} onChange={handleChange(url)}>
-            <ExpansionPanelSummary>
-              <Typography>{`${endpoints[0].method.toUpperCase()}: ${url}`}</Typography>
-            </ExpansionPanelSummary>
-            <Endpoint endpoint={endpoints[0]} />
-          </ExpansionPanel>
-        );
-      })}
+        })}
+      </Paper>
     </div>
   );
 }

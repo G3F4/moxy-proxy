@@ -1,5 +1,6 @@
 import { Typography } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
 import React, { useContext, useState } from 'react';
 import ReactJson from 'react-json-view';
 import { ServerState as ServerStateInterface } from '../../../interfaces';
@@ -53,15 +54,17 @@ export default function ServerState() {
           <Button onClick={handleUpdateWithClipboard}>Update with clipboard</Button>
         </div>
       </div>
-      {!editing && <ReactJson name="state" src={serverState} />}
-      {editing && (
-        <Editor
-          autoHeight
-          code={JSON.stringify(serverState, null, 2)}
-          language="json"
-          onSave={handleSave}
-        />
-      )}
+      <Paper style={{ padding: 10 }}>
+        {!editing && <ReactJson name="state" src={serverState} />}
+        {editing && (
+          <Editor
+            autoHeight
+            code={JSON.stringify(serverState, null, 2)}
+            language="json"
+            onSave={handleSave}
+          />
+        )}
+      </Paper>
     </>
   );
 }
