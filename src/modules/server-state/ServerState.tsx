@@ -6,6 +6,7 @@ import ReactJson from 'react-json-view';
 import { ServerState as ServerStateInterface } from '../../../interfaces';
 import { AppStateContext } from '../../App';
 import { Editor } from '../../common/Editor';
+import ServerStateMenu from './ServerStateMenu';
 
 export default function ServerState() {
   const { serverState, resetServerState, updateServerState } = useContext(AppStateContext);
@@ -43,15 +44,19 @@ export default function ServerState() {
         <Typography style={{ margin: 8 }} variant="h5">
           Server state
         </Typography>
-        <div>
+        <div style={{ display: 'flex' }}>
           {editing ? (
             <Button onClick={handleDoneEditing}>Done</Button>
           ) : (
             <Button onClick={handleStartEditing}>Edit</Button>
           )}
-          <Button onClick={resetServerState}>Reset server</Button>
-          <Button onClick={handleCopyToClipboard}>Copy to clipboard</Button>
-          <Button onClick={handleUpdateWithClipboard}>Update with clipboard</Button>
+          <ServerStateMenu
+            actions={[
+              { label: 'Reset server', onClick: resetServerState },
+              { label: 'Copy to clipboard', onClick: handleCopyToClipboard },
+              { label: 'Update with clipboard', onClick: handleUpdateWithClipboard },
+            ]}
+          />
         </div>
       </div>
       <Paper style={{ padding: 10 }}>
