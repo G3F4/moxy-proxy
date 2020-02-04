@@ -86,7 +86,7 @@ export default function Endpoints() {
                 <ExpansionPanelSummary>
                   <Typography>{`Group URL: ${url}`}</Typography>
                 </ExpansionPanelSummary>
-                <EndpointGroup endpoints={endpoints} url={url} />
+                <EndpointGroup endpoints={endpoints} />
               </ExpansionPanel>
             );
           }
