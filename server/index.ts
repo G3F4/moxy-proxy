@@ -138,24 +138,18 @@ async function httpHandler(res: HttpResponse, req: HttpRequest) {
     const url = req.getUrl() !== '/' ? req.getUrl() : '/index.html';
     const urlLastChar = url[url.length - 1];
     const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
-    const suspenseStatus = endpointsService.getEndpointSuspenseStatus({ url: rawUrl, method });
+    const responseStatus = endpointsService.getEndpointResponseStatus({ url: rawUrl, method });
     const contentType = req.getHeader('content-type');
+    const status = responseStatus ? responseStatus.toString() : '200';
 
     if (contentType) {
+      logInfo(['Content-Type'], contentType);
       res.writeHeader('content-type', contentType)
     }
 
-    logInfo(['Content-Type'], contentType);
-    logInfo(['suspenseStatus'], suspenseStatus);
-
-    if (suspenseStatus) {
-      res.writeStatus(suspenseStatus.toString());
-    }
+    res.writeStatus(status);
 
     const handler = endpointsService.getHandler({ url: rawUrl, method });
-
-    logInfo(['url'], url);
-    logInfo(['method'], method);
 
     if (handler) {
       const requestBody = await readJsonAsync(res);
@@ -205,7 +199,6 @@ App()
       'Access-Control-Allow-Headers',
       'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept',
     );
-    res.writeStatus('200');
 
     res.end();
   })

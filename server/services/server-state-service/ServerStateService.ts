@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 import * as util from 'util';
 import { ServerState } from '../../../interfaces';
 import { ServerStateScenario, ServerStateScenarioMapping } from '../../../sharedTypes';
-import { logInfo } from '../../utils/logger';
+import { logError, logInfo } from '../../utils/logger';
 import FileService from '../file-service/FileService';
 import SocketsService from '../sockets-service/SocketsService';
 
@@ -16,7 +16,7 @@ export default class ServerStateService {
   private serverStateInterfaceFileName = 'interfaces.ts';
   private initialServerStatePath = `data/serverState/${this.activeServerStateScenarioId}.json`;
   private serverStateScenariosMapPath = 'data/serverStateScenarios.json';
-  private initialServerStates: Record<string, ServerState> = {};
+  private readonly initialServerStates: Record<string, ServerState> = {};
 
   getActiveServerStateScenarioId() {
     return this.activeServerStateScenarioId;
@@ -59,13 +59,10 @@ export default class ServerStateService {
 
     this.saveServerStateToFile(serverStateScenarioId, this.serverState);
     this.socketsService.broadcastEvent({ action: 'updateServerState', payload: this.serverState });
-    this.makeTypesFromInitialServerState().then(() => {
-      logInfo(['makeTypesFromInitialServerState'], 'done');
-    });
+    this.makeTypesFromInitialServerState().then(() => {});
   }
 
   addServerStateScenario(scenario: ServerStateScenario) {
-    console.log(['addServerStateScenario'], scenario);
     this.saveServerStateScenario(scenario);
 
     this.serverStateScenarioMappings = [
@@ -121,15 +118,16 @@ export default class ServerStateService {
   }
 
   async makeTypesFromInitialServerState() {
-    const { stdout, stderr } = await execPromised(
+    const { stderr } = await execPromised(
       `make_types -i ${this.serverStateInterfaceFileName} ${this.initialServerStatePath} ServerState`,
     );
 
-    logInfo(['makeTypesFromInitialServerState'], stdout, stderr);
-
-    this.serverStateInterface = this.fileService.readText(this.serverStateInterfaceFileName);
-
-    this.socketsService.broadcastEvent({ action: 'updateServerStateInterface', payload: this.serverStateInterface });
+    if (stderr) {
+      logError(stderr);
+    } else {
+      this.serverStateInterface = this.fileService.readText(this.serverStateInterfaceFileName);
+      this.socketsService.broadcastEvent({ action: 'updateServerStateInterface', payload: this.serverStateInterface });
+    }
   }
 
   private saveServerStateScenario(scenario: ServerStateScenario) {

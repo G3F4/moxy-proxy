@@ -36,7 +36,7 @@ export default class EndpointsService {
     }
   }
 
-  getEndpointSuspenseStatus({ method, url }: { method: Method; url: string }) {
+  getEndpointResponseStatus({ method, url }: { method: Method; url: string }) {
     const endpoint = this.endpoints.find(
       endpoint => `/${endpoint.url}` === url && endpoint.method === method,
     );
@@ -109,12 +109,15 @@ export default class EndpointsService {
     endpointId: string;
     status: HttpStatus | null;
   }) {
-    const endpointIndex = this.endpoints.findIndex(({ id }) => id === endpointId);
-    const endpoint = this.endpoints[endpointIndex];
+    const endpoint = this.endpoints.find(({ id }) => id === endpointId);
+    const endpointMapping = this.endpointMappings.find(({ id }) => id === endpointId);
 
-    endpoint.responseStatus = status;
-    this.endpoints[endpointIndex] = endpoint;
-    this.saveEndpointToFile(endpoint);
+    if(endpoint && endpointMapping) {
+      endpoint.responseStatus = status;
+      endpointMapping.responseStatus = status;
+    }
+
+    this.saveEndpointMappings();
   }
 
   loadHandler(endpoint: Endpoint | EndpointMapping): Handler | null {

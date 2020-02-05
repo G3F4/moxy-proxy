@@ -1,6 +1,6 @@
 import { WebSocket } from 'uWebSockets.js';
 import { ClientAction, ServerEvent } from '../../../sharedTypes';
-import { logError, logInfo } from '../../utils/logger';
+import { logError } from '../../utils/logger';
 
 export default class SocketsService {
   sockets: WebSocket[] = [];
@@ -16,7 +16,6 @@ export default class SocketsService {
   sendEvent(socket: WebSocket, event: ServerEvent): void {
     try {
       socket.send(JSON.stringify(event));
-      // logInfo(['sendEvent'], { action, payload });
     } catch (e) {
       logError(e);
     }
@@ -27,8 +26,6 @@ export default class SocketsService {
   }
 
   broadcastEvent(event: ServerEvent) {
-    logInfo(['broadcastEvent'], event);
-
     this.sockets.forEach(socket => {
       try {
         socket.send(JSON.stringify(event));
