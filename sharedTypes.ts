@@ -7,7 +7,7 @@ export type ServerAction =
   | 'updateServerStateScenarios';
 
 interface SocketEvent {
-  payload?: unknown;
+  payload?: any;
 }
 
 export interface ServerEvent extends SocketEvent {

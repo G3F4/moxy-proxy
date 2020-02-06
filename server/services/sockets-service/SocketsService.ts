@@ -36,11 +36,8 @@ export default class SocketsService {
     });
   }
 
-  parseClientMessage(message: ArrayBuffer): { action: ClientAction; payload: unknown } {
-    const { action, payload } = JSON.parse(
-      // @ts-ignore
-      String.fromCharCode.apply(null, new Uint8Array(message)),
-    );
+  parseClientMessage(message: any): { action: ClientAction; payload: unknown } {
+    const { action, payload } = JSON.parse(message);
 
     return { action, payload };
   }

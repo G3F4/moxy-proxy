@@ -13,8 +13,11 @@ import useLocalstorage from './common/hooks/useLocalstorage';
 import Layout from './layouts/Layout';
 import { TabKey } from './layouts/TabsLayout';
 
+const socketHash = 'superHash123';
 const socketUrl =
-  process.env.NODE_ENV === 'production' ? `wss://${window.location.host}` : 'ws://localhost:5000';
+  process.env.NODE_ENV === 'production' && window.location.hostname !== 'localhost'
+    ? `wss://${window.location.host}/${socketHash}`
+    : `ws://localhost:5000/${socketHash}`;
 
 function initialServerState(): ServerState {
   //@ts-ignore
@@ -110,7 +113,7 @@ function App() {
       // TODO wznawianie połączenia po utracie
       setTimeout(() => {
         window.location.reload();
-      }, 3000)
+      }, 3000);
     };
 
     socket.onmessage = event => {

@@ -25,8 +25,9 @@ export default class EndpointsService {
   }
 
   getHandler({ method, url }: { method: Method; url: string }) {
+    const [endpointUrl] = url.split('?');
     const endpoint = this.endpoints.find(
-      endpoint => `/${endpoint.url}` === url && endpoint.method === method,
+      endpoint => `/${endpoint.url}` === endpointUrl && endpoint.method === method,
     );
 
     if (endpoint) {
@@ -35,12 +36,13 @@ export default class EndpointsService {
   }
 
   getEndpointResponseStatus({ method, url }: { method: Method; url: string }) {
-    const endpoint = this.endpoints.find(
-      endpoint => `/${endpoint.url}` === url && endpoint.method === method,
+    const [endpointUrl] = url.split('?');
+    const endpointMapping = this.endpointMappings.find(
+      endpoint => `/${endpoint.url}` === endpointUrl && endpoint.method === method,
     );
 
-    if (endpoint) {
-      return endpoint.responseStatus;
+    if (endpointMapping) {
+      return endpointMapping.responseStatus;
     }
 
     return null;

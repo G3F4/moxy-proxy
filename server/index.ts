@@ -1,15 +1,14 @@
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { SocketStream } from 'fastify-websocket';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { ServerResponse } from 'http';
 import produce from 'immer';
-import { App, HttpRequest, HttpResponse, WebSocket } from 'uWebSockets.js';
-import { PORT } from '../constans';
 import { ServerState } from '../interfaces';
 import { ClientAction, Endpoint, HttpStatus, Method, ServerStateScenario } from '../sharedTypes';
 import EndpointsService from './services/endpoints-service/EndpointsService';
 import FileService from './services/file-service/FileService';
 import ServerStateService from './services/server-state-service/ServerStateService';
 import SocketsService from './services/sockets-service/SocketsService';
-import { logError, logInfo } from './utils/logger';
-import { readJsonAsync } from './utils/readJson';
 
 const socketsService = new SocketsService();
 const fileService = new FileService(process.cwd(), readFileSync, writeFileSync, existsSync);
@@ -82,120 +81,132 @@ const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) 
 
   ping(ws: WebSocket, _payload: unknown) {},
 };
+const fastify: FastifyInstance = require('fastify')({
+  logger: true,
+});
 
-function messageHandler(ws: WebSocket, message: ArrayBuffer) {
-  const { action, payload } = socketsService.parseClientMessage(message);
-  const handler = clientMessageHandlers[action];
+fastify.register(require('fastify-cors'), {
+  origin: true,
+  credentials: true,
+});
 
-  handler(ws, payload);
-}
+fastify.register(require('fastify-websocket'), {
+  handle: (conn: SocketStream) => {
+    conn.pipe(conn); // creates an echo server
+  },
+  options: { maxPayload: 1048576 },
+});
 
-function openHandler(ws: WebSocket) {
-  ws.id = Date.now();
-  socketsService.addSocket(ws);
+const socketHash = 'superHash123';
 
-  socketsService.sendEvent(ws, {
+fastify.get(`/${socketHash}`, { websocket: true }, (connection, req) => {
+  connection.socket.id = Date.now();
+  socketsService.addSocket(connection.socket);
+
+  socketsService.sendEvent(connection.socket, {
     action: 'updateServerState',
     payload: serverStateService.getServerState(),
   });
-  socketsService.sendEvent(ws, {
+  socketsService.sendEvent(connection.socket, {
     action: 'updateServerStateInterface',
     payload: serverStateService.getServerStateInterface(),
   });
-  socketsService.sendEvent(ws, {
+  socketsService.sendEvent(connection.socket, {
     action: 'updateServerStateScenarios',
     payload: serverStateService.getServerStateScenarioMappings(),
   });
-  socketsService.sendEvent(ws, {
+  socketsService.sendEvent(connection.socket, {
     action: 'updateEndpoints',
     payload: endpointsService.getEndpoints(),
   });
+
+  connection.socket.on('message', (message: any) => {
+    const { action, payload } = socketsService.parseClientMessage(message);
+    const handler = clientMessageHandlers[action];
+
+    handler(connection.socket, payload);
+  });
+
+  connection.socket.on('close', () => {
+    socketsService.deleteSocket(connection.socket);
+  });
+});
+
+const contentTypeMap: Record<string, string> = {
+  html: 'text/html',
+  js: 'text/javascript',
+  css: 'text/css',
+  png: 'image/png',
+  json: 'application/javascript',
+  map: 'application/octet-stream',
+} as const;
+
+function loadStaticFile(request: FastifyRequest, reply: FastifyReply<ServerResponse>) {
+  const filePath = request.raw.url !== '/' ? request.raw.url : '/index.html';
+  const file = fileService.readText(`build${filePath}`);
+  const parts = filePath!.split('.');
+  const extension = parts[parts.length - 1];
+  const contentType = contentTypeMap[extension];
+
+  reply
+    .type(contentType)
+    .code(200)
+    .send(file);
 }
 
-function closeHandler(ws: WebSocket) {
-  socketsService.deleteSocket(ws);
-}
+const IsFileRegex = /\.[0-9a-z]{1,5}$/i;
 
-const webSocketBehavior = {
-  message: messageHandler,
-  open: openHandler,
-  close: closeHandler,
-};
+fastify.route({
+  method: ['DELETE', 'GET', 'PATCH', 'POST', 'PUT'],
+  url: '*',
+  handler: async function httpHandlerFast(request, reply) {
+    const fileRequest = request.raw.url === '/' || IsFileRegex.test(request.raw.url!);
 
-// Http
-async function httpHandler(res: HttpResponse, req: HttpRequest) {
-  logInfo(['httpHandler']);
-
-  try {
-    const method = req.getMethod() as Method;
-    const url = req.getUrl() !== '/' ? req.getUrl() : '/index.html';
-    const urlLastChar = url[url.length - 1];
-    const rawUrl = urlLastChar === '/' ? url.slice(0, -1) : url;
-    const responseStatus = endpointsService.getEndpointResponseStatus({ url: rawUrl, method });
-    const contentType = req.getHeader('content-type');
-    const status = responseStatus ? responseStatus.toString() : '200';
-
-    if (contentType) {
-      logInfo(['Content-Type'], contentType);
-      res.writeHeader('content-type', contentType)
-    }
-
-    res.writeStatus(status);
-    enableCors(res, req);
-
-    const handler = endpointsService.getHandler({ url: rawUrl, method });
-
-    if (handler) {
-      const requestBody = await readJsonAsync(res);
-      const request = {
-        body: requestBody,
-      };
-      const { requestResponse, serverUpdate } = handler;
-      const requestResponseReturn = requestResponse(serverStateService.getServerState(), request);
-      const state = produce(serverStateService.getServerState(), serverUpdate(request));
-
-      serverStateService.updateServerState({
-        serverStateScenarioId: serverStateService.getActiveServerStateScenarioId(),
-        state,
-      });
-
-      return res.end(JSON.stringify(requestResponseReturn));
+    if (fileRequest) {
+      loadStaticFile(request, reply);
     } else {
-      const file = fileService.readText(`build${url}`);
+      const method = request.raw.method!.toLowerCase() as Method;
+      const url = request.raw.url;
+      const urlLastChar = url![url!.length - 1];
+      const rawUrl = urlLastChar === '/' ? url!.slice(0, -1) : url;
+      const responseStatus = endpointsService.getEndpointResponseStatus({ url: rawUrl!, method });
+      const contentType = request.headers['content-type'];
+      const status = responseStatus ? responseStatus : 200;
+      const handler = endpointsService.getHandler({ url: rawUrl!, method });
 
-      return res.end(file);
+      reply.type(contentType).code(status);
+
+      if (handler) {
+        const requestObj = {
+          body: request.body,
+        };
+        const { requestResponse, serverUpdate } = handler;
+        const requestResponseReturn = requestResponse(
+          serverStateService.getServerState(),
+          requestObj,
+        );
+        const state = produce(serverStateService.getServerState(), serverUpdate(requestObj));
+
+        serverStateService.updateServerState({
+          serverStateScenarioId: serverStateService.getActiveServerStateScenarioId(),
+          state,
+        });
+
+        reply.send(JSON.stringify(requestResponseReturn));
+      } else {
+        reply.send('No handler');
+      }
     }
-  } catch (e) {
-    logError(`error: ${e.toString()}`);
-    res.writeStatus('404');
-    res.end();
-    logError(['error'], e);
-  }
-}
+  },
+});
 
-async function startServerHandler(listenSocket: any) {
-  if (listenSocket) {
-    logError(`Listening to port: ${PORT}`);
-  }
+fastify.listen(5000, async (err, address) => {
+  if (err) throw err;
+
+  fastify.log.info(`server listening on ${address}`);
 
   await serverStateService.makeTypesFromInitialServerState();
-}
-
-function enableCors(res: HttpResponse, req: HttpRequest) {
-  const origin = req.getHeader('origin');
-
-  if (origin.length > 0) {
-    res.writeHeader('Access-Control-Allow-Origin', origin);
-    res.writeHeader('Access-Control-Allow-Credentials', 'true');
-  }
-
-}
-
-// Application
-App()
-  .ws('/*', webSocketBehavior)
-  .any('/*', httpHandler)
-  .listen(PORT, startServerHandler);
+});
 
 // curl -i --header "Content-Type: application/json" --request GET  http://localhost:5000/test
 // curl -i --header "Content-Type: application/json" --request PUT  http://localhost:5000/test

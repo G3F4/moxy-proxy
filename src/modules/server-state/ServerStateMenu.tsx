@@ -13,11 +13,9 @@ export default function ServerStateMenu({
 }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-
   const handleClick = (event: MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
-
   const handleClose = () => {
     setAnchorEl(null);
   };
@@ -32,25 +30,25 @@ export default function ServerStateMenu({
   return (
     <div>
       <IconButton
-        aria-label="more"
         aria-controls="server-state-menu"
         aria-haspopup="true"
+        aria-label="more"
         onClick={handleClick}
       >
         <MoreVertIcon />
       </IconButton>
       <Menu
-        id="server-state-menu"
-        anchorEl={anchorEl}
         keepMounted
+        anchorEl={anchorEl}
+        id="server-state-menu"
         open={open}
-        onClose={handleClose}
         PaperProps={{
           style: {
             maxHeight: ITEM_HEIGHT * 4.5,
             width: 200,
           },
         }}
+        onClose={handleClose}
       >
         {actions.map(({ label, onClick }) => (
           <MenuItem key={label} onClick={handleActionClick(onClick)}>
