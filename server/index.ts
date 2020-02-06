@@ -15,7 +15,7 @@ const socketsService = new SocketsService();
 const fileService = new FileService(process.cwd(), readFileSync, writeFileSync, existsSync);
 const endpointsService = new EndpointsService(fileService);
 const serverStateService = new ServerStateService(fileService, socketsService);
-const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: unknown) => void> = {
+const clientMessageHandlers: Record<ClientAction, (ws: WebSocket, payload: any) => void> = {
   addEndpoint(ws: WebSocket, payload: Endpoint) {
     endpointsService.addEndpoint(payload);
     socketsService.broadcastEvent({
@@ -124,14 +124,7 @@ const webSocketBehavior = {
 
 // Http
 async function httpHandler(res: HttpResponse, req: HttpRequest) {
-  res.writeHeader('Access-Control-Allow-Origin', req.getHeader('origin'));
-  res.writeHeader('Access-Control-Allow-Credentials', 'true');
-  res.writeHeader('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
-  res.writeHeader('Access-Control-Max-Age', '86400');
-  res.writeHeader(
-    'Access-Control-Allow-Headers',
-    'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept',
-  );
+  logInfo(['httpHandler']);
 
   try {
     const method = req.getMethod() as Method;
@@ -148,6 +141,7 @@ async function httpHandler(res: HttpResponse, req: HttpRequest) {
     }
 
     res.writeStatus(status);
+    enableCors(res, req);
 
     const handler = endpointsService.getHandler({ url: rawUrl, method });
 
@@ -187,21 +181,19 @@ async function startServerHandler(listenSocket: any) {
   await serverStateService.makeTypesFromInitialServerState();
 }
 
+function enableCors(res: HttpResponse, req: HttpRequest) {
+  const origin = req.getHeader('origin');
+
+  if (origin.length > 0) {
+    res.writeHeader('Access-Control-Allow-Origin', origin);
+    res.writeHeader('Access-Control-Allow-Credentials', 'true');
+  }
+
+}
+
 // Application
 App()
   .ws('/*', webSocketBehavior)
-  .options('/*', (res: HttpResponse, req: HttpRequest) => {
-    res.writeHeader('Access-Control-Allow-Origin', req.getHeader('origin'));
-    res.writeHeader('Access-Control-Allow-Credentials', 'true');
-    res.writeHeader('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
-    res.writeHeader('Access-Control-Max-Age', '86400');
-    res.writeHeader(
-      'Access-Control-Allow-Headers',
-      'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept',
-    );
-
-    res.end();
-  })
   .any('/*', httpHandler)
   .listen(PORT, startServerHandler);
 

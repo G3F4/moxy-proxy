@@ -82,7 +82,7 @@ export default function Endpoints() {
         {Object.entries(groupedEndpoints).map(([url, endpoints]) => {
           if (endpoints.length > 1) {
             return (
-              <ExpansionPanel square expanded={expandedEndpoint === url} onChange={handleChange(url)}>
+              <ExpansionPanel key={url} square expanded={expandedEndpoint === url} onChange={handleChange(url)}>
                 <ExpansionPanelSummary>
                   <Typography>{`Group URL: ${url}`}</Typography>
                 </ExpansionPanelSummary>
@@ -92,7 +92,7 @@ export default function Endpoints() {
           }
 
           return (
-            <ExpansionPanel square expanded={expandedEndpoint === url} onChange={handleChange(url)}>
+            <ExpansionPanel key={url} square expanded={expandedEndpoint === url} onChange={handleChange(url)}>
               <ExpansionPanelSummary>
                 <Typography>{`${endpoints[0].method.toUpperCase()}: ${url}`}</Typography>
               </ExpansionPanelSummary>

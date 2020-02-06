@@ -107,6 +107,10 @@ function App() {
 
     socket.onclose = event => {
       console.log(['WebSocket.onclose'], event);
+      // TODO wznawianie połączenia po utracie
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000)
     };
 
     socket.onmessage = event => {
@@ -175,6 +179,7 @@ function App() {
       body,
       method,
       headers,
+      credentials: 'include',
     });
   }
 
