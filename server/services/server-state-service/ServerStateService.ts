@@ -4,7 +4,6 @@ import { ServerState } from '../../../interfaces';
 import { ServerStateScenario, ServerStateScenarioMapping } from '../../../sharedTypes';
 import { logError, logInfo } from '../../utils/logger';
 import FileService from '../file-service/FileService';
-import SocketsService from '../sockets-service/SocketsService';
 
 const execPromised = util.promisify(exec);
 
@@ -16,7 +15,7 @@ export default class ServerStateService {
   private serverStateInterfaceFileName = 'interfaces.ts';
   private initialServerStatePath = `data/serverState/${this.activeServerStateScenarioId}.json`;
   private serverStateScenariosMapPath = 'data/serverStateScenarios.json';
-  private readonly initialServerStates: Record<string, ServerState> = {};
+  private initialServerStates: Record<string, ServerState> = {};
 
   getActiveServerStateScenarioId() {
     return this.activeServerStateScenarioId;
@@ -34,7 +33,7 @@ export default class ServerStateService {
     return this.serverStateScenarioMappings;
   }
 
-  constructor(readonly fileService: FileService, readonly socketsService: SocketsService) {
+  constructor(readonly fileService: FileService) {
     this.serverState = fileService.readJSON(this.initialServerStatePath);
     this.serverStateInterface = fileService.readText(this.serverStateInterfaceFileName);
     this.serverStateScenarioMappings = fileService.readJSON(this.serverStateScenariosMapPath);
@@ -58,7 +57,6 @@ export default class ServerStateService {
     };
 
     this.saveServerStateToFile(serverStateScenarioId, this.serverState);
-    this.socketsService.broadcastEvent({ action: 'updateServerState', payload: this.serverState });
     this.makeTypesFromInitialServerState().then(() => {});
   }
 
@@ -126,7 +124,6 @@ export default class ServerStateService {
       logError(stderr);
     } else {
       this.serverStateInterface = this.fileService.readText(this.serverStateInterfaceFileName);
-      this.socketsService.broadcastEvent({ action: 'updateServerStateInterface', payload: this.serverStateInterface });
     }
   }
 

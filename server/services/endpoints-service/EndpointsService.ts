@@ -24,15 +24,17 @@ export default class EndpointsService {
     return this.endpoints;
   }
 
-  getHandler({ method, url }: { method: Method; url: string }) {
+  getHandler({ method, url }: { method: Method; url: string }): Handler {
     const [endpointUrl] = url.split('?');
-    const endpoint = this.endpoints.find(
+    const endpoint = this.endpointMappings.find(
       endpoint => `/${endpoint.url}` === endpointUrl && endpoint.method === method,
     );
 
     if (endpoint) {
       return this.loadHandler(endpoint);
     }
+
+    throw new Error(`no handler mapping for url: ${url} | method: ${method}`);
   }
 
   getEndpointResponseStatus({ method, url }: { method: Method; url: string }) {
@@ -120,12 +122,12 @@ export default class EndpointsService {
     this.saveEndpointMappings();
   }
 
-  loadHandler(endpoint: Endpoint | EndpointMapping): Handler | null {
+  loadHandler(endpoint: Endpoint | EndpointMapping): Handler {
     const path = this.handlerPath(endpoint);
     const handlerExists = this.fileService.checkIfExist(path);
 
     if (!handlerExists) {
-      return null;
+      throw new Error(`handler at path: ${path} not exists`);
     }
 
     const watcher = nocache(`${this.fileService.cwd}/${path}`);

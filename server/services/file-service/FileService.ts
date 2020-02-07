@@ -12,14 +12,11 @@ export default class FileService {
 
   constructor(
     readonly cwd: string,
-    readonly readSync: typeof readFileSync,
-    readonly writeSync: typeof writeFileSync,
-    readonly exists: typeof existsSync,
   ) {
   }
 
   checkIfExist(path: string): boolean {
-    return this.exists(`${this.cwd}/${path}`);
+    return existsSync(`${this.cwd}/${path}`);
   }
 
   deleteFile(path: string) {
@@ -50,24 +47,24 @@ export default class FileService {
   }
 
   readJSON<T extends unknown>(path: string): T {
-    return JSON.parse(this.readSync(`${this.cwd}/${path}`, 'utf8'));
+    return JSON.parse(readFileSync(`${this.cwd}/${path}`, 'utf8'));
   }
 
   saveJSON(path: string, data: unknown): void {
-    this.writeSync(`${this.cwd}/${path}`, JSON.stringify(data, null, 2), 'utf-8');
+    writeFileSync(`${this.cwd}/${path}`, JSON.stringify(data, null, 2), 'utf-8');
   }
 
   readText(path: string): string {
-    return this.readSync(`${this.cwd}/${path}`, 'utf8');
+    return readFileSync(`${this.cwd}/${path}`, 'utf8');
   }
 
   saveText(path: string, text: string): void {
     const fileExists = this.checkIfExist(path);
 
     if (fileExists) {
-      this.writeSync(path, text);
+      writeFileSync(path, text);
     } else {
-      this.writeSync(path, text, { flag: 'wx' });
+      writeFileSync(path, text, { flag: 'wx' });
     }
   }
 
