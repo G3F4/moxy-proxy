@@ -1,6 +1,8 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import 'fastify-websocket';
 import { ServerResponse } from 'http';
+import { original } from 'parseurl';
+import { parse } from 'querystring';
 import { Method } from '../sharedTypes';
 import { PORT } from './config';
 import ApiService from './services/api-service/ApiService';
@@ -64,14 +66,19 @@ export default class Application {
 
   private apiController(request: FastifyRequest, reply: FastifyReply<ServerResponse>) {
     const method = request.raw.method!.toLowerCase() as Method;
-    const url = request.raw.url!;
-    const urlLastChar = url![url!.length - 1];
-    const rawUrl = urlLastChar === '/' ? url!.slice(0, -1) : url;
-    const { contentType, requestResponse, status } = this.apiService.callHandler(
-      rawUrl,
+    const { pathname, query } = original(request.raw)!;
+    let parameters = {};
+
+    if (typeof query === 'string') {
+      parameters = parse(query);
+    }
+
+    const { contentType, requestResponse, status } = this.apiService.callHandler({
+      url: pathname!,
       method,
-      request.body,
-    );
+      parameters,
+      body: request.body,
+    });
 
     reply
       .type(contentType)

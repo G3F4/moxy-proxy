@@ -47,7 +47,7 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
   const [activeStep, setActiveStep] = useState(0);
   const [endpoint, setEndpoint] = useState<Endpoint>({
     id: Date.now().toString(),
-    url: '',
+    url: '/',
     method: 'get',
     parameters: [],
     responseStatus: null,

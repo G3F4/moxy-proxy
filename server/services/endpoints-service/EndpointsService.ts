@@ -25,22 +25,20 @@ export default class EndpointsService {
   }
 
   getHandler({ method, url }: { method: Method; url: string }): Handler {
-    const [endpointUrl] = url.split('?');
-    const endpoint = this.endpointMappings.find(
-      endpoint => `/${endpoint.url}` === endpointUrl && endpoint.method === method,
+    const endpointMapping = this.endpointMappings.find(
+      endpoint => endpoint.url === url && endpoint.method === method,
     );
 
-    if (endpoint) {
-      return this.loadHandler(endpoint);
+    if (endpointMapping) {
+      return this.loadHandler(endpointMapping);
     }
 
     throw new Error(`no handler mapping for url: ${url} | method: ${method}`);
   }
 
   getEndpointResponseStatus({ method, url }: { method: Method; url: string }) {
-    const [endpointUrl] = url.split('?');
     const endpointMapping = this.endpointMappings.find(
-      endpoint => `/${endpoint.url}` === endpointUrl && endpoint.method === method,
+      endpoint => endpoint.url === url && endpoint.method === method,
     );
 
     if (endpointMapping) {
@@ -122,7 +120,7 @@ export default class EndpointsService {
     this.saveEndpointMappings();
   }
 
-  loadHandler(endpoint: Endpoint | EndpointMapping): Handler {
+  private loadHandler(endpoint: Endpoint | EndpointMapping): Handler {
     const path = this.handlerPath(endpoint);
     const handlerExists = this.fileService.checkIfExist(path);
 

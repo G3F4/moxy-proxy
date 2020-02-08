@@ -3,6 +3,15 @@ import { Method } from '../../../sharedTypes';
 import EndpointsService from '../endpoints-service/EndpointsService';
 import ServerStateService from '../server-state-service/ServerStateService';
 
+const defaultContentType = 'json/application';
+
+interface CallHandlerArgs {
+  url: string;
+  method: Method;
+  body: Record<string, unknown>;
+  parameters: Record<string, string>;
+}
+
 interface CallHandlerResponse {
   requestResponse: string;
   status: number;
@@ -15,34 +24,31 @@ export default class ApiService {
     readonly endpointsService: EndpointsService,
   ) {}
 
-  callHandler(url: string, method: Method, requestBody: any = {}): CallHandlerResponse {
+  callHandler({
+    url,
+    method = 'get',
+    body = {},
+    parameters = {},
+  }: CallHandlerArgs): CallHandlerResponse {
     const handler = this.endpointsService.getHandler({ url, method });
     const responseStatus = this.endpointsService.getEndpointResponseStatus({ url, method });
     const status = responseStatus ? responseStatus : 200;
-    const requestObj = {
-      body: requestBody,
-    };
     const { requestResponse, serverUpdate } = handler;
+    const request = { body, parameters };
     const requestResponseReturn = requestResponse(
       this.serverStateService.getServerState(),
-      requestObj,
+      request,
     );
-    const state = produce(this.serverStateService.getServerState(), serverUpdate(requestObj));
 
     this.serverStateService.updateServerState({
       serverStateScenarioId: this.serverStateService.getActiveServerStateScenarioId(),
-      state,
-    });
-
-    this.serverStateService.updateServerState({
-      serverStateScenarioId: this.serverStateService.getActiveServerStateScenarioId(),
-      state,
+      state: produce(this.serverStateService.getServerState(), serverUpdate(request)),
     });
 
     return {
-      requestResponse: JSON.stringify(requestResponseReturn),
       status,
-      contentType: 'json/application',
+      contentType: defaultContentType,
+      requestResponse: JSON.stringify(requestResponseReturn),
     };
   }
 }
