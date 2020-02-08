@@ -104,6 +104,7 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
   const { testEndpoint } = useContext(AppStateContext);
   const [urlParameters, setUrlParameters] = useState(getUrlParameters(endpoint.url));
+  const urlParts = endpoint.url.split('/').filter(Boolean);
 
   function handleClickOpen() {
     setOpen(true);
@@ -147,23 +148,37 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
             <Close />
           </IconButton>
         </DialogTitle>
-        <DialogContent>
-          {Object.entries(urlParameters).map(([parameterName, value]) => (
-            <TextField
-              fullWidth
-              label={`${parameterName}`}
-              placeholder="Set parameter value"
-              value={value}
-              onChange={event => {
-                setUrlParameters({
-                  ...urlParameters,
-                  [parameterName]: event.target.value,
-                });
-              }}
-              required
-            />
-          ))}
-        </DialogContent>
+        {Object.keys(urlParameters).length > 0 && (
+          <DialogContent style={{ display: 'flex' }}>
+            {urlParts.map(part => {
+              const urlParameter = part[0] === urlDelimiter;
+
+              if (urlParameter) {
+                const parameterName = part.slice(1);
+                const value = urlParameters[parameterName];
+
+                return (
+                  <TextField
+                    label={parameterName}
+                    placeholder="Set parameter value"
+                    value={value}
+                    onChange={event => {
+                      setUrlParameters({
+                        ...urlParameters,
+                        [parameterName]: event.target.value,
+                      });
+                    }}
+                    required
+                  />
+                );
+              } else {
+                return (
+                  <Typography variant="body1" style={{ marginTop: 20, marginRight: 5  }}>{`${part} /`}</Typography>
+                );
+              }
+            })}
+          </DialogContent>
+        )}
         <DialogContent>
           {showQueryString ? (
             <TextField
