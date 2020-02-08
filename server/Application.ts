@@ -73,17 +73,24 @@ export default class Application {
       parameters = parse(query);
     }
 
-    const { contentType, requestResponse, status } = this.apiService.callHandler({
-      url: pathname!,
-      method,
-      parameters,
-      body: request.body,
-    });
 
-    reply
-      .type(contentType)
-      .code(status)
-      .send(requestResponse);
+    try {
+      const { contentType, requestResponse, status } = this.apiService.callHandler({
+        url: pathname!,
+        method,
+        parameters,
+        body: request.body,
+      });
+
+      reply
+        .type(contentType)
+        .code(status)
+        .send(requestResponse);
+    } catch (e) {
+      reply
+        .code(404)
+        .send(e.toString());
+    }
   }
 
   private staticsController(request: FastifyRequest, reply: FastifyReply<ServerResponse>) {
