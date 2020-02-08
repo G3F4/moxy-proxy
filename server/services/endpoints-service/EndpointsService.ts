@@ -13,6 +13,8 @@ export interface Handler {
   serverUpdate: ServerUpdate;
 }
 
+const urlParameterDelimiter = ':';
+
 export default class EndpointsService {
   private endpoints: Endpoint[] = [];
   private endpointMappings: EndpointMapping[] = [];
@@ -25,9 +27,19 @@ export default class EndpointsService {
   }
 
   getHandler({ method, url }: { method: Method; url: string }): Handler {
-    const endpointMapping = this.endpointMappings.find(
-      endpoint => endpoint.url === url && endpoint.method === method,
-    );
+    const urlParts = url.split('/').filter(Boolean);
+    const endpointMapping = this.endpointMappings.find(endpoint => {
+      const parts = endpoint.url.split('/').filter(Boolean);
+
+      if (urlParts.length === parts.length && endpoint.method === method) {
+        return parts.some(
+          (part, urlPartIndex) =>
+            part[0] === urlParameterDelimiter || part === urlParts[urlPartIndex],
+        );
+      }
+
+      return false;
+    });
 
     if (endpointMapping) {
       return this.loadHandler(endpointMapping);
@@ -112,7 +124,7 @@ export default class EndpointsService {
     const endpoint = this.endpoints.find(({ id }) => id === endpointId);
     const endpointMapping = this.endpointMappings.find(({ id }) => id === endpointId);
 
-    if(endpoint && endpointMapping) {
+    if (endpoint && endpointMapping) {
       endpoint.responseStatus = status;
       endpointMapping.responseStatus = status;
     }
