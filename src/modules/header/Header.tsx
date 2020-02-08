@@ -42,8 +42,6 @@ export default function Header() {
   const inputLabel = useRef<HTMLLabelElement>(null);
   const [labelWidth, setLabelWidth] = useState(0);
 
-  console.log(['Header.serverStateScenarios'], serverStateScenarios)
-
   useEffect(() => {
     setLabelWidth(inputLabel.current!.offsetWidth);
   }, []);

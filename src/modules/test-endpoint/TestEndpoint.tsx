@@ -75,6 +75,23 @@ const emptyJsonString = `
 {}
 `;
 
+export const urlDelimiter = ':';
+
+function getUrlParameters(url: string): Record<string, string> {
+  const parts = url.split('/').filter(Boolean);
+
+  return parts.reduce((acc, part) => {
+    if (part[0] === urlDelimiter) {
+      return {
+        ...acc,
+        [part.slice(1)]: '',
+      }
+    }
+
+    return acc;
+  }, {} as Record<string, string>)
+}
+
 export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   const [open, setOpen] = useState(false);
   const [requestBody, setRequestBody] = useState(emptyJsonString);
@@ -86,6 +103,7 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   const classes = useStyles();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
   const { testEndpoint } = useContext(AppStateContext);
+  const [urlParameters, setUrlParameters] = useState(getUrlParameters(endpoint.url));
 
   function handleClickOpen() {
     setOpen(true);
@@ -96,7 +114,7 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   }
 
   async function handleTest() {
-    const response = await testEndpoint(endpoint, queryString, requestBody);
+    const response = await testEndpoint(endpoint, urlParameters, queryString, requestBody);
 
     if (response.status < 300) {
       try {
@@ -129,6 +147,23 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
             <Close />
           </IconButton>
         </DialogTitle>
+        <DialogContent>
+          {Object.entries(urlParameters).map(([parameterName, value]) => (
+            <TextField
+              fullWidth
+              label={`${parameterName}`}
+              placeholder="Set parameter value"
+              value={value}
+              onChange={event => {
+                setUrlParameters({
+                  ...urlParameters,
+                  [parameterName]: event.target.value,
+                });
+              }}
+              required
+            />
+          ))}
+        </DialogContent>
         <DialogContent>
           {showQueryString ? (
             <TextField

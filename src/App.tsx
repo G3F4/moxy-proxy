@@ -12,6 +12,7 @@ import './App.css';
 import useLocalstorage from './common/hooks/useLocalstorage';
 import Layout from './layouts/Layout';
 import { TabKey } from './layouts/TabsLayout';
+import { urlDelimiter } from './modules/test-endpoint/TestEndpoint';
 
 const socketHash = 'superHash123';
 const socketUrl =
@@ -49,7 +50,7 @@ export const AppStateContext = createContext({
   deleteEndpoint(_endpointId: string) {},
   changeEndpointResponseStatus(_endpointId: string, _status: HttpStatus | null) {},
   updateEndpoint(_endpoint: Endpoint) {},
-  testEndpoint(_endpoint: Endpoint, _queryString: string, _requestBody: string) {
+  testEndpoint(_endpoint: Endpoint, _urlParameters: Record<string, string>, _queryString: string, _requestBody: string) {
     return Promise.resolve(new Response(''));
   },
 });
@@ -165,6 +166,7 @@ function App() {
 
   async function handleTestEndpoint(
     { url, method }: Endpoint,
+    urlParameters: Record<string, string>,
     queryParams: string,
     requestBody: string,
   ) {
@@ -178,7 +180,23 @@ function App() {
           'Content-Type': 'application/json',
         };
 
-    return await fetch(`${url}?${queryParams}`, {
+    function parseUrlWithParameters(url: string, urlParameters: Record<string, string>) {
+      const urlParts = url.split('/').filter(Boolean);
+
+      return urlParts.reduce((acc, part) => {
+        const urlParameter = part[0] === urlDelimiter;
+
+        if (urlParameter) {
+          return `${acc}/${urlParameters[part.slice(1)]}`
+        }
+
+        return `${acc}/${part}`;
+      }, '')
+    }
+
+    const parsedUrl = `${parseUrlWithParameters(url, urlParameters)}?${queryParams}`;
+
+    return await fetch(parsedUrl, {
       body,
       method,
       headers,
