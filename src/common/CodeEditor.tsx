@@ -15,6 +15,7 @@ export default function CodeEditor({
   language?: string;
   onSave: any;
 }) {
+  const [draft, setDraft] = useState(code);
   const [editing, setEditing] = useState(false);
   const [editorReady, setEditorReady] = useState(false);
 
@@ -24,6 +25,7 @@ export default function CodeEditor({
 
   function handleSave() {
     setEditing(false);
+    onSave(draft);
   }
 
   return (
@@ -42,10 +44,10 @@ export default function CodeEditor({
         {editing ? (
           <Editor
             autoHeight
-            code={code}
+            code={draft}
             language={language}
             onReady={handleEditorReady}
-            onSave={onSave}
+            onSave={setDraft}
           />
         ) : (
           <SyntaxHighlighter language={language}>{code.trim()}</SyntaxHighlighter>
