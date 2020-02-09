@@ -31,10 +31,11 @@ export default class ApiService {
     parameters = {},
   }: CallHandlerArgs): CallHandlerResponse {
     const handler = this.endpointsService.getHandler({ url, method });
+    const urlParameters = this.endpointsService.getUrlParameters({ url, method });
     const responseStatus = this.endpointsService.getEndpointResponseStatus({ url, method });
     const status = responseStatus ? responseStatus : 200;
     const { requestResponse, serverUpdate } = handler;
-    const request = { body, parameters };
+    const request = { body, parameters, urlParameters };
     const requestResponseReturn = requestResponse(
       this.serverStateService.getServerState(),
       request,

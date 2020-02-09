@@ -2,8 +2,10 @@ import React from 'react';
 import CodeEditor from '../../../common/CodeEditor';
 
 export const initialServerStateUpdateCode = `
-const serverUpdate = ({ body, parameters }) => (state) => {
-  state.modified = true;
+function serverUpdate(request) {
+  return function stateUpdate(state) {
+    state.modified = true;
+  };
 };
 `;
 

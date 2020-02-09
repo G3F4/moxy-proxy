@@ -2,9 +2,9 @@ import React from 'react';
 import CodeEditor from '../../../common/CodeEditor';
 
 export const initialResponseCode = `
-const requestResponse = (state, { body, parameters }) => {
+function requestResponse(state, request) {
   return state;
-}
+};
 `;
 
 export default function ResponseStep({

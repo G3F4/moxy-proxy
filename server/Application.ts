@@ -73,7 +73,6 @@ export default class Application {
       parameters = parse(query);
     }
 
-
     try {
       const { contentType, requestResponse, status } = this.apiService.callHandler({
         url: pathname!,

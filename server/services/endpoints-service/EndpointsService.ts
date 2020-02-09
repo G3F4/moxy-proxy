@@ -28,24 +28,37 @@ export default class EndpointsService {
 
   getHandler({ method, url }: { method: Method; url: string }): Handler {
     const urlParts = url.split('/').filter(Boolean);
-    const endpointMapping = this.endpointMappings.find(endpoint => {
-      const parts = endpoint.url.split('/').filter(Boolean);
-
-      if (urlParts.length === parts.length && endpoint.method === method) {
-        return parts.some(
-          (part, urlPartIndex) =>
-            part[0] === urlParameterDelimiter || part === urlParts[urlPartIndex],
-        );
-      }
-
-      return false;
-    });
+    const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, urlParts }));
 
     if (endpointMapping) {
       return this.loadHandler(endpointMapping);
     }
 
     throw new Error(`no handler mapping for url: ${url} | method: ${method}`);
+  }
+
+  getUrlParameters({ method, url }: { method: Method; url: string }): Record<string, string> {
+    const urlParts = url.split('/').filter(Boolean);
+    const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, urlParts }));
+
+    if (endpointMapping) {
+      const parts = endpointMapping.url.split('/').filter(Boolean);
+
+      return parts.reduce((acc, part, partIndex) => {
+        const urlParameter = part[0] === urlParameterDelimiter;
+
+        if (urlParameter) {
+          return {
+            ...acc,
+            [part.slice(1)]: urlParts[partIndex],
+          }
+        }
+
+        return acc;
+      }, {});
+    }
+
+    return {};
   }
 
   getEndpointResponseStatus({ method, url }: { method: Method; url: string }) {
@@ -130,6 +143,21 @@ export default class EndpointsService {
     }
 
     this.saveEndpointMappings();
+  }
+
+  private findEndpoint({ method, urlParts }: { method: Method; urlParts: string[] }) {
+    return (endpoint: EndpointMapping) => {
+      const parts = endpoint.url.split('/').filter(Boolean);
+
+      if (urlParts.length === parts.length && endpoint.method === method) {
+        return parts.some(
+          (part, urlPartIndex) =>
+            part[0] === urlParameterDelimiter || part === urlParts[urlPartIndex],
+        );
+      }
+
+      return false;
+    }
   }
 
   private loadHandler(endpoint: Endpoint | EndpointMapping): Handler {
