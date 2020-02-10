@@ -11,7 +11,7 @@ import { Close } from '@material-ui/icons';
 import CloseIcon from '@material-ui/icons/Close';
 import React, { SyntheticEvent, useContext, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { Endpoint } from '../../../sharedTypes';
+import { Endpoint, EndpointParameter } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
 import CodeEditor from '../../common/CodeEditor';
 
@@ -28,7 +28,9 @@ function CopyCurl({
   const handleClick = async () => {
     setOpen(true);
     await navigator.clipboard.writeText(
-      `curl -i --header "Content-Type: application/json" --request ${endpoint.method.toLocaleUpperCase()} --data '${JSON.stringify(JSON.parse(requestBody))}' ${window.location.origin}/${endpoint.url}?${queryString}`,
+      `curl -i --header "Content-Type: application/json" --request ${endpoint.method.toLocaleUpperCase()} --data '${JSON.stringify(
+        JSON.parse(requestBody),
+      )}' ${window.location.origin}/${endpoint.url}?${queryString}`,
     );
   };
   const handleClose = (event: SyntheticEvent | MouseEvent, reason?: string) => {
@@ -85,11 +87,21 @@ function getUrlParameters(url: string): Record<string, string> {
       return {
         ...acc,
         [part.slice(1)]: '',
-      }
+      };
     }
 
     return acc;
-  }, {} as Record<string, string>)
+  }, {} as Record<string, string>);
+}
+
+function initialQueryParamsValues(queryParams: EndpointParameter[]): Record<string, string> {
+  return queryParams.reduce(
+    (acc, queryParam) => ({
+      ...acc,
+      [queryParam.name]: '',
+    }),
+    {},
+  );
 }
 
 export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
@@ -97,14 +109,15 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   const [requestBody, setRequestBody] = useState(emptyJsonString);
   const [showRequestBody, setShowRequestBody] = useState(false);
   const [responseJson, setResponseJson] = useState('');
-  const [queryString, setQueryString] = useState('');
-  const [showQueryString, setShowQueryString] = useState(false);
   const theme = useTheme();
   const classes = useStyles();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
   const { testEndpoint } = useContext(AppStateContext);
   const [urlParameters, setUrlParameters] = useState(getUrlParameters(endpoint.url));
+  const [queryParams, setQueryParams] = useState(initialQueryParamsValues(endpoint.parameters));
   const urlParts = endpoint.url.split('/').filter(Boolean);
+
+  console.log(['endpoint'], endpoint);
 
   function handleClickOpen() {
     setOpen(true);
@@ -114,7 +127,12 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
     setOpen(false);
   }
 
+  function parseQueryParams(params: typeof queryParams) {
+    return Object.entries(params).reduce((acc, [name, value]) => `${acc}&${name}=${value}`, '');
+  }
+
   async function handleTest() {
+    const queryString = parseQueryParams(queryParams);
     const response = await testEndpoint(endpoint, urlParameters, queryString, requestBody);
 
     if (response.status < 300) {
@@ -149,48 +167,69 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
           </IconButton>
         </DialogTitle>
         {Object.keys(urlParameters).length > 0 && (
-          <DialogContent style={{ display: 'flex' }}>
-            {urlParts.map(part => {
-              const urlParameter = part[0] === urlDelimiter;
+          <DialogContent>
+            <Typography variant="subtitle2" style={{ flexGrow: 1 }}>
+              Fill url parameters
+            </Typography>
+            <div style={{ display: 'flex' }}>
+              {urlParts.map(part => {
+                const urlParameter = part[0] === urlDelimiter;
 
-              if (urlParameter) {
-                const parameterName = part.slice(1);
-                const value = urlParameters[parameterName];
+                if (urlParameter) {
+                  const parameterName = part.slice(1);
+                  const value = urlParameters[parameterName];
 
-                return (
-                  <TextField
-                    label={parameterName}
-                    placeholder="Set parameter value"
-                    value={value}
-                    onChange={event => {
-                      setUrlParameters({
-                        ...urlParameters,
-                        [parameterName]: event.target.value,
-                      });
-                    }}
-                    required
-                  />
-                );
-              } else {
-                return (
-                  <Typography variant="body1" style={{ marginTop: 20, marginRight: 5  }}>{`${part} /`}</Typography>
-                );
-              }
-            })}
+                  return (
+                    <TextField
+                      label={parameterName}
+                      placeholder="Set parameter value"
+                      value={value}
+                      onChange={event => {
+                        setUrlParameters({
+                          ...urlParameters,
+                          [parameterName]: event.target.value,
+                        });
+                      }}
+                      required
+                    />
+                  );
+                } else {
+                  return (
+                    <Typography
+                      variant="body1"
+                      style={{ marginTop: 20, marginRight: 5 }}
+                    >{`${part} /`}</Typography>
+                  );
+                }
+              })}
+            </div>
           </DialogContent>
         )}
-        <DialogContent>
-          {showQueryString ? (
-            <TextField
-              fullWidth
-              label="Query string"
-              value={queryString}
-              onChange={event => setQueryString(event.target.value)}
-            />
-          ) : (
-            <Button onClick={() => setShowQueryString(true)}>Add query string</Button>
-          )}
-        </DialogContent>
+        {endpoint.parameters.length > 0 && (
+          <DialogContent>
+            <Typography variant="subtitle2">Fill query parameters</Typography>
+            <div style={{ display: 'flex' }}>
+              {endpoint.parameters.map(({ id, name, type }, index) => (
+                <>
+                  <Typography variant="body1" style={{ marginTop: 20, marginRight: 5 }}>{`${
+                    index > 0 ? '& ' : ''
+                  }${name} = `}</Typography>
+                  <TextField
+                    label={name}
+                    placeholder="Set query parameter value"
+                    value={queryParams[name]}
+                    onChange={event => {
+                      setQueryParams({
+                        ...queryParams,
+                        [name]: event.target.value,
+                      });
+                    }}
+                  />
+                </>
+              ))}
+            </div>
+          </DialogContent>
+        )}
         <DialogContent>
           {showRequestBody ? (
             <CodeEditor
@@ -212,7 +251,11 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
           )}
         </DialogContent>
         <DialogActions>
-          <CopyCurl endpoint={endpoint} queryString={queryString} requestBody={requestBody} />
+          <CopyCurl
+            endpoint={endpoint}
+            queryString={parseQueryParams(queryParams)}
+            requestBody={requestBody}
+          />
           <Button onClick={handleTest}>Test</Button>
         </DialogActions>
       </Dialog>
