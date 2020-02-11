@@ -168,7 +168,7 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
         </DialogTitle>
         {Object.keys(urlParameters).length > 0 && (
           <DialogContent>
-            <Typography variant="subtitle2" style={{ flexGrow: 1 }}>
+            <Typography style={{ flexGrow: 1 }} variant="subtitle2">
               Fill url parameters
             </Typography>
             <div style={{ display: 'flex' }}>
@@ -181,6 +181,7 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
 
                   return (
                     <TextField
+                      required
                       label={parameterName}
                       placeholder="Set parameter value"
                       value={value}
@@ -190,14 +191,13 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
                           [parameterName]: event.target.value,
                         });
                       }}
-                      required
                     />
                   );
                 } else {
                   return (
                     <Typography
-                      variant="body1"
                       style={{ marginTop: 20, marginRight: 5 }}
+                      variant="body1"
                     >{`${part} /`}</Typography>
                   );
                 }
@@ -211,7 +211,7 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
             <div style={{ display: 'flex' }}>
               {endpoint.parameters.map(({ id, name, type }, index) => (
                 <>
-                  <Typography variant="body1" style={{ marginTop: 20, marginRight: 5 }}>{`${
+                  <Typography style={{ marginTop: 20, marginRight: 5 }} variant="body1">{`${
                     index > 0 ? '& ' : ''
                   }${name} = `}</Typography>
                   <TextField
@@ -246,7 +246,9 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
           {responseJson && (
             <>
               <Typography variant="body1">Response</Typography>
-              <SyntaxHighlighter language="json">{responseJson.trim()}</SyntaxHighlighter>
+              <SyntaxHighlighter language="json">
+                {JSON.stringify(JSON.parse(responseJson), null, 2)}
+              </SyntaxHighlighter>
             </>
           )}
         </DialogContent>

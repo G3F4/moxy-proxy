@@ -30,6 +30,25 @@ fastify.register(require('fastify-websocket'), {
   options: { maxPayload: 1048576 },
 });
 
+fastify.addContentTypeParser(
+  '*',
+  { parseAs: 'string' },
+  function(req, body, done) {
+    const contentType = req.headers['content-type'];
+
+    if (contentType && contentType.startsWith('application')) {
+      try {
+        done(null, JSON.parse(body));
+      } catch (err) {
+        err.statusCode = 400;
+        done(err, undefined);
+      }
+    }
+
+    return body;
+  },
+);
+
 const app = new Application(fastify, serverStateService, socketsService, fileService, apiService);
 
 app.start();
