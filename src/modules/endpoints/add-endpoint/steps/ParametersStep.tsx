@@ -5,7 +5,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import React from 'react';
-import { EndpointParameter } from '../../../../sharedTypes';
+import { EndpointParameter } from '../../../../../sharedTypes';
 
 export const parametersTypes = [
   { text: 'String', value: 'string' },

@@ -7,7 +7,7 @@ import produce from 'immer';
 import React, { ChangeEvent, useContext, useState } from 'react';
 import { Endpoint as EndpointInterface } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
-import AddEndpoint from '../add-endpoint/AddEndpoint';
+import AddEndpoint from './add-endpoint/AddEndpoint';
 import Endpoint from './Endpoint';
 import EndpointGroup from './EndpointGroup';
 
@@ -69,9 +69,14 @@ export default function Endpoints() {
 
   return (
     <div className={classes.root}>
-      <Typography style={{ margin: 8 }} variant="h5">
-        Endpoints
-      </Typography>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography style={{ margin: 8 }} variant="h5">
+          Endpoints
+        </Typography>
+        <div style={{ display: 'flex' }}>
+          <AddEndpoint />
+        </div>
+      </div>
       <Paper>
         {endpoints.length === 0 && (
           <>

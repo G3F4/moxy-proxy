@@ -8,8 +8,6 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { AppStateContext, ViewMode } from '../../App';
-import AddEndpoint from '../add-endpoint/AddEndpoint';
-import AddServerScenario from '../add-server-scenario/AddServerScenario';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -99,8 +97,6 @@ export default function Header() {
               ))}
             </Select>
           </FormControl>
-          <AddServerScenario />
-          <AddEndpoint />
         </Toolbar>
       </AppBar>
     </div>

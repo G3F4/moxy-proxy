@@ -1,7 +1,7 @@
 import { TextField } from '@material-ui/core';
 import Typography from '@material-ui/core/Typography';
 import React from 'react';
-import { Endpoint } from '../../../sharedTypes';
+import { Endpoint } from '../../../../sharedTypes';
 
 export default function QueryParameters({
   endpoint,

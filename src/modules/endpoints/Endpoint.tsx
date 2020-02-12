@@ -9,7 +9,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { Endpoint as EndpointInterface, HttpStatus, HttpStatusOption } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
 import { httpStatuses } from '../../common/httpStatuses';
-import TestEndpoint from '../test-endpoint/TestEndpoint';
+import TestEndpoint from './test-endpoint/TestEndpoint';
 import EndpointCode from './EndpointCode';
 
 const httpStatusOptions: HttpStatusOption[] = Object.keys(httpStatuses).map(key => ({

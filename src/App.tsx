@@ -12,7 +12,7 @@ import './App.css';
 import useLocalstorage from './common/hooks/useLocalstorage';
 import Layout from './layouts/Layout';
 import { TabKey } from './layouts/TabsLayout';
-import { urlDelimiter } from './modules/test-endpoint/TestEndpoint';
+import { urlDelimiter } from './modules/endpoints/test-endpoint/TestEndpoint';
 
 const socketHash = 'superHash123';
 const socketUrl =

@@ -3,7 +3,7 @@ import Button from '@material-ui/core/Button';
 import Snackbar from '@material-ui/core/Snackbar';
 import CloseIcon from '@material-ui/icons/Close';
 import React, { SyntheticEvent, useState } from 'react';
-import { Endpoint } from '../../../sharedTypes';
+import { Endpoint } from '../../../../sharedTypes';
 
 export default function CopyCurl({
   endpoint,

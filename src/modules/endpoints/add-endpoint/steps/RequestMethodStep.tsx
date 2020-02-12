@@ -1,7 +1,7 @@
 import { ButtonGroup } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import React from 'react';
-import { Method } from '../../../../sharedTypes';
+import { Method } from '../../../../../sharedTypes';
 
 export default function RequestMethodStep({
   method,

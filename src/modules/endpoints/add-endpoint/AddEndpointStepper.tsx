@@ -10,7 +10,7 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import produce from 'immer';
 import React, { useState } from 'react';
-import { Endpoint, EndpointParameter } from '../../../sharedTypes';
+import { Endpoint, EndpointParameter } from '../../../../sharedTypes';
 import ParametersStep from './steps/ParametersStep';
 import RequestMethodStep from './steps/RequestMethodStep';
 import ResponseStep, { initialResponseCode } from './steps/ResponseStep';

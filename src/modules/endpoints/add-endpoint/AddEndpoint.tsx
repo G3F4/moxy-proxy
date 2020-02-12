@@ -5,8 +5,8 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import { createStyles, makeStyles, Theme, useTheme } from '@material-ui/core/styles';
 import { Close } from '@material-ui/icons';
 import React, { useContext, useState } from 'react';
-import { Endpoint } from '../../../sharedTypes';
-import { AppStateContext } from '../../App';
+import { Endpoint } from '../../../../sharedTypes';
+import { AppStateContext } from '../../../App';
 import AddEndpointStepper from './AddEndpointStepper';
 
 const useStyles = makeStyles((theme: Theme) =>

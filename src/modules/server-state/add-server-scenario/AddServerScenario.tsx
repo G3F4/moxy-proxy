@@ -9,8 +9,8 @@ import { createStyles, makeStyles, Theme, useTheme } from '@material-ui/core/sty
 import TextField from '@material-ui/core/TextField';
 import { Close } from '@material-ui/icons';
 import React, { ChangeEvent, useContext, useState } from 'react';
-import { AppStateContext } from '../../App';
-import { Editor } from '../../common/Editor';
+import { AppStateContext } from '../../../App';
+import { Editor } from '../../../common/Editor';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -60,7 +60,7 @@ export default function AddServerScenario() {
   const code = JSON.stringify(scenarioServerState, null, 2);
 
   return (
-    <div>
+    <>
       <Button onClick={handleClickOpen}>Add server scenario</Button>
       <Dialog
         closeAfterTransition
@@ -95,6 +95,6 @@ export default function AddServerScenario() {
           <Button onClick={handleSubmit}>Submit</Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </>
   );
 }

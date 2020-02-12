@@ -6,6 +6,7 @@ import ReactJson from 'react-json-view';
 import { ServerState as ServerStateInterface } from '../../../interfaces';
 import { AppStateContext } from '../../App';
 import { Editor } from '../../common/Editor';
+import AddServerScenario from './add-server-scenario/AddServerScenario';
 import ServerStateMenu from './ServerStateMenu';
 
 export default function ServerState() {
@@ -50,6 +51,7 @@ export default function ServerState() {
           ) : (
             <Button onClick={handleStartEditing}>Edit</Button>
           )}
+          <AddServerScenario />
           <ServerStateMenu
             actions={[
               { label: 'Reset server', onClick: resetServerState },

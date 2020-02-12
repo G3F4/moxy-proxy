@@ -1,5 +1,5 @@
 import React from 'react';
-import CodeEditor from '../../../common/CodeEditor';
+import CodeEditor from '../../../../common/CodeEditor';
 
 export const initialServerStateUpdateCode = `
 function serverUpdate(request) {
