@@ -1,67 +1,20 @@
-import { IconButton, TextField, useMediaQuery } from '@material-ui/core';
+import { IconButton, useMediaQuery } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import Snackbar from '@material-ui/core/Snackbar';
 import { createStyles, makeStyles, Theme, useTheme } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import { Close } from '@material-ui/icons';
-import CloseIcon from '@material-ui/icons/Close';
-import React, { SyntheticEvent, useContext, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { Endpoint, EndpointParameter } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
 import CodeEditor from '../../common/CodeEditor';
-
-function CopyCurl({
-  endpoint,
-  queryString,
-  requestBody,
-}: {
-  endpoint: Endpoint;
-  queryString: string;
-  requestBody: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const handleClick = async () => {
-    setOpen(true);
-    await navigator.clipboard.writeText(
-      `curl -i --header "Content-Type: application/json" --request ${endpoint.method.toLocaleUpperCase()} --data '${JSON.stringify(
-        JSON.parse(requestBody),
-      )}' ${window.location.origin}/${endpoint.url}?${queryString}`,
-    );
-  };
-  const handleClose = (event: SyntheticEvent | MouseEvent, reason?: string) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-
-    setOpen(false);
-  };
-
-  return (
-    <div>
-      <Button onClick={handleClick}>Copy CURL to clipboard</Button>
-      <Snackbar
-        action={
-          <IconButton aria-label="close" color="inherit" size="small" onClick={handleClose}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        }
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-        autoHideDuration={6000}
-        message="CURL copied to clipboard!"
-        open={open}
-        onClose={handleClose}
-      />
-    </div>
-  );
-}
+import CopyCurl from './CopyCurl';
+import QueryParameters from './QueryParameters';
+import UrlParameters from './UrlParameters';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -115,9 +68,6 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   const { testEndpoint } = useContext(AppStateContext);
   const [urlParameters, setUrlParameters] = useState(getUrlParameters(endpoint.url));
   const [queryParams, setQueryParams] = useState(initialQueryParamsValues(endpoint.parameters));
-  const urlParts = endpoint.url.split('/').filter(Boolean);
-
-  console.log(['endpoint'], endpoint);
 
   function handleClickOpen() {
     setOpen(true);
@@ -168,66 +118,20 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
         </DialogTitle>
         {Object.keys(urlParameters).length > 0 && (
           <DialogContent>
-            <Typography style={{ flexGrow: 1 }} variant="subtitle2">
-              Fill url parameters
-            </Typography>
-            <div style={{ display: 'flex' }}>
-              {urlParts.map(part => {
-                const urlParameter = part[0] === urlDelimiter;
-
-                if (urlParameter) {
-                  const parameterName = part.slice(1);
-                  const value = urlParameters[parameterName];
-
-                  return (
-                    <TextField
-                      required
-                      label={parameterName}
-                      placeholder="Set parameter value"
-                      value={value}
-                      onChange={event => {
-                        setUrlParameters({
-                          ...urlParameters,
-                          [parameterName]: event.target.value,
-                        });
-                      }}
-                    />
-                  );
-                } else {
-                  return (
-                    <Typography
-                      style={{ marginTop: 20, marginRight: 5 }}
-                      variant="body1"
-                    >{`${part} /`}</Typography>
-                  );
-                }
-              })}
-            </div>
+            <UrlParameters
+              endpoint={endpoint}
+              urlParameters={urlParameters}
+              setUrlParameters={setUrlParameters}
+            />
           </DialogContent>
         )}
         {endpoint.parameters.length > 0 && (
           <DialogContent>
-            <Typography variant="subtitle2">Fill query parameters</Typography>
-            <div style={{ display: 'flex' }}>
-              {endpoint.parameters.map(({ id, name, type }, index) => (
-                <>
-                  <Typography style={{ marginTop: 20, marginRight: 5 }} variant="body1">{`${
-                    index > 0 ? '& ' : ''
-                  }${name} = `}</Typography>
-                  <TextField
-                    label={name}
-                    placeholder="Set query parameter value"
-                    value={queryParams[name]}
-                    onChange={event => {
-                      setQueryParams({
-                        ...queryParams,
-                        [name]: event.target.value,
-                      });
-                    }}
-                  />
-                </>
-              ))}
-            </div>
+            <QueryParameters
+              endpoint={endpoint}
+              queryParams={queryParams}
+              setQueryParams={setQueryParams}
+            />
           </DialogContent>
         )}
         <DialogContent>
