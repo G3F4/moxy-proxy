@@ -21,7 +21,12 @@ export default class Application {
 
   start() {
     this.registerRoutes();
-    this.server.listen(PORT, this.listenHandler.bind(this));
+    if (process.env.NODE_ENV === 'production') {
+      // @ts-ignore
+      this.server.listen(PORT, '0,0,0,0', this.listenHandler.bind(this));
+    } else {
+      this.server.listen(PORT, this.listenHandler.bind(this));
+    }
   }
 
   private registerRoutes() {

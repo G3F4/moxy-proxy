@@ -13,7 +13,7 @@
     "test:client": "react-scripts test",
     "build:client": "react-scripts build",
     "dev:server": "ts-node-dev --project tsconfig.server.json --ignore-watch endpoints --respawn --transpileOnly server/index.ts",
-    "dev:client": "react-scripts start",
+    "dev:client": "PORT=8888 react-scripts start",
     "lint": "eslint './**/*.{ts,tsx}'",
     "lint:fix": "eslint './**/*.{ts,tsx}' --fix"
   },
