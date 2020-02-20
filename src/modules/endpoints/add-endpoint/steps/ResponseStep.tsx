@@ -4,7 +4,7 @@ import CodeEditor from '../../../../common/CodeEditor';
 export const initialResponseCode = `
 function requestResponse(state, request) {
   return state;
-};
+}
 `;
 
 export default function ResponseStep({

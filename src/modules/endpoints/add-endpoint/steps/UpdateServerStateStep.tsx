@@ -6,7 +6,7 @@ function serverUpdate(request) {
   return function stateUpdate(state) {
     state.modified = true;
   };
-};
+}
 `;
 
 export default function UpdateServerStateStep({

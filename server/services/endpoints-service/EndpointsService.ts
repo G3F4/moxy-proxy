@@ -27,8 +27,7 @@ export default class EndpointsService {
   }
 
   getHandler({ method, url }: { method: Method; url: string }): Handler {
-    const urlParts = url.split('/').filter(Boolean);
-    const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, urlParts }));
+    const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, url }));
 
     if (endpointMapping) {
       return this.loadHandler(endpointMapping);
@@ -39,7 +38,7 @@ export default class EndpointsService {
 
   getUrlParameters({ method, url }: { method: Method; url: string }): Record<string, string> {
     const urlParts = url.split('/').filter(Boolean);
-    const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, urlParts }));
+    const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, url }));
 
     if (endpointMapping) {
       const parts = endpointMapping.url.split('/').filter(Boolean);
@@ -62,9 +61,7 @@ export default class EndpointsService {
   }
 
   getEndpointResponseStatus({ method, url }: { method: Method; url: string }) {
-    const endpointMapping = this.endpointMappings.find(
-      endpoint => endpoint.url === url && endpoint.method === method,
-    );
+    const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, url }));
 
     if (endpointMapping) {
       return endpointMapping.responseStatus;
@@ -145,7 +142,9 @@ export default class EndpointsService {
     this.saveEndpointMappings();
   }
 
-  private findEndpoint({ method, urlParts }: { method: Method; urlParts: string[] }) {
+  private findEndpoint({ method, url }: { method: Method; url: string }) {
+    const urlParts = url.split('/').filter(Boolean);
+
     return (endpoint: EndpointMapping) => {
       const parts = endpoint.url.split('/').filter(Boolean);
 

@@ -86,6 +86,8 @@ export default class Application {
         body: request.body,
       });
 
+      console.log(['status'], status)
+
       reply
         .type(contentType)
         .code(status)
