@@ -21,12 +21,7 @@ export default class Application {
 
   start() {
     this.registerRoutes();
-    if (process.env.NODE_ENV === 'production') {
-      // @ts-ignore
-      this.server.listen(PORT, '0,0,0,0', this.listenHandler.bind(this));
-    } else {
-      this.server.listen(PORT, this.listenHandler.bind(this));
-    }
+    this.server.listen(parseInt(PORT), '0.0.0.0', this.listenHandler.bind(this));
   }
 
   private registerRoutes() {
@@ -85,8 +80,6 @@ export default class Application {
         parameters,
         body: request.body,
       });
-
-      console.log(['status'], status)
 
       reply
         .type(contentType)
