@@ -227,9 +227,11 @@ export default class EndpointsService {
   private handlerTemplate(endpoint: Endpoint) {
     return (
       `
-export ${endpoint.responseCode.trim()}
+${endpoint.responseCode.trim()}
 
-export ${endpoint.serverStateUpdateCode.trim()}
+${endpoint.serverStateUpdateCode.trim()}
+
+module.exports = { requestResponse, serverUpdate };
 `.trim() + '\n'
     );
   }

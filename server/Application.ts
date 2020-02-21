@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import 'fastify-websocket';
+import { SocketStream } from 'fastify-websocket';
 import { ServerResponse } from 'http';
 import { original } from 'parseurl';
 import { parse } from 'querystring';
@@ -17,7 +18,39 @@ export default class Application {
     private readonly socketsService: SocketsService,
     private readonly fileService: FileService,
     private readonly apiService: ApiService,
-  ) {}
+  ) {
+
+    server.register(require('fastify-cors'), {
+      origin: true,
+      credentials: true,
+    });
+
+    server.register(require('fastify-websocket'), {
+      handle: (conn: SocketStream) => {
+        conn.pipe(conn); // creates an echo server
+      },
+      options: { maxPayload: 1048576 },
+    });
+
+    server.addContentTypeParser(
+      '*',
+      { parseAs: 'string' },
+      function(req, body, done) {
+        const contentType = req.headers['content-type'];
+
+        if (contentType && contentType.startsWith('application')) {
+          try {
+            done(null, JSON.parse(body));
+          } catch (err) {
+            err.statusCode = 400;
+            done(err, undefined);
+          }
+        }
+
+        return body;
+      },
+    );
+  }
 
   start() {
     this.registerRoutes();

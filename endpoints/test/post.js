@@ -1,9 +1,11 @@
-export function requestResponse(state, request) {
+function requestResponse(state, request) {
     return 'data stored!';
 }
 
-export function serverUpdate(request) {
+function serverUpdate(request) {
     return function (state) {
         Object.assign(state.data, request.body);
     };
 }
+
+module.exports = { requestResponse, serverUpdate };

@@ -1,9 +1,11 @@
-export function requestResponse(state, request) {
+function requestResponse(state, request) {
     return 'increased!';
 }
 
-export function serverUpdate(request) {
+function serverUpdate(request) {
     return function (state) {
         state.requestCount = state.requestCount + 1;
     };
 }
+
+module.exports = { requestResponse, serverUpdate };

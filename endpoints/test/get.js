@@ -1,8 +1,11 @@
-export function requestResponse(state, request) {
+function requestResponse(state, request) {
     return state.requestCount;
 }
 
-export function serverUpdate(request) {
+function serverUpdate(request) {
     return function (state) {
     };
 }
+
+module.exports = { requestResponse, serverUpdate };
+

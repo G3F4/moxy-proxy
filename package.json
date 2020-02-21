@@ -9,7 +9,8 @@
   "private": false,
   "scripts": {
     "start": "ts-node --project tsconfig.server.json server/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 0",
+    "test": "yarn run test:e2e && jest",
+    "test:e2e": "testcafe chrome __tests__/e2e.test.* --app 'yarn start'",
     "test:client": "react-scripts test",
     "build:client": "react-scripts build",
     "dev:server": "ts-node-dev --project tsconfig.server.json --ignore-watch endpoints --respawn --transpileOnly server/index.ts",
@@ -19,21 +20,21 @@
   },
   "proxy": "http://localhost:5000",
   "dependencies": {
-    "@material-ui/lab": "4.0.0-alpha.40",
-    "@types/jest": "24.0.0",
+    "@types/jest": "25.1.3",
     "@types/mkdirp": "0.5.2",
     "@types/node": "13.1.6",
     "@types/parseurl": "1.3.1",
-    "@types/puppeteer": "2.0.0",
     "@types/rimraf": "2.0.3",
     "dotenv": "8.2.0",
+    "eslint-plugin-testcafe": "0.2.1",
     "fastify": "2.11.0",
     "fastify-cors": "3.0.1",
     "fastify-websocket": "1.1.0",
     "immer": "5.2.1",
     "maketypes": "1.1.2",
     "parseurl": "1.3.3",
-    "puppeteer": "2.0.0",
+    "testcafe": "1.8.2",
+    "ts-jest": "25.2.1",
     "ts-node": "8.6.1",
     "ts-node-dev": "1.0.0-pre.44",
     "typescript": "3.7.4"
@@ -41,6 +42,7 @@
   "devDependencies": {
     "@material-ui/core": "4.9.0",
     "@material-ui/icons": "4.5.1",
+    "@material-ui/lab": "4.0.0-alpha.40",
     "@monaco-editor/react": "3.0.1",
     "@testing-library/jest-dom": "4.2.4",
     "@testing-library/react": "9.3.2",
@@ -48,6 +50,7 @@
     "@types/react": "16.9.0",
     "@types/react-dom": "16.9.0",
     "@types/react-syntax-highlighter": "11.0.4",
+    "@types/supertest": "2.0.8",
     "eslint-config-prettier": "6.9.0",
     "eslint-plugin-prettier": "3.1.2",
     "prettier": "1.19.1",
@@ -57,7 +60,8 @@
     "react-monaco-editor": "0.33.0",
     "react-prism": "4.3.2",
     "react-scripts": "3.3.0",
-    "react-syntax-highlighter": "12.2.1"
+    "react-syntax-highlighter": "12.2.1",
+    "supertest": "4.0.2"
   },
   "eslintConfig": {
     "extends": "react-app"
