@@ -10,7 +10,7 @@
   "scripts": {
     "start": "ts-node --project tsconfig.server.json server/index.ts",
     "test": "yarn run test:e2e && jest",
-    "test:e2e": "testcafe chrome:headless __tests__/e2e.test.*",
+    "test:e2e": "testcafe chrome:headless __tests__/e2e.test.* --app \"ts-node --project tsconfig.server.json server/index.ts\"  --app-init-delay 10000",
     "test:client": "react-scripts test",
     "build:client": "react-scripts build",
     "dev:server": "ts-node-dev --project tsconfig.server.json --ignore-watch endpoints --respawn --transpileOnly server/index.ts",
