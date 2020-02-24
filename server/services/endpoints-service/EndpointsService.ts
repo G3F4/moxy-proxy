@@ -27,7 +27,10 @@ export default class EndpointsService {
   }
 
   getHandler({ method, url }: { method: Method; url: string }): Handler {
+    console.log(['getHandler.this.endpointMappings'], this.endpointMappings)
     const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, url }));
+
+    console.log(['getHandler.endpointMapping'], endpointMapping)
 
     if (endpointMapping) {
       return this.loadHandler(endpointMapping);
@@ -149,7 +152,7 @@ export default class EndpointsService {
       const parts = endpoint.url.split('/').filter(Boolean);
 
       if (urlParts.length === parts.length && endpoint.method === method) {
-        return parts.some(
+        return parts.every(
           (part, urlPartIndex) =>
             part[0] === urlParameterDelimiter || part === urlParts[urlPartIndex],
         );
