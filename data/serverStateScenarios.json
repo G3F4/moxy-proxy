@@ -8,5 +8,10 @@
     "id": "2",
     "name": "test",
     "path": "data/serverState/test.json"
+  },
+  {
+    "name": "noOffers",
+    "id": "1582800792074",
+    "path": "data/serverState/noOffers.json"
   }
 ]

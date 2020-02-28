@@ -8,4 +8,3 @@ function serverUpdate(request) {
 }
 
 module.exports = { requestResponse, serverUpdate };
-

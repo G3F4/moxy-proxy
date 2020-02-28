@@ -6,5 +6,70 @@
       "test2"
     ]
   },
-  "modified": true
+  "modified": true,
+  "offers": [
+    {
+      "id": "1",
+      "name": "oferta",
+      "images": [
+        {
+          "url": "www.allegro.pl"
+        }
+      ],
+      "sellingMode": {
+        "buyNow": {
+          "price": {
+            "sale": {
+              "amount": "99.99",
+              "currency": "PLN"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "3",
+      "name": "oferta 3",
+      "images": [
+        {
+          "url": "www.allegro.pl"
+        }
+      ],
+      "sellingMode": {
+        "buyNow": {
+          "price": {
+            "sale": {
+              "amount": "9.99",
+              "currency": "PLN"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "2",
+      "name": "oferta 2",
+      "images": [
+        {
+          "url": "www.allegro.pl"
+        }
+      ],
+      "sellingMode": {
+        "buyNow": {
+          "price": {
+            "sale": {
+              "amount": "699.99",
+              "currency": "PLN"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "sourcingCampaignIds": [
+    "1"
+  ],
+  "fees": {
+    "total": 12
+  }
 }

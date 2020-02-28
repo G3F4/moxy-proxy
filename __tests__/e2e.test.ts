@@ -1,17 +1,22 @@
-import { Selector } from 'testcafe';
-
-const appHeaderSelector = Selector('h6').withText('Moxy Proxy');
-const endpointTabSelector = Selector('span').withText('ENDPOINTS');
-const addEndpointSelector = Selector('button').withText('ADD ENDPOINT');
-const urlPatternInputSelector = Selector('label').withText('URL pattern').parent().find('input');
+import 'testcafe';
+import { PORT } from '../server/config';
+import appBar from './pageObjects/appBar';
+import endpointsView from './pageObjects/endpointsView';
+import viewTabs from './pageObjects/viewTabs';
 
 fixture `Fixture`
-  .page `http://localhost:5000`;
+  .page `http://localhost:${PORT}`;
 
-test('User can add endpoint', async t => {
-  await t.expect(appHeaderSelector.exists).ok({ timeout: 1000 });
-  await t.click(endpointTabSelector);
-  await t.click(addEndpointSelector);
-  await t.typeText(urlPatternInputSelector, 'test2/:id');
-  await t.takeScreenshot('test.png');
+test('User can test endpoint', async t => {
+  await appBar().stateScenario().selectOption('test');
+  await viewTabs().goToEndpointsTab();
+  await endpointsView().toggleEndpoint('Group URL: test');
+  await endpointsView().switchMethod('PUT');
+  await endpointsView().switchMethod('DELETE');
+  await endpointsView().switchMethod('GET');
+  const { fillQueryParameter, testIt, addRequestBody } = await endpointsView().testEndpoint();
+  await fillQueryParameter('test', '1234');
+  await addRequestBody();
+  const response = await testIt();
+  await t.expect(response).eql('0');
 });

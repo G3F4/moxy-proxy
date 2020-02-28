@@ -10,10 +10,11 @@
   "scripts": {
     "start": "ts-node --project tsconfig.server.json server/index.ts",
     "test": "yarn run test:e2e",
-    "test:e2e": "testcafe chrome:headless __tests__/e2e.test.* --app \"ts-node --project tsconfig.server.json server/index.ts\"  --app-init-delay 10000",
+    "test:e2e": "testcafe chrome:headless __tests__/e2e.test.* --app 'yarn start'  --app-init-delay 10000",
+    "test:e2e:local": "testcafe chrome __tests__/e2e.test.* --app 'yarn start'  --app-init-delay 10000",
     "test:client": "react-scripts test",
     "build:client": "react-scripts build",
-    "dev:server": "ts-node-dev --project tsconfig.server.json --ignore-watch endpoints --respawn --transpileOnly server/index.ts",
+    "dev:server": "ts-node-dev --project tsconfig.server.json --ignore-watch ./data --respawn --transpileOnly server/index.ts",
     "dev:client": "PORT=8888 react-scripts start",
     "lint": "eslint './**/*.{ts,tsx}'",
     "lint:fix": "eslint './**/*.{ts,tsx}' --fix"

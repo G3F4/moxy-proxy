@@ -5,6 +5,18 @@ import { logInfo } from '../../utils/logger';
 import { nocache } from '../../utils/nocache';
 import FileService from '../file-service/FileService';
 
+function handlerTemplate(endpoint: Endpoint) {
+  return (
+    `
+${endpoint.responseCode.trim()}
+
+${endpoint.serverStateUpdateCode.trim()}
+
+module.exports = { requestResponse, serverUpdate };
+`.trim() + '\n'
+  );
+}
+
 export type RequestResponse = (state: ServerState, request: unknown) => unknown;
 export type ServerUpdate = (request: unknown) => (state: ServerState) => void;
 
@@ -16,21 +28,12 @@ export interface Handler {
 const urlParameterDelimiter = ':';
 
 export default class EndpointsService {
-  private endpoints: Endpoint[] = [];
-  private endpointMappings: EndpointMapping[] = [];
-  private dir: string = 'endpoints';
-  private endpointMappingsFileName: string = 'endpoints.json';
-  private handlersWatcher: Record<string, FSWatcher> = {};
-
   getEndpoints() {
     return this.endpoints;
   }
 
   getHandler({ method, url }: { method: Method; url: string }): Handler {
-    console.log(['getHandler.this.endpointMappings'], this.endpointMappings)
     const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, url }));
-
-    console.log(['getHandler.endpointMapping'], endpointMapping)
 
     if (endpointMapping) {
       return this.loadHandler(endpointMapping);
@@ -145,6 +148,12 @@ export default class EndpointsService {
     this.saveEndpointMappings();
   }
 
+  private endpoints: Endpoint[] = [];
+  private endpointMappings: EndpointMapping[] = [];
+  private dir: string = 'data/endpoints';
+  private endpointMappingsFileName: string = 'endpoints.json';
+  private handlersWatcher: Record<string, FSWatcher> = {};
+
   private findEndpoint({ method, url }: { method: Method; url: string }) {
     const urlParts = url.split('/').filter(Boolean);
 
@@ -221,22 +230,10 @@ export default class EndpointsService {
   }
 
   private saveEndpointToFile(endpoint: Endpoint) {
-    const code = this.handlerTemplate(endpoint);
+    const code = handlerTemplate(endpoint);
 
     this.fileService.checkFolder(`${this.dir}/${endpoint.url}`);
     this.fileService.saveText(this.handlerPath(endpoint), code);
-  }
-
-  private handlerTemplate(endpoint: Endpoint) {
-    return (
-      `
-${endpoint.responseCode.trim()}
-
-${endpoint.serverStateUpdateCode.trim()}
-
-module.exports = { requestResponse, serverUpdate };
-`.trim() + '\n'
-    );
   }
 
   private handlerPath({ url, method }: Endpoint | EndpointMapping) {

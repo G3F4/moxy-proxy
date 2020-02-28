@@ -51,12 +51,9 @@ export default class ServerStateService {
   }) {
     logInfo(['updateServerState'], serverStateScenarioId);
 
-    this.serverState = {
-      ...this.serverState,
-      ...state,
-    };
+    this.serverState = state;
 
-    this.saveServerStateToFile(serverStateScenarioId, this.serverState);
+    this.saveServerStateToFile(serverStateScenarioId, state);
     this.makeTypesFromInitialServerState().then(() => {});
   }
 
