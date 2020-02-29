@@ -5,20 +5,37 @@ import userWrite from '../utils/userWrite';
 async function nextStep(container: Selector) {
   const button = container.find('button').withText('NEXT');
 
+  await assertSectionActive(container);
+
   await userClick(button);
 }
 
 async function previousStep(container: Selector) {
   const button = container.find('button').withText('BACK');
 
+  await assertSectionActive(container);
+
   await userClick(button);
 }
 
-function submitSection(wizardContainer: Selector) {
+async function assertSectionActive(container: Selector) {
+  const sectionContent = container.find('div');
+  const contentAttributes = await sectionContent.attributes;
+
+  if (contentAttributes.disabled === '') {
+    throw new Error('section is not active');
+  }
+}
+
+async function submitSection(wizardContainer: Selector) {
   const submitSectionContainer = wizardContainer
     .find('span')
     .withText('Update server state')
     .parent('div');
+
+  await t
+    .expect(submitSectionContainer.exists)
+    .ok('section container doesnt exists');
 
   return {
     async submitEndpoint() {
@@ -34,11 +51,15 @@ function submitSection(wizardContainer: Selector) {
   };
 }
 
-function stateUpdateSection(wizardContainer: Selector) {
+async function stateUpdateSection(wizardContainer: Selector) {
   const stateUpdateSectionContainer = wizardContainer
     .find('span')
     .withText('Update server state')
     .parent('div');
+
+  await t
+    .expect(stateUpdateSectionContainer.exists)
+    .ok('section container doesnt exists');
 
   return {
     async goToSubmitSection() {
@@ -54,11 +75,15 @@ function stateUpdateSection(wizardContainer: Selector) {
   };
 }
 
-function responseSection(wizardContainer: Selector) {
+async function responseSection(wizardContainer: Selector) {
   const responseSectionContainer = wizardContainer
     .find('span')
     .withText('Define response')
     .parent('div');
+
+  await t
+    .expect(responseSectionContainer.exists)
+    .ok('section container doesnt exists');
 
   return {
     async goToStateUpdateSection() {
@@ -74,13 +99,42 @@ function responseSection(wizardContainer: Selector) {
   };
 }
 
-function urlParametersSection(wizardContainer: Selector) {
+async function urlParametersSection(wizardContainer: Selector) {
   const urlParametersSectionContainer = wizardContainer
     .find('span')
-    .withText('Define response')
+    .withText('Add parameters')
     .parent('div');
 
+  await t
+    .expect(urlParametersSectionContainer.exists)
+    .ok('section container doesnt exists');
+
   return {
+    async addUrlParameter(name: string, type: string) {
+      const addParameterButton = urlParametersSectionContainer
+        .find('button')
+        .withText('ADD PARAMETER');
+      const parameterNameInput = urlParametersSectionContainer
+        .find('label')
+        .withText('Parameter name')
+        .nth(-1)
+        .parent()
+        .find('input');
+      const parameterType = urlParametersSectionContainer
+        .find('label')
+        .withText('Parameter type')
+        .nth(-1)
+        .parent();
+      const parameterTypeOption = Selector('ul')
+        .withAttribute('aria-labelledby', 'parameter-typ-label')
+        .find('li')
+        .withText(type);
+
+      await userClick(addParameterButton);
+      await userWrite(parameterNameInput, name);
+      await userClick(parameterType);
+      await userClick(parameterTypeOption);
+    },
     async goToResponseSection() {
       await nextStep(urlParametersSectionContainer);
 
@@ -100,9 +154,15 @@ async function methodSection(wizardContainer: Selector) {
     .withText('Select request type')
     .parent('div');
 
+  await t
+    .expect(methodSectionContainer.exists)
+    .ok('section container doesnt exists');
+
   return {
     async chooseMethod(method: string) {
-      const methodButton = methodSectionContainer.find('button').withText(method);
+      const methodButton = methodSectionContainer
+        .find('button')
+        .withText(method);
 
       await userClick(methodButton);
     },
@@ -119,21 +179,26 @@ async function methodSection(wizardContainer: Selector) {
   };
 }
 
-function urlSection(wizardContainer: Selector) {
+async function urlSection(wizardContainer: Selector) {
   const urlSectionContainer = wizardContainer
     .find('span')
     .withText('URL pattern')
     .parent('div');
 
-  const api = {
+  await t
+    .expect(urlSectionContainer.exists)
+    .ok('section container doesnt exists');
+
+  return {
     async enterUrl(url: string) {
       const urlInput = urlSectionContainer.find('input');
 
       await userWrite(urlInput, url);
-
-      return {
-        ...api,
-      };
+    },
+    async deleteUrl(charCountToRemove = 1) {
+      for (let i = 0; i < charCountToRemove; i++) {
+        await t.pressKey('backspace');
+      }
     },
     async goToMethodSection() {
       await nextStep(urlSectionContainer);
@@ -141,13 +206,16 @@ function urlSection(wizardContainer: Selector) {
       return methodSection(wizardContainer);
     },
   };
-
-  return api;
 }
 
 async function testEndpoint(viewContainer: Selector) {
-  const openTestDialogButton = viewContainer.find('button').withText('TEST ENDPOINT');
-  const testEndpointViewContainer = Selector('div').withAttribute('role', 'dialog');
+  const openTestDialogButton = viewContainer
+    .find('button')
+    .withText('TEST ENDPOINT');
+  const testEndpointViewContainer = Selector('div').withAttribute(
+    'role',
+    'dialog',
+  );
   const queryParametersContainer = testEndpointViewContainer
     .find('h6')
     .withText('Fill query parameters')
@@ -172,7 +240,9 @@ async function testEndpoint(viewContainer: Selector) {
       await userWrite(element, value);
     },
     async addRequestBody() {
-      const element = testEndpointViewContainer.find('span').withText('ADD REQUEST BODY');
+      const element = testEndpointViewContainer
+        .find('span')
+        .withText('ADD REQUEST BODY');
 
       await userClick(element);
     },
@@ -198,11 +268,13 @@ async function testEndpoint(viewContainer: Selector) {
   };
 }
 
-export default function endpointsView() {
+export default async function endpointsView() {
   const viewContainer = Selector('h5')
     .withText('Endpoints')
     .parent()
     .parent();
+
+  await t.expect(viewContainer.exists).ok('view container doesnt exists');
 
   return {
     async toggleEndpoint(label: string) {
@@ -225,7 +297,9 @@ export default function endpointsView() {
       return testEndpoint(viewContainer);
     },
     async addEndpoint() {
-      const addEndpointButton = viewContainer.find('button').withText('ADD ENDPOINT');
+      const addEndpointButton = viewContainer
+        .find('button')
+        .withText('ADD ENDPOINT');
       await userClick(addEndpointButton);
 
       const wizardContainer = Selector('div').withAttribute('role', 'dialog');
