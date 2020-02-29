@@ -1,7 +1,8 @@
 import { Selector, t } from 'testcafe';
+import randomUserDelay from './randomUserDelay';
 
 export default async function userClick(selector: Selector) {
-  const delay = 200;
+  const delay = randomUserDelay();
 
   if (delay) {
     await t.wait(delay);
