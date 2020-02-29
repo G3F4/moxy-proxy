@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import * as util from 'util';
 import { ServerState } from '../../../interfaces';
 import { ServerStateScenario, ServerStateScenarioMapping } from '../../../sharedTypes';
+import { DATA_DIR } from '../../config';
 import { logError, logInfo } from '../../utils/logger';
 import FileService from '../file-service/FileService';
 
@@ -13,8 +14,8 @@ export default class ServerStateService {
   private serverStateInterface: string = '';
   private serverStateScenarioMappings: ServerStateScenarioMapping[];
   private serverStateInterfaceFileName = 'interfaces.ts';
-  private initialServerStatePath = `data/serverState/${this.activeServerStateScenarioId}.json`;
-  private serverStateScenariosMapPath = 'data/serverStateScenarios.json';
+  private initialServerStatePath = `${DATA_DIR}/serverState/${this.activeServerStateScenarioId}.json`;
+  private serverStateScenariosMapPath = `${DATA_DIR}/serverStateScenarios.json`;
   private initialServerStates: Record<string, ServerState> = {};
 
   getActiveServerStateScenarioId() {

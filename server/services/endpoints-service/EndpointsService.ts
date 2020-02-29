@@ -1,6 +1,7 @@
 import { FSWatcher } from 'fs';
 import { ServerState } from '../../../interfaces';
 import { Endpoint, EndpointMapping, HttpStatus, Method } from '../../../sharedTypes';
+import { DATA_DIR } from '../../config';
 import { logInfo } from '../../utils/logger';
 import { nocache } from '../../utils/nocache';
 import FileService from '../file-service/FileService';
@@ -150,7 +151,7 @@ export default class EndpointsService {
 
   private endpoints: Endpoint[] = [];
   private endpointMappings: EndpointMapping[] = [];
-  private dir: string = 'data/endpoints';
+  private dir: string = `${DATA_DIR}/endpoints`;
   private endpointMappingsFileName: string = 'endpoints.json';
   private handlersWatcher: Record<string, FSWatcher> = {};
 

@@ -9,9 +9,9 @@
   "private": false,
   "scripts": {
     "start": "ts-node --project tsconfig.server.json server/index.ts",
-    "test": "yarn run test:e2e",
-    "test:e2e": "testcafe chrome:headless __tests__/e2e.test.* --app 'yarn start'  --app-init-delay 10000",
-    "test:e2e:local": "testcafe chrome __tests__/e2e.test.* --app 'yarn start'  --app-init-delay 10000",
+    "test": "NODE_ENV=test yarn run test:e2e",
+    "test:e2e": "NODE_ENV=test testcafe chrome:headless __tests__/e2e.test.* --app 'yarn start'  --app-init-delay 10000",
+    "test:e2e:local": "NODE_ENV=test testcafe chrome __tests__/e2e.test.* --app 'yarn start'  --app-init-delay 10000; git checkout __tests__/data",
     "test:client": "react-scripts test",
     "build:client": "react-scripts build",
     "dev:server": "ts-node-dev --project tsconfig.server.json --ignore-watch ./data --respawn --transpileOnly server/index.ts",
