@@ -7,7 +7,7 @@ import viewTabs from './pageObjects/viewTabs';
 fixture `Fixture`
   .page `http://localhost:${PORT}`;
 
-test('User can test endpoint', async user => {
+test('User can test endpoint', async () => {
   await applicationBar().stateScenario().selectOption('test');
   await viewTabs().goToEndpointsTab();
   const { switchMethod, testEndpoint, toggleEndpoint } = await endpointsView();
@@ -15,31 +15,28 @@ test('User can test endpoint', async user => {
   await switchMethod('PUT');
   await switchMethod('DELETE');
   await switchMethod('GET');
-  const { fillQueryParameter, testIt, addRequestBody } = await testEndpoint();
+  const { fillQueryParameter, testIt, addRequestBody, closeWizard } = await testEndpoint();
   await fillQueryParameter('test', '1234');
   await addRequestBody();
-  const response = await testIt();
-  await user.expect(response).eql('0');
-  await user.wait(5000);
+  await testIt('0');
+  await closeWizard();
 });
 
-test('User can add endpoint', async t => {
+test('User can add endpoint', async () => {
   await applicationBar().stateScenario().selectOption('test');
   await viewTabs().goToEndpointsTab();
   const { addEndpoint } = await endpointsView();
-  const { urlSection } = await addEndpoint();
-  const { enterUrl, toToMethodSection } = urlSection();
+  const { enterUrl, goToMethodSection } = await addEndpoint();
   await enterUrl('test/:it/good/:testId');
-  const { chooseMethod, toToUrlParametersSection } = await toToMethodSection();
+  const { chooseMethod, goToUrlParametersSection } = await goToMethodSection();
   await chooseMethod('POST');
   await chooseMethod('DELETE');
   await chooseMethod('PUT');
   await chooseMethod('PATCH');
   await chooseMethod('GET');
-  const { goToResponseSection } = await toToUrlParametersSection();
+  const { goToResponseSection } = await goToUrlParametersSection();
   const { goToStateUpdateSection } = await goToResponseSection();
   const { goToSubmitSection } = await goToStateUpdateSection();
   const { submitEndpoint } = await goToSubmitSection();
   await submitEndpoint();
-  await t.wait(5000);
 });
