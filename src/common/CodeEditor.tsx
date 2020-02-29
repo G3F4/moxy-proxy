@@ -32,8 +32,8 @@ export default function CodeEditor({
     <div style={{ width: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <Typography variant="body1">{title}</Typography>
-        {editing ? (
-          <Button disabled={!editorReady} onClick={handleSave}>
+        {editorReady && editing ? (
+          <Button onClick={handleSave}>
             Done
           </Button>
         ) : (

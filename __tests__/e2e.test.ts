@@ -41,6 +41,7 @@ test('User can add endpoint', async (t) => {
   await urlParametersSection.addUrlParameter('test', 'Boolean');
   await urlParametersSection.addUrlParameter('test2', 'String');
   const responseSection = await urlParametersSection.goToResponseSection();
+  await responseSection.editResponse();
   await responseSection.backToUrlSection();
   await urlParametersSection.goToResponseSection();
   const stateUpdateSection = await responseSection.goToStateUpdateSection();
