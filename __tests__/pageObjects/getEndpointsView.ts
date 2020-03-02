@@ -392,7 +392,6 @@ export default async function getEndpointsView() {
         .parent()
         .find('div')
         .withAttribute('role', 'region');
-
       const endpointPanelExists = await endpointPanel.exists;
       const endpointContainerExists = await endpointContainer.exists;
 
@@ -402,6 +401,7 @@ export default async function getEndpointsView() {
         console.log(['endpointPanelExists'], endpointPanelExists);
         console.log(['endpointContainerExists'], endpointContainerExists);
         await t.debug();
+
         throw new Error(`Endpoint with label "${label}" does not exists`);
       }
 

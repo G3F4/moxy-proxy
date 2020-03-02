@@ -96,7 +96,7 @@ test('delete endpoint', async t => {
   await getViewTabs().clickTab('ENDPOINTS');
 
   const endpointsView = await views.getEndpointsView();
-
   const endpoint = await endpointsView.toggleEndpoint(endpointLabel);
+
   await endpoint.deleteEndpoint();
 });

@@ -8,9 +8,12 @@ export default function getApplication() {
   function getApplicationContainer() {
     return Selector('div').withAttribute('id', 'root');
   }
+
   async function waitForLoaded() {
     const applicationContainer = getApplicationContainer();
+
     await getApplicationBar(applicationContainer).waitForLoaded();
+
     const tabsViewActive = await getApplicationBar(
       applicationContainer,
     ).tabsViewActive();

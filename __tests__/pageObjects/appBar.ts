@@ -1,12 +1,14 @@
-import { Selector, t } from 'testcafe';
+import { Selector } from 'testcafe';
 import userClick from '../utils/userClick';
 import userWait from '../utils/userWait';
 
 export default function appBar(parent: Selector) {
   const appBarContainer = Selector('header');
+
   function getFallback() {
     return parent.find('div').withText('Loading tabs layout...');
   }
+
   function getViewModeSelect() {
     return appBarContainer
       .find('label')
@@ -28,11 +30,11 @@ export default function appBar(parent: Selector) {
 
     await userClick(option);
   }
+
   async function waitForLoaded() {
     const loading = await getFallback().exists;
 
     if (loading) {
-      console.log(['viewTabs.waitForLoaded']);
       userWait();
       await waitForLoaded();
     }
@@ -52,6 +54,7 @@ export default function appBar(parent: Selector) {
     },
     async tabsViewActive() {
       await appBarContainer;
+
       const viewMode = await getViewModeSelect().find('input').value;
 
       return viewMode === 'tabs';

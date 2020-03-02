@@ -6,6 +6,7 @@ export default function viewTabs(parent: Selector) {
   function getFallback() {
     return parent.find('div').withText('Loading tabs layout...');
   }
+
   function getContainer() {
     return parent.find('div').withAttribute('role', 'tablist');
   }
@@ -14,7 +15,6 @@ export default function viewTabs(parent: Selector) {
     const loading = await getFallback().exists;
 
     if (loading) {
-      console.log(['viewTabs.waitForLoaded']);
       userWait();
       await waitForLoaded();
     }
