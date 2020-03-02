@@ -84,13 +84,3 @@ test('delete endpoint', async t => {
   const endpoint = await endpointsView.toggleEndpoint(endpointLabel);
   await endpoint.deleteEndpoint();
 });
-
-test('User can change view mode', async () => {
-  const { getApplicationBar } = getApplication();
-
-  await getApplicationBar().changeViewMode('Board view');
-  await getApplicationBar().changeViewMode('Tabs view');
-  await getApplicationBar().changeViewMode('Panels view');
-  await getApplicationBar().changeViewMode('Board view');
-  await getApplicationBar().changeViewMode('Tabs view');
-});

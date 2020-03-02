@@ -11,7 +11,7 @@
     "start": "ts-node --project tsconfig.server.json server/index.ts",
     "test": "NODE_ENV=test yarn run test:e2e",
     "test:e2e": "NODE_ENV=test testcafe chrome:headless __tests__/e2e.test.* --skip-js-errors --app 'yarn start'  --app-init-delay 10000",
-    "test:e2e:local": "NODE_ENV=test testcafe chrome __tests__/e2e.test.* --skip-js-errors --app 'yarn start'  --app-init-delay 10000; git checkout __tests__/data",
+    "test:e2e:local": "NODE_ENV=test testcafe chrome __tests__/*.test.* --skip-js-errors --app 'yarn start'  --app-init-delay 10000; git checkout __tests__/data",
     "test:e2e:remote": "APP_URL=https://moxy-proxy.herokuapp.com/ testcafe chrome __tests__/e2e.test.* --skip-js-errors",
     "test:client": "react-scripts test",
     "build:client": "react-scripts build",

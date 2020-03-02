@@ -93,7 +93,7 @@ export default class EndpointsService {
     };
 
     if (!this.checkIfEndpointAlreadyExists(endpointMapping)) {
-      this.endpoints = [...this.endpoints, endpoint];
+      this.endpoints = [...this.endpoints, { ...endpoint, url: endpointMapping.url }];
       this.endpointMappings = [...this.endpointMappings, endpointMapping];
 
       this.saveEndpointMappings();

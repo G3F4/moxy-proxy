@@ -393,6 +393,7 @@ export default async function getEndpointsView() {
 
 
       if (!endpointPanelExists || !endpointContainerExists) {
+        console.log(['label'], label);
         console.log(['endpointPanelExists'], endpointPanelExists);
         console.log(['endpointContainerExists'], endpointContainerExists);
         await t.debug();
