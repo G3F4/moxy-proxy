@@ -1,4 +1,4 @@
-import { Selector } from 'testcafe';
+import { Selector, t } from 'testcafe';
 import userClick from '../utils/userClick';
 import userPressKey from '../utils/userPressKey';
 import userWait from '../utils/userWait';
@@ -65,7 +65,29 @@ export default function getServerStateView(parent: Selector) {
           await userWrite(input, scenarioName);
         },
         async editScenarioState() {
+          const editorContainer = await getViewContainer()
+            .find('p')
+            .withText('Modify copy of state before adding');
+          function getFallback() {
+            return getViewContainer().withText('Loading...');
+          }
+          function getSubmitButton() {
+            return getViewContainer()
+              .find('button')
+              .withText('SUBMIT');
+          }
+          async function waitForLoaded() {
+            const loading = await getFallback().exists;
+
+            if (loading) {
+              await userWait();
+              await waitForLoaded();
+            }
+          }
+          await waitForLoaded();
+
           await userPressKey('tab');
+          await userClick(getSubmitButton());
         },
       };
     },

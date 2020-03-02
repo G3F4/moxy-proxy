@@ -5,7 +5,7 @@ import getApplication from './pageObjects/getApplication';
 fixture`User can read, edit and add server state scenario`.page(APP_URL);
 
 test('read server state', async () => {
-  const application = await getApplication();
+  const application = getApplication();
 
   await application.waitForLoaded();
 
@@ -15,8 +15,8 @@ test('read server state', async () => {
   await serverStateView.searchValue('"requestCount":int0');
 });
 
-test('edit server state', async () => {
-  const application = await getApplication();
+test('add state scenario', async () => {
+  const application = getApplication();
 
   await application.waitForLoaded();
 
