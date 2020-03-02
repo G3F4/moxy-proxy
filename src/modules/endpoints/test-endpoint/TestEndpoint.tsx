@@ -120,8 +120,8 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
           <DialogContent>
             <UrlParameters
               endpoint={endpoint}
-              urlParameters={urlParameters}
               setUrlParameters={setUrlParameters}
+              urlParameters={urlParameters}
             />
           </DialogContent>
         )}

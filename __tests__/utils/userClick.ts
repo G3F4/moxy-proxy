@@ -8,9 +8,5 @@ export default async function userClick(selector: Selector) {
 
   const delay = randomUserDelay();
 
-  if (delay) {
-    await t.wait(delay);
-  }
-
-  await t.click(selector);
+  return t.wait(delay).click(selector);
 }

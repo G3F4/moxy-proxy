@@ -1,5 +1,7 @@
 import { Selector, t } from 'testcafe';
 import userClick from '../utils/userClick';
+import userPressKey from '../utils/userPressKey';
+import userWait from '../utils/userWait';
 import userWrite from '../utils/userWrite';
 
 async function nextStep(container: Selector) {
@@ -18,11 +20,75 @@ async function previousStep(container: Selector) {
   await userClick(button);
 }
 
+function getCodeEditor(container: Selector) {
+  async function getEditButton() {
+    return container.find('button').withText('EDIT');
+  }
+
+  async function getDoneButton() {
+    return container.find('button').withText('DONE');
+  }
+
+  async function getEditor() {
+    return container.find('div').withAttribute('data-keybinding-context', '1');
+  }
+
+  async function waitForEditorWithRetry(retriesCount = 3) {
+    const editor = await getEditor();
+    const editorAfterWaitExists = await editor.exists;
+
+    if (!editorAfterWaitExists) {
+      if (retriesCount === 0) {
+        throw new Error('Editor loading timeout');
+      }
+
+      await userWait();
+
+      await waitForEditorWithRetry(retriesCount - 1);
+    }
+  }
+
+  return {
+    async startEditing() {
+      const editButton = await getEditButton();
+      const doneButton = await getDoneButton();
+      const editor = await getEditor();
+
+      await userClick(editButton);
+
+      const editorLoaded = await doneButton.exists;
+      const editorExists = await editor.exists;
+
+      if (!editorLoaded || !editorExists) {
+        await waitForEditorWithRetry(25);
+      }
+
+      await userClick(editor);
+    },
+    async enterCode(code: string) {
+      const editor = await getEditor();
+
+      await userWrite(editor, code);
+    },
+    async doneEditing() {
+      const doneButton = await getDoneButton();
+
+      await userWait();
+
+      await userClick(doneButton);
+    },
+  };
+}
+
 async function assertSectionActive(container: Selector) {
   const sectionContent = container.find('div');
+  const icon = container.find('svg');
+  const iconFirstChildrenTagName = await icon.child(0).tagName;
   const contentAttributes = await sectionContent.attributes;
+  const sectionCompleted = iconFirstChildrenTagName === 'path';
+  const sectionDisabled = contentAttributes.disabled === '';
 
-  if (contentAttributes.disabled === '') {
+  if (sectionDisabled || sectionCompleted) {
     throw new Error('section is not active');
   }
 }
@@ -33,9 +99,7 @@ async function submitSection(wizardContainer: Selector) {
     .withText('Update server state')
     .parent('div');
 
-  await t
-    .expect(section.exists)
-    .ok('section container doesnt exists');
+  await t.expect(section.exists).ok('section container doesnt exists');
 
   return {
     async submitEndpoint() {
@@ -57,11 +121,25 @@ async function stateUpdateSection(wizardContainer: Selector) {
     .withText('Update server state')
     .parent('div');
 
-  await t
-    .expect(section.exists)
-    .ok('section container doesnt exists');
+  await t.expect(section.exists).ok('section container doesnt exists');
 
   return {
+    async editStateUpdate() {
+      const codeEditor = await getCodeEditor(section);
+
+      await codeEditor.startEditing();
+      await userPressKey('up');
+      await userPressKey('up');
+      await userPressKey('end');
+      await userPressKey('left');
+      await userPressKey('backspace');
+      await userPressKey('backspace');
+      await userPressKey('backspace');
+      await userPressKey('backspace');
+      await codeEditor.enterCode('false ');
+      await userPressKey('backspace');
+      await codeEditor.doneEditing();
+    },
     async goToSubmitSection() {
       await nextStep(section);
 
@@ -81,25 +159,19 @@ async function responseSection(wizardContainer: Selector) {
     .withText('Define response')
     .parent('div');
 
-  await t
-    .expect(section.exists)
-    .ok('section container doesnt exists');
+  await t.expect(section.exists).ok('section container doesnt exists');
 
   return {
     async editResponse() {
-      const editButton = section.find('button').withText('EDIT');
-      const doneButton = section.find('button').withText('DONE');
-      const editor = section.find('div').withAttribute('data-keybinding-context', '1');
+      const codeEditor = await getCodeEditor(section);
 
-      await userClick(editButton);
-      await userWrite(editor, 's');
-      await t.pressKey('backspace');
-      await t.pressKey('end');
-      await t.pressKey('down');
-      await t.pressKey('end');
-      await t.pressKey('left');
-      await userWrite(editor, '.test');
-      await userClick(doneButton);
+      await codeEditor.startEditing();
+      await userPressKey('up');
+      await userPressKey('end');
+      await userPressKey('left');
+      await codeEditor.enterCode('.requestCount ');
+      await userPressKey('backspace');
+      await codeEditor.doneEditing();
     },
     async goToStateUpdateSection() {
       await nextStep(section);
@@ -120,9 +192,7 @@ async function urlParametersSection(wizardContainer: Selector) {
     .withText('Add parameters')
     .parent('div');
 
-  await t
-    .expect(section.exists)
-    .ok('section container doesnt exists');
+  await t.expect(section.exists).ok('section container doesnt exists');
 
   return {
     async addUrlParameter(name: string, type: string) {
@@ -169,15 +239,11 @@ async function methodSection(wizardContainer: Selector) {
     .withText('Select request type')
     .parent('div');
 
-  await t
-    .expect(section.exists)
-    .ok('section container doesnt exists');
+  await t.expect(section.exists).ok('section container doesnt exists');
 
   return {
     async chooseMethod(method: string) {
-      const methodButton = section
-        .find('button')
-        .withText(method);
+      const methodButton = section.find('button').withText(method);
 
       await userClick(methodButton);
     },
@@ -200,9 +266,7 @@ async function urlSection(wizardContainer: Selector) {
     .withText('URL pattern')
     .parent('div');
 
-  await t
-    .expect(section.exists)
-    .ok('section container doesnt exists');
+  await t.expect(section.exists).ok('section container doesnt exists');
 
   return {
     async enterUrl(url: string) {
@@ -235,6 +299,11 @@ async function testEndpoint(viewContainer: Selector) {
     .find('h6')
     .withText('Fill query parameters')
     .parent();
+  const urlParametersContainer = testEndpointViewContainer
+    .find('h6')
+    .withText('Fill url parameters')
+    .parent();
+
   await userClick(openTestDialogButton);
 
   return {
@@ -247,6 +316,15 @@ async function testEndpoint(viewContainer: Selector) {
     },
     async fillQueryParameter(name: string, value: string) {
       const element = queryParametersContainer
+        .find('label')
+        .withText(name)
+        .parent()
+        .find('input');
+
+      await userWrite(element, value);
+    },
+    async fillUrlParameter(name: string, value: string) {
+      const element = urlParametersContainer
         .find('label')
         .withText(name)
         .parent()
@@ -283,43 +361,84 @@ async function testEndpoint(viewContainer: Selector) {
   };
 }
 
-export default async function endpointsView() {
-  const viewContainer = Selector('h5')
-    .withText('Endpoints')
-    .parent()
-    .parent();
+async function deleteEndpoint(viewContainer: Selector) {
+  const openTestDialogButton = viewContainer.find('button').withText('DELETE');
 
-  await t.expect(viewContainer.exists).ok('view container doesnt exists');
+  await userClick(openTestDialogButton);
+}
+
+export default async function getEndpointsView() {
+  function getViewContainer() {
+    return Selector('h5')
+      .withText('Endpoints')
+      .parent()
+      .parent();
+  }
+
+  await t.expect(getViewContainer().exists).ok('view container doesnt exists');
 
   return {
     async toggleEndpoint(label: string) {
-      const element = viewContainer
+      const endpointPanel = getViewContainer()
         .find('div')
         .withAttribute('role', 'button')
         .withText(label);
+      const endpointContainer = endpointPanel
+        .parent()
+        .find('div')
+        .withAttribute('role', 'region');
 
-      await userClick(element);
+      const endpointPanelExists = await endpointPanel.exists;
+      const endpointContainerExists = await endpointContainer.exists;
+
+
+      if (!endpointPanelExists || !endpointContainerExists) {
+        console.log(['endpointPanelExists'], endpointPanelExists);
+        console.log(['endpointContainerExists'], endpointContainerExists);
+        await t.debug();
+        throw new Error(`Endpoint with label "${label}" does not exists`);
+      }
+
+      await userClick(endpointPanel);
+
+      return {
+        async testEndpoint() {
+          return testEndpoint(endpointContainer);
+        },
+        async deleteEndpoint() {
+          await deleteEndpoint(endpointContainer);
+        },
+      };
     },
     async switchMethod(method: string) {
-      const element = viewContainer
+      const element = getViewContainer()
         .find('button')
         .withAttribute('role', 'tab')
         .withText(method);
 
       await userClick(element);
     },
-    testEndpoint() {
-      return testEndpoint(viewContainer);
+    getTestEndpointView() {
+      return testEndpoint(getViewContainer());
     },
     async addEndpoint() {
-      const addEndpointButton = viewContainer
+      const addEndpointButton = getViewContainer()
         .find('button')
         .withText('ADD ENDPOINT');
+
       await userClick(addEndpointButton);
 
       const wizardContainer = Selector('div').withAttribute('role', 'dialog');
 
       return urlSection(wizardContainer);
+    },
+    async checkEndpointExists(endpointLabel: string) {
+      const element = getViewContainer()
+        .find('div')
+        .withAttribute('role', 'button')
+        .withText(endpointLabel);
+
+      await t.expect(await element.exists).ok('Endpoint does not exists');
     },
   };
 }

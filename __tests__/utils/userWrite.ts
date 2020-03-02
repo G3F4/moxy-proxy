@@ -8,9 +8,5 @@ export default async function userWrite(selector: Selector, text: string) {
 
   const delay = randomUserDelay();
 
-  if (delay) {
-    await t.wait(delay);
-  }
-
-  await t.typeText(selector, text);
+  return t.wait(delay).typeText(selector, text);
 }

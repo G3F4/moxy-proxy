@@ -1,10 +1,10 @@
+import startApplication from './startApplication';
+
 const nodeEnv = process.env.NODE_ENV;
 
 require('dotenv').config({
   path: nodeEnv ? `${process.cwd()}/.env.${nodeEnv.toLowerCase()}` : undefined,
 });
-
-import startApplication from './startApplication';
 
 startApplication();
 

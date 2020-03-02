@@ -87,16 +87,18 @@ export default class EndpointsService {
     const endpointMapping: EndpointMapping = {
       id: Date.now().toString(),
       method: endpoint.method,
-      url: endpoint.url,
+      url: endpoint.url.slice(1),
       parameters: endpoint.parameters,
       responseStatus: endpoint.responseStatus,
     };
 
-    this.endpoints = [...this.endpoints, endpoint];
-    this.endpointMappings = [...this.endpointMappings, endpointMapping];
+    if (!this.checkIfEndpointAlreadyExists(endpointMapping)) {
+      this.endpoints = [...this.endpoints, endpoint];
+      this.endpointMappings = [...this.endpointMappings, endpointMapping];
 
-    this.saveEndpointMappings();
-    this.saveEndpointToFile(endpoint);
+      this.saveEndpointMappings();
+      this.saveEndpointToFile(endpoint);
+    }
   }
 
   deleteEndpoint(endpointId: string) {
@@ -152,8 +154,14 @@ export default class EndpointsService {
   private endpoints: Endpoint[] = [];
   private endpointMappings: EndpointMapping[] = [];
   private dir: string = `${DATA_DIR}/endpoints`;
-  private endpointMappingsFileName: string = 'endpoints.json';
+  private endpointMappingsFileName: string = `endpoints.json`;
   private handlersWatcher: Record<string, FSWatcher> = {};
+
+  private checkIfEndpointAlreadyExists({ method, url }: EndpointMapping) {
+    const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, url }));
+
+    return Boolean(endpointMapping);
+  }
 
   private findEndpoint({ method, url }: { method: Method; url: string }) {
     const urlParts = url.split('/').filter(Boolean);
