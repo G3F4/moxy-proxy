@@ -7,10 +7,10 @@ fixture`User can add, test and delete endpoint`.page(APP_URL);
 const endpointLabel = 'GET: test/:it/good/:id';
 
 test('add endpoint', async () => {
-  const { getApplicationBar, getViewTabs, views } = getApplication();
+  const { getApplicationBar, getViewTabs, views } = await getApplication();
 
   await getApplicationBar().changeStateScenario('test');
-  await getViewTabs().goToEndpointsTab();
+  await getViewTabs().clickTab('ENDPOINTS');
 
   const endpointsView = await views.getEndpointsView();
   const urlSection = await endpointsView.addEndpoint();
@@ -53,10 +53,10 @@ test('add endpoint', async () => {
 });
 
 test('test endpoint', async () => {
-  const { getApplicationBar, getViewTabs, views } = getApplication();
+  const { getApplicationBar, getViewTabs, views } = await getApplication();
 
   await getApplicationBar().changeStateScenario('test');
-  await getViewTabs().goToEndpointsTab();
+  await getViewTabs().clickTab('ENDPOINTS');
 
   const endpointsView = await views.getEndpointsView();
 
@@ -90,10 +90,10 @@ test('test endpoint', async () => {
 });
 
 test('delete endpoint', async t => {
-  const { getApplicationBar, getViewTabs, views } = getApplication();
+  const { getApplicationBar, getViewTabs, views } = await getApplication();
 
   await getApplicationBar().changeStateScenario('test');
-  await getViewTabs().goToEndpointsTab();
+  await getViewTabs().clickTab('ENDPOINTS');
 
   const endpointsView = await views.getEndpointsView();
 
