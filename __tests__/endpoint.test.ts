@@ -6,7 +6,7 @@ fixture`User can add, test and delete endpoint`.page(APP_URL);
 
 const endpointLabel = 'GET: test/:it/good/:id';
 
-test('add endpoint', async (t) => {
+test('add endpoint', async () => {
   const { getApplicationBar, getViewTabs, views } = getApplication();
 
   await getApplicationBar().changeStateScenario('test');
@@ -69,7 +69,23 @@ test('test endpoint', async () => {
   await testEndpointView.fillQueryParameter('test', '1234');
   await testEndpointView.fillQueryParameter('test2', 'abc');
   await testEndpointView.addRequestBody();
-  await testEndpointView.testIt('0');
+  await testEndpointView.testIt(
+    JSON.stringify(
+      {
+        body: null,
+        parameters: {
+          test: '1234',
+          test2: 'abc',
+        },
+        urlParameters: {
+          it: '12',
+          id: 'foo',
+        },
+      },
+      null,
+      2,
+    ),
+  );
   await testEndpointView.closeWizard();
 });
 

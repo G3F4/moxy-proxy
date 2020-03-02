@@ -169,7 +169,12 @@ async function responseSection(wizardContainer: Selector) {
       await userPressKey('up');
       await userPressKey('end');
       await userPressKey('left');
-      await codeEditor.enterCode('.requestCount ');
+      await userPressKey('backspace');
+      await userPressKey('backspace');
+      await userPressKey('backspace');
+      await userPressKey('backspace');
+      await userPressKey('backspace');
+      await codeEditor.enterCode('request ');
       await userPressKey('backspace');
       await codeEditor.doneEditing();
     },
@@ -354,9 +359,9 @@ async function testEndpoint(viewContainer: Selector) {
         .find('p')
         .withText('Response')
         .parent();
-      const response = responseSection.find('code');
+      const response = await responseSection.find('code').textContent;
 
-      await t.expect(response.textContent).eql(expectedResponse);
+      await t.expect(response).eql(expectedResponse);
     },
   };
 }
