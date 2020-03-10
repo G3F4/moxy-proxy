@@ -12,6 +12,8 @@ import ServerStateMenu from './ServerStateMenu';
 export default function ServerState() {
   const { serverState, resetServerState, updateServerState, deleteStateScenario } = useContext(AppStateContext);
   const [editing, setEditing] = useState(false);
+  const [invalidJson, setInvalidJson] = useState(false);
+  const [draftCode, setDraftCode] = useState(JSON.stringify(serverState, null, 2));
 
   function handleStartEditing() {
     setEditing(true);
@@ -19,10 +21,17 @@ export default function ServerState() {
 
   function handleDoneEditing() {
     setEditing(false);
+    updateServerState(JSON.parse(draftCode) as ServerStateInterface);
   }
 
   function handleSave(code: string) {
-    updateServerState(JSON.parse(code) as ServerStateInterface);
+    setDraftCode(code);
+    try {
+      JSON.parse(code);
+      setInvalidJson(false);
+    } catch (e) {
+      setInvalidJson(true);
+    }
   }
 
   async function handleUpdateWithClipboard() {
@@ -51,7 +60,7 @@ export default function ServerState() {
         </Typography>
         <div style={{ display: 'flex' }}>
           {editing ? (
-            <Button onClick={handleDoneEditing}>Done</Button>
+            <Button onClick={handleDoneEditing} disabled={invalidJson}>Done</Button>
           ) : (
             <Button onClick={handleStartEditing}>Edit</Button>
           )}
@@ -71,7 +80,7 @@ export default function ServerState() {
         {editing && (
           <Editor
             autoHeight
-            code={JSON.stringify(serverState, null, 2)}
+            code={draftCode}
             language="json"
             onSave={handleSave}
           />
