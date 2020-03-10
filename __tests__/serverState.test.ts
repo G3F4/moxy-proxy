@@ -15,7 +15,7 @@ test('read server state', async () => {
   await serverStateView.searchValue('"requestCount":int0');
 });
 
-test('add state scenario', async () => {
+test('add state scenario', async (t) => {
   const application = getApplication();
 
   await application.waitForLoaded();
@@ -28,4 +28,7 @@ test('add state scenario', async () => {
 
   await addServerStateScenarioView.enterScenarioName('test test test');
   await addServerStateScenarioView.editScenarioState();
+  await addServerStateScenarioView.submitServerStateScenario();
+  await application.getApplicationBar().changeStateScenario('test test test');
+  await serverStateView.searchValue('"requestCount":int101');
 });

@@ -43,17 +43,21 @@ export default function getServerStateView(parent: Selector) {
       }
     },
     async addServerStateScenario() {
-      function getAddServerStateScenarioButton() {
-        return getViewHeader()
-          .find('button')
-          .withText('ADD SERVER SCENARIO');
-      }
-
       function getAddServerStateScenarioViewContainer() {
         return Selector('h6')
           .withText('Add server scenario')
           .parent('div')
           .withAttribute('role', 'dialog');
+      }
+      function getAddServerStateScenarioButton() {
+        return getViewHeader()
+          .find('button')
+          .withText('ADD SERVER SCENARIO');
+      }
+      function getSubmitServerStateScenarioSubmit() {
+        return getAddServerStateScenarioViewContainer()
+          .find('button')
+          .withText('SUBMIT');
       }
 
       await userClick(getAddServerStateScenarioButton());
@@ -65,16 +69,8 @@ export default function getServerStateView(parent: Selector) {
           await userWrite(input, scenarioName);
         },
         async editScenarioState() {
-          const editorContainer = await getViewContainer()
-            .find('p')
-            .withText('Modify copy of state before adding');
           function getFallback() {
             return getViewContainer().withText('Loading...');
-          }
-          function getSubmitButton() {
-            return getViewContainer()
-              .find('button')
-              .withText('SUBMIT');
           }
           async function waitForLoaded() {
             const loading = await getFallback().exists;
@@ -84,10 +80,19 @@ export default function getServerStateView(parent: Selector) {
               await waitForLoaded();
             }
           }
-          await waitForLoaded();
 
+          await waitForLoaded();
           await userPressKey('tab');
-          await userClick(getSubmitButton());
+          await userPressKey('down');
+          await userPressKey('end');
+          await userPressKey('left');
+          await userPressKey('backspace');
+          await userPressKey('1');
+          await userPressKey('0');
+          await userPressKey('1');
+        },
+        async submitServerStateScenario() {
+          await userClick(getSubmitServerStateScenarioSubmit());
         },
       };
     },
