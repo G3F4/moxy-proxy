@@ -1,6 +1,6 @@
-import { Selector, t } from 'testcafe';
+import { Selector } from 'testcafe';
 import userClick from '../utils/userClick';
-import userPressKey from '../utils/userPressKey';
+import userPressKey, { UserPressKeyOptions } from '../utils/userPressKey';
 import userWait from '../utils/userWait';
 import userWrite from '../utils/userWrite';
 
@@ -68,9 +68,22 @@ export default function getServerStateView(parent: Selector) {
 
           await userWrite(input, scenarioName);
         },
-        async editScenarioState() {
+        async submitServerStateScenario() {
+          await userClick(getSubmitServerStateScenarioSubmit());
+        },
+        async getEditor() {
+          function getEditorContainer() {
+            return getAddServerStateScenarioViewContainer()
+              .find('p')
+              .withText('Modify copy of state before adding')
+              .parent('div')
+              .find('section');
+          }
+          function getEditorInput() {
+            return getEditorContainer().find('textarea');
+          }
           function getFallback() {
-            return getViewContainer().withText('Loading...');
+            return getEditorContainer().withText('Loading...');
           }
           async function waitForLoaded() {
             const loading = await getFallback().exists;
@@ -81,18 +94,62 @@ export default function getServerStateView(parent: Selector) {
             }
           }
 
-          await waitForLoaded();
-          await userPressKey('tab');
-          await userPressKey('down');
-          await userPressKey('end');
-          await userPressKey('left');
-          await userPressKey('backspace');
-          await userPressKey('1');
-          await userPressKey('0');
-          await userPressKey('1');
-        },
-        async submitServerStateScenario() {
-          await userClick(getSubmitServerStateScenarioSubmit());
+          return {
+            async focusEditor() {
+              await userClick(getEditorInput());
+            },
+            waitForLoaded,
+            async cursorUp(options?: UserPressKeyOptions) {
+              await userPressKey({ key: 'up', ...(options || {}) });
+            },
+            async cursorDown(options?: UserPressKeyOptions) {
+              await userPressKey({ key: 'down', ...(options || {}) });
+            },
+            async cursorLeft(options?: UserPressKeyOptions) {
+              await userPressKey({ key: 'left', ...(options || {}) });
+            },
+            async cursorRight(options?: UserPressKeyOptions) {
+              await userPressKey({ key: 'right', ...(options || {}) });
+            },
+            async cursorToEnd() {
+              await userPressKey({ key: 'end' });
+            },
+            async cursorToHome() {
+              await userPressKey({ key: 'home' });
+            },
+            async cursorToBottom() {
+              await userPressKey({ key: 'pagedown' });
+            },
+            async cursorToTop() {
+              await userPressKey({ key: 'pageup' });
+            },
+            async enter(options?: UserPressKeyOptions) {
+              await userPressKey({ key: 'enter', ...(options || {}) });
+            },
+            async tab(
+              options?: UserPressKeyOptions,
+            ) {
+              await userPressKey({ key: 'tab', ...(options || {}) });
+            },
+            async deleteCode(howManyCharacters = 1) {
+              for (let i = 0; i < howManyCharacters; i++) {
+                await userPressKey({
+                  key: 'backspace',
+                });
+              }
+            },
+            async enterCode(code: string) {
+              const chars = code.split('');
+
+              await Promise.all(
+                chars.map(async char => {
+                  const key = char === ' ' ? 'space' : char;
+
+                  await userPressKey({ key });
+                }),
+              );
+            },
+          };
         },
       };
     },

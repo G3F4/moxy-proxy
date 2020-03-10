@@ -128,16 +128,16 @@ async function stateUpdateSection(wizardContainer: Selector) {
       const codeEditor = await getCodeEditor(section);
 
       await codeEditor.startEditing();
-      await userPressKey('up');
-      await userPressKey('up');
-      await userPressKey('end');
-      await userPressKey('left');
-      await userPressKey('backspace');
-      await userPressKey('backspace');
-      await userPressKey('backspace');
-      await userPressKey('backspace');
+      await userPressKey({ key: 'up' });
+      await userPressKey({ key: 'up' });
+      await userPressKey({ key: 'end' });
+      await userPressKey({ key: 'left' });
+      await userPressKey({ key: 'backspace' });
+      await userPressKey({ key: 'backspace' });
+      await userPressKey({ key: 'backspace' });
+      await userPressKey({ key: 'backspace' });
       await codeEditor.enterCode('false ');
-      await userPressKey('backspace');
+      await userPressKey({ key: 'backspace' });
       await codeEditor.doneEditing();
     },
     async goToSubmitSection() {
@@ -166,16 +166,16 @@ async function responseSection(wizardContainer: Selector) {
       const codeEditor = await getCodeEditor(section);
 
       await codeEditor.startEditing();
-      await userPressKey('up');
-      await userPressKey('end');
-      await userPressKey('left');
-      await userPressKey('backspace');
-      await userPressKey('backspace');
-      await userPressKey('backspace');
-      await userPressKey('backspace');
-      await userPressKey('backspace');
+      await userPressKey({ key: 'up' });
+      await userPressKey({ key: 'end' });
+      await userPressKey({ key: 'left' });
+      await userPressKey({ key: 'backspace' });
+      await userPressKey({ key: 'backspace' });
+      await userPressKey({ key: 'backspace' });
+      await userPressKey({ key: 'backspace' });
+      await userPressKey({ key: 'backspace' });
       await codeEditor.enterCode('request ');
-      await userPressKey('backspace');
+      await userPressKey({ key: 'backspace' });
       await codeEditor.doneEditing();
     },
     async goToStateUpdateSection() {
