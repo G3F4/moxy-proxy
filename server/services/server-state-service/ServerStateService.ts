@@ -114,6 +114,7 @@ export default class ServerStateService {
       const scenarioMappings = this.serverStateScenarioMappings.filter(
         ({ id }) => id !== scenarioId,
       );
+
       this.updateMappings(scenarioMappings);
       this.activeServerStateScenarioId = scenarioId;
       this.changeServerStateScenario(this.getDefaultScenarioId());

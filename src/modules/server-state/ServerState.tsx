@@ -60,7 +60,7 @@ export default function ServerState() {
         </Typography>
         <div style={{ display: 'flex' }}>
           {editing ? (
-            <Button onClick={handleDoneEditing} disabled={invalidJson}>Done</Button>
+            <Button disabled={invalidJson} onClick={handleDoneEditing}>Done</Button>
           ) : (
             <Button onClick={handleStartEditing}>Edit</Button>
           )}

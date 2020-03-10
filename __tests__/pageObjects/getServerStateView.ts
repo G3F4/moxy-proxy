@@ -38,13 +38,23 @@ export default function getServerStateView(parent: Selector) {
           .withAttribute('aria-label', 'more');
       }
 
+      function getMoreMenuContainer() {
+        return Selector('div')
+          .withAttribute('id', 'server-state-menu')
+          .find('ul');
+      }
+
       await userClick(getButton());
 
       return {
         async deleteScenario() {
-
-        }
-      }
+          await userClick(
+            getMoreMenuContainer()
+              .find('li')
+              .withText('Delete scenario'),
+          );
+        },
+      };
     },
     waitForLoaded,
     async searchValue(expectedValue: string) {
@@ -64,11 +74,13 @@ export default function getServerStateView(parent: Selector) {
           .parent('div')
           .withAttribute('role', 'dialog');
       }
+
       function getAddServerStateScenarioButton() {
         return getViewHeader()
           .find('button')
           .withText('ADD SERVER SCENARIO');
       }
+
       function getSubmitServerStateScenarioSubmit() {
         return getAddServerStateScenarioViewContainer()
           .find('button')
@@ -94,12 +106,15 @@ export default function getServerStateView(parent: Selector) {
               .parent('div')
               .find('section');
           }
+
           function getEditorInput() {
             return getEditorContainer().find('textarea');
           }
+
           function getFallback() {
             return getEditorContainer().withText('Loading...');
           }
+
           async function waitForLoaded() {
             const loading = await getFallback().exists;
 

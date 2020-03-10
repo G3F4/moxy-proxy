@@ -17,7 +17,7 @@ test('read server state', async () => {
   await serverStateView.searchValue('"requestCount":int0');
 });
 
-test('add state scenario from scratch', async t => {
+test('add state scenario from scratch', async () => {
   const application = getApplication();
 
   await application.waitForLoaded();
@@ -29,7 +29,9 @@ test('add state scenario from scratch', async t => {
   const addServerStateScenarioView = await serverStateView.addServerStateScenario();
 
   await addServerStateScenarioView.enterScenarioName(scenarioName);
+
   const stateScenarioEditor = await addServerStateScenarioView.getEditor();
+
   await stateScenarioEditor.waitForLoaded();
   await stateScenarioEditor.focusEditor();
   await stateScenarioEditor.cursorToBottom();
@@ -73,8 +75,7 @@ test('add state scenario from scratch', async t => {
   await serverStateView.searchValue('2:int3');
 });
 
-// TODO missing feature
-test('delete state scenario', async (t) => {
+test('delete state scenario', async () => {
   const application = getApplication();
 
   await application.waitForLoaded();
@@ -83,6 +84,8 @@ test('delete state scenario', async (t) => {
   const serverStateView = application.views.getServerStateView();
 
   await serverStateView.waitForLoaded();
+
   const moreMenu = await serverStateView.openMoreMenu();
+
   await moreMenu.deleteScenario();
 });

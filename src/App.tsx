@@ -139,7 +139,7 @@ function App() {
     return () => {
       clearInterval(pingInterval);
     };
-  }, []);
+  }, [messageHandler]);
 
   function handleResetServerState() {
     sendEvent({
