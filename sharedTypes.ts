@@ -1,9 +1,10 @@
 export type Method = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'options';
 
 export type ServerAction =
+  | 'updateEndpoints'
   | 'updateServerState'
   | 'updateServerStateInterface'
-  | 'updateEndpoints'
+  | 'updateActiveStateScenarioId'
   | 'updateServerStateScenarios';
 
 interface SocketEvent {
@@ -20,6 +21,7 @@ export type ClientAction =
   | 'updateEndpoint'
   | 'deleteEndpoint'
   | 'clientUpdatedServer'
+  | 'deleteStateScenario'
   | 'resetServerState'
   | 'changeServerStateScenario'
   | 'changeEndpointResponseStatus'

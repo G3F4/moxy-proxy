@@ -10,7 +10,7 @@ import AddServerScenario from './add-server-scenario/AddServerScenario';
 import ServerStateMenu from './ServerStateMenu';
 
 export default function ServerState() {
-  const { serverState, resetServerState, updateServerState } = useContext(AppStateContext);
+  const { serverState, resetServerState, updateServerState, deleteStateScenario } = useContext(AppStateContext);
   const [editing, setEditing] = useState(false);
 
   function handleStartEditing() {
@@ -35,6 +35,10 @@ export default function ServerState() {
     }
   }
 
+  function handleDeleteScenario() {
+    deleteStateScenario();
+  }
+
   async function handleCopyToClipboard() {
     await navigator.clipboard.writeText(JSON.stringify(serverState, null, 2));
   }
@@ -57,6 +61,7 @@ export default function ServerState() {
               { label: 'Reset server', onClick: resetServerState },
               { label: 'Copy to clipboard', onClick: handleCopyToClipboard },
               { label: 'Update with clipboard', onClick: handleUpdateWithClipboard },
+              { label: 'Delete scenario', onClick: handleDeleteScenario },
             ]}
           />
         </div>

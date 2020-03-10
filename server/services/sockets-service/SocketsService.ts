@@ -36,6 +36,10 @@ export default class SocketsService {
       payload: this.serverStateService.getServerStateScenarioMappings(),
     });
     this.sendEvent(socket, {
+      action: 'updateActiveStateScenarioId',
+      payload: this.serverStateService.getActiveServerStateScenarioId(),
+    });
+    this.sendEvent(socket, {
       action: 'updateEndpoints',
       payload: this.endpointsService.getEndpoints(),
     });
@@ -129,7 +133,19 @@ export default class SocketsService {
         payload: this.serverStateService.getServerStateScenarioMappings(),
       });
     },
+    deleteStateScenario: (payload: string) => {
+      this.serverStateService.deleteStateScenario(payload);
+      this.broadcastEvent({
+        action: 'updateServerStateScenarios',
+        payload: this.serverStateService.getServerStateScenarioMappings(),
+      });
+      this.broadcastEvent({
+        action: 'updateActiveStateScenarioId',
+        payload: this.serverStateService.getActiveServerStateScenarioId(),
+      });
+    },
     changeServerStateScenario: (payload: string) => {
+      console.log(['changeServerStateScenario'], payload)
       this.serverStateService.changeServerStateScenario(payload);
       this.broadcastEvent({
         action: 'updateServerState',

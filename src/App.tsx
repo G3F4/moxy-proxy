@@ -46,6 +46,7 @@ export const AppStateContext = createContext({
   changeServerStateScenario(_serverStateScenarioId: string) {},
   updateServerState(_serverState: ServerState) {},
   resetServerState() {},
+  deleteStateScenario() {},
   addEndpoint(_endpoint: Endpoint) {},
   deleteEndpoint(_endpointId: string) {},
   changeEndpointResponseStatus(_endpointId: string, _status: HttpStatus | null) {},
@@ -96,6 +97,9 @@ function App() {
       updateServerStateInterface(payload: string) {
         setServerStateInterface(payload);
       },
+      updateActiveStateScenarioId(payload: string) {
+        setActiveServerStateScenarioId(payload);
+      },
       updateServerStateScenarios(payload: ServerStateScenario[]) {
         setServerStateScenarios(payload);
       },
@@ -140,6 +144,13 @@ function App() {
   function handleResetServerState() {
     sendEvent({
       action: 'resetServerState',
+    });
+  }
+
+  function handleDeleteStateScenario() {
+    sendEvent({
+      action: 'deleteStateScenario',
+      payload: activeServerStateScenarioId,
     });
   }
 
@@ -252,6 +263,7 @@ function App() {
     viewMode,
     changeEndpointResponseStatus: handleChangeEndpointResponseStatus,
     addServerStateScenario: handleAddServerStateScenario,
+    deleteStateScenario: handleDeleteStateScenario,
     changeServerStateScenario: handleChangeServerStateScenario,
     changeViewMode: setViewMode,
     changeActiveTab: setActiveTab,
