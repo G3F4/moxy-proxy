@@ -31,6 +31,21 @@ export default function getServerStateView(parent: Selector) {
   }
 
   return {
+    async openMoreMenu() {
+      function getButton() {
+        return getViewHeader()
+          .find('button')
+          .withAttribute('aria-label', 'more');
+      }
+
+      await userClick(getButton());
+
+      return {
+        async deleteScenario() {
+
+        }
+      }
+    },
     waitForLoaded,
     async searchValue(expectedValue: string) {
       const value = await getViewContainer()
@@ -126,9 +141,7 @@ export default function getServerStateView(parent: Selector) {
             async enter(options?: UserPressKeyOptions) {
               await userPressKey({ key: 'enter', ...(options || {}) });
             },
-            async tab(
-              options?: UserPressKeyOptions,
-            ) {
+            async tab(options?: UserPressKeyOptions) {
               await userPressKey({ key: 'tab', ...(options || {}) });
             },
             async deleteCode(howManyCharacters = 1) {

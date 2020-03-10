@@ -27,6 +27,11 @@ export default function appBar(parent: Selector) {
     await userClick(select);
 
     const option = select.find('li').withText(optionLabel);
+    const optionExists = await option.exists;
+
+    if (!optionExists) {
+      throw new Error('option does not exists in select');
+    }
 
     await userClick(option);
   }
