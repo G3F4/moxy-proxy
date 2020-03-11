@@ -1,7 +1,10 @@
 import { exec } from 'child_process';
 import * as util from 'util';
 import { ServerState } from '../../../interfaces';
-import { ServerStateScenario, ServerStateScenarioMapping } from '../../../sharedTypes';
+import {
+  ServerStateScenario,
+  ServerStateScenarioMapping,
+} from '../../../sharedTypes';
 import { DATA_DIR } from '../../config';
 import { logError, logInfo } from '../../utils/logger';
 import FileService from '../file-service/FileService';
@@ -77,7 +80,7 @@ export default class ServerStateService {
       {
         name: scenario.name,
         id: Date.now().toString(),
-        path: this.getServerStateScenarioDataPath(scenario),
+        path: this.createServerStateScenarioDataPath(scenario),
       },
     ];
 
@@ -92,7 +95,11 @@ export default class ServerStateService {
     if (mapping) {
       this.activeServerStateScenarioId = scenarioId;
 
-      const state = this.fileService.readJSON<ServerState>(mapping.path);
+      console.log(['`${DATA_DIR}/${mapping.path}`'], `${DATA_DIR}/${mapping.path}`)
+
+      const state = this.fileService.readJSON<ServerState>(
+        `${DATA_DIR}/${mapping.path}`,
+      );
 
       if (!this.initialServerStates[mapping.id]) {
         this.initialServerStates[mapping.id] = state;
@@ -146,7 +153,10 @@ export default class ServerStateService {
     );
 
     if (serverStateScenarioMapping) {
-      this.fileService.saveJSON(serverStateScenarioMapping.path, data);
+      this.fileService.saveJSON(
+        `${DATA_DIR}/${serverStateScenarioMapping.path}`,
+        data,
+      );
     }
   }
 
@@ -165,15 +175,15 @@ export default class ServerStateService {
   }
 
   private saveServerStateScenario(scenario: ServerStateScenario) {
-    const serverStateScenarioDataPath = this.getServerStateScenarioDataPath(
+    const serverStateScenarioDataPath = this.createServerStateScenarioDataPath(
       scenario,
     );
 
-    this.fileService.saveJSON(serverStateScenarioDataPath, scenario.state);
+    this.fileService.saveJSON(`${DATA_DIR}/${serverStateScenarioDataPath}`, scenario.state);
   }
 
-  private getServerStateScenarioDataPath(scenario: ServerStateScenario) {
-    return `data/serverState/${scenario.name}.json`;
+  private createServerStateScenarioDataPath(scenario: ServerStateScenario) {
+    return `serverState/${scenario.name}.json`;
   }
 
   private saveServerStateScenarioMappings(

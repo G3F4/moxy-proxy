@@ -37,7 +37,7 @@ export default function getServerStateView(parent: Selector) {
     const valueExists = await value.exists;
 
     if (!valueExists) {
-      throw new Error('searched value does not exists');
+      throw new Error(`searched value: ${expectedValue} does not exists`);
     }
   }
 

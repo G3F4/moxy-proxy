@@ -1,4 +1,10 @@
 {
-  "requestCount": 0,
-  "modified": false
+  "requestCount": 10,
+  "data": {
+    "test": [
+      "test"
+    ]
+  },
+  "modified": true,
+  "newField": {}
 }

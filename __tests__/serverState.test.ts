@@ -34,7 +34,7 @@ test('read default state scenario data', async () => {
   await serverStateView.searchObjectField({
     key: 'modified',
     type: 'bool',
-    value: 'true',
+    value: 'false',
   });
 });
 

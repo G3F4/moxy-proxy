@@ -2,11 +2,11 @@
   {
     "id": "default",
     "name": "default",
-    "path": "data/serverState/default.json"
+    "path": "serverState/default.json"
   },
   {
     "id": "2",
     "name": "test",
-    "path": "data/serverState/test.json"
+    "path": "serverState/test.json"
   }
 ]
