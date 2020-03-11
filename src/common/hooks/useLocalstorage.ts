@@ -19,7 +19,7 @@ export default function useLocalstorage<T>(key: string, initialValue: T) {
     } catch (error) {
       console.error(error);
     }
-  }, []);
+  }, [key]);
 
   return [storedValue, setValue];
 }

@@ -30,6 +30,17 @@ export default function getServerStateView(parent: Selector) {
     }
   }
 
+  async function searchValue(expectedValue: string) {
+    const value = await getViewContainer()
+      .find('div')
+      .withText(expectedValue);
+    const valueExists = await value.exists;
+
+    if (!valueExists) {
+      throw new Error('searched value does not exists');
+    }
+  }
+
   return {
     async openMoreMenu() {
       function getButton() {
@@ -57,15 +68,43 @@ export default function getServerStateView(parent: Selector) {
       };
     },
     waitForLoaded,
-    async searchValue(expectedValue: string) {
-      const value = await getViewContainer()
-        .find('div')
-        .withText(expectedValue);
-      const valueExists = await value.exists;
+    async searchObjectField(props: {
+      key: string;
+      type: 'string' | 'int' | 'bool';
+      value: string;
+    }) {
+      const { key, value, type } = props;
+      const expectedValue = `"${key}":${type}${value}`;
 
-      if (!valueExists) {
-        throw new Error('searched value does not exists');
-      }
+      await searchValue(expectedValue);
+    },
+    async searchObject(props: { key: string; fieldsCount: number }) {
+      const { key, fieldsCount } = props;
+      const expectedValue = `"${key}":{${fieldsCount} item${
+        fieldsCount > 1 ? 's' : ''
+      }`;
+
+      await searchValue(expectedValue);
+    },
+    async searchArray(props: { key: string; itemsCount: number }) {
+      const { key, itemsCount } = props;
+      const expectedValue = `"${key}":[${itemsCount} item${
+        itemsCount > 1 ? 's' : ''
+      }`;
+
+      await searchValue(expectedValue);
+    },
+    async searchArrayItem(props: {
+      index: number;
+      type: 'string' | 'int' | 'bool';
+      value: string;
+    }) {
+      const { index, value, type } = props;
+      const expectedValue = `${index}:${type}${
+        type === 'string' ? '"' : ''
+      }${value}${type === 'string' ? '"' : ''}`;
+
+      await searchValue(expectedValue);
     },
     async addServerStateScenario() {
       function getAddServerStateScenarioViewContainer() {

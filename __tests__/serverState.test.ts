@@ -6,7 +6,7 @@ const scenarioName = 'test test test';
 
 fixture`User can read, edit and add server state scenario`.page(APP_URL);
 
-test('read server state', async () => {
+test('read default state scenario data', async () => {
   const application = getApplication();
 
   await application.waitForLoaded();
@@ -14,7 +14,28 @@ test('read server state', async () => {
   const serverStateView = application.views.getServerStateView();
 
   await serverStateView.waitForLoaded();
-  await serverStateView.searchValue('"requestCount":int0');
+  await serverStateView.searchObjectField({
+    key: 'requestCount',
+    type: 'int',
+    value: '0',
+  });
+  await serverStateView.searchObject({ key: 'data', fieldsCount: 1 });
+  await serverStateView.searchArray({ key: 'test', itemsCount: 2 });
+  await serverStateView.searchArrayItem({
+    index: 0,
+    type: 'string',
+    value: 'test',
+  });
+  await serverStateView.searchArrayItem({
+    index: 1,
+    type: 'string',
+    value: 'test2',
+  });
+  await serverStateView.searchObjectField({
+    key: 'modified',
+    type: 'bool',
+    value: 'true',
+  });
 });
 
 test('add state scenario from scratch', async () => {
@@ -67,12 +88,28 @@ test('add state scenario from scratch', async () => {
   await stateScenarioEditor.deleteCode();
   await addServerStateScenarioView.submitServerStateScenario();
   await application.getApplicationBar().changeStateScenario(scenarioName);
-  await serverStateView.searchValue('"test":{2 items');
-  await serverStateView.searchValue('"flag":booltrue');
-  await serverStateView.searchValue('"items":[3 items');
-  await serverStateView.searchValue('0:int1');
-  await serverStateView.searchValue('1:int2');
-  await serverStateView.searchValue('2:int3');
+  await serverStateView.searchObject({ key: 'test', fieldsCount: 2 });
+  await serverStateView.searchObjectField({
+    key: 'flag',
+    type: 'bool',
+    value: 'true',
+  });
+  await serverStateView.searchArray({ key: 'items', itemsCount: 3 });
+  await serverStateView.searchArrayItem({
+    index: 0,
+    type: 'int',
+    value: '1',
+  });
+  await serverStateView.searchArrayItem({
+    index: 1,
+    type: 'int',
+    value: '2',
+  });
+  await serverStateView.searchArrayItem({
+    index: 2,
+    type: 'int',
+    value: '3',
+  });
 });
 
 test('delete state scenario', async () => {

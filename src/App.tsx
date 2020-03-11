@@ -1,13 +1,6 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { ServerState } from '../interfaces';
-import {
-  ClientEvent,
-  Endpoint,
-  HttpStatus,
-  ServerAction,
-  ServerEvent,
-  ServerStateScenario,
-} from '../sharedTypes';
+import { ClientEvent, Endpoint, HttpStatus, ServerAction, ServerEvent, ServerStateScenario } from '../sharedTypes';
 import './App.css';
 import useLocalstorage from './common/hooks/useLocalstorage';
 import Layout from './layouts/Layout';
@@ -100,7 +93,6 @@ function App() {
   );
   const [serverStateInterface, setServerStateInterface] = useState('');
   const [endpoints, setEndpoints] = useState(initialEndpoint);
-
   const messageHandler = useCallback((event: ServerEvent) => {
     const { action, payload } = event;
     const handlers: Record<ServerAction, (payload: any) => void> = {
@@ -122,7 +114,7 @@ function App() {
     };
 
     handlers[action](payload);
-  }, []);
+  }, [setActiveServerStateScenarioId]);
 
   useEffect(() => {
     socket.onopen = event => {
