@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { ServerState } from '../interfaces';
 import {
   ClientEvent,
@@ -16,7 +16,8 @@ import { urlDelimiter } from './modules/endpoints/test-endpoint/TestEndpoint';
 
 const socketHash = 'superHash123';
 const socketUrl =
-  process.env.NODE_ENV === 'production' && window.location.hostname !== 'localhost'
+  process.env.NODE_ENV === 'production' &&
+  window.location.hostname !== 'localhost'
     ? `wss://${window.location.host}/${socketHash}`
     : `ws://localhost:5000/${socketHash}`;
 
@@ -49,14 +50,24 @@ export const AppStateContext = createContext({
   deleteStateScenario() {},
   addEndpoint(_endpoint: Endpoint) {},
   deleteEndpoint(_endpointId: string) {},
-  changeEndpointResponseStatus(_endpointId: string, _status: HttpStatus | null) {},
+  changeEndpointResponseStatus(
+    _endpointId: string,
+    _status: HttpStatus | null,
+  ) {},
   updateEndpoint(_endpoint: Endpoint) {},
-  testEndpoint(_endpoint: Endpoint, _urlParameters: Record<string, string>, _queryString: string, _requestBody: string) {
+  testEndpoint(
+    _endpoint: Endpoint,
+    _urlParameters: Record<string, string>,
+    _queryString: string,
+    _requestBody: string,
+  ) {
     return Promise.resolve(new Response(''));
   },
 });
 
-function parseMessage(message: string): { action: ServerAction; payload: unknown } {
+function parseMessage(
+  message: string,
+): { action: ServerAction; payload: unknown } {
   const { action, payload } = JSON.parse(message);
 
   return { action, payload };
@@ -64,28 +75,33 @@ function parseMessage(message: string): { action: ServerAction; payload: unknown
 
 const socket = new WebSocket(socketUrl);
 
+function sendEvent(event: ClientEvent) {
+  console.log(['sendEvent'], event);
+  try {
+    socket.send(JSON.stringify(event));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 function App() {
-  const [activeTab, setActiveTab] = useLocalstorage<TabKey>('activeTab', 'serverState');
-  const [activeServerStateScenarioId, setActiveServerStateScenarioId] = useLocalstorage(
-    'activeServerStateScenarioId',
-    'default',
+  const [activeTab, setActiveTab] = useLocalstorage<TabKey>(
+    'activeTab',
+    'serverState',
   );
+  const [
+    activeServerStateScenarioId,
+    setActiveServerStateScenarioId,
+  ] = useLocalstorage('activeServerStateScenarioId', 'default');
   const [viewMode, setViewMode] = useLocalstorage<ViewMode>('viewMode', 'tabs');
   const [serverState, setServerState] = useState(initialServerState);
-  const [serverStateScenarios, setServerStateScenarios] = useState([] as ServerStateScenario[]);
+  const [serverStateScenarios, setServerStateScenarios] = useState(
+    [] as ServerStateScenario[],
+  );
   const [serverStateInterface, setServerStateInterface] = useState('');
   const [endpoints, setEndpoints] = useState(initialEndpoint);
 
-  function sendEvent(event: ClientEvent) {
-    console.log(['sendEvent'], event);
-    try {
-      socket.send(JSON.stringify(event));
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  function messageHandler(event: ServerEvent) {
+  const messageHandler = useCallback((event: ServerEvent) => {
     const { action, payload } = event;
     const handlers: Record<ServerAction, (payload: any) => void> = {
       updateEndpoints(payload: Endpoint[]) {
@@ -106,7 +122,7 @@ function App() {
     };
 
     handlers[action](payload);
-  }
+  }, []);
 
   useEffect(() => {
     socket.onopen = event => {
@@ -191,21 +207,27 @@ function App() {
           'Content-Type': 'application/json',
         };
 
-    function parseUrlWithParameters(url: string, urlParameters: Record<string, string>) {
+    function parseUrlWithParameters(
+      url: string,
+      urlParameters: Record<string, string>,
+    ) {
       const urlParts = url.split('/').filter(Boolean);
 
       return urlParts.reduce((acc, part) => {
         const urlParameter = part[0] === urlDelimiter;
 
         if (urlParameter) {
-          return `${acc}/${urlParameters[part.slice(1)]}`
+          return `${acc}/${urlParameters[part.slice(1)]}`;
         }
 
         return `${acc}/${part}`;
-      }, '')
+      }, '');
     }
 
-    const parsedUrl = `${parseUrlWithParameters(url, urlParameters)}?${queryParams}`;
+    const parsedUrl = `${parseUrlWithParameters(
+      url,
+      urlParameters,
+    )}?${queryParams}`;
 
     return await fetch(parsedUrl, {
       body,
@@ -226,7 +248,9 @@ function App() {
     });
   }
 
-  function handleAddServerStateScenario(serverStateScenario: ServerStateScenario) {
+  function handleAddServerStateScenario(
+    serverStateScenario: ServerStateScenario,
+  ) {
     setServerStateScenarios(scenarios => [...scenarios, serverStateScenario]);
     sendEvent({
       action: 'addServerStateScenario',
@@ -243,7 +267,10 @@ function App() {
     setActiveServerStateScenarioId(serverStateScenarioId);
   }
 
-  function handleChangeEndpointResponseStatus(endpointId: string, status: HttpStatus | null) {
+  function handleChangeEndpointResponseStatus(
+    endpointId: string,
+    status: HttpStatus | null,
+  ) {
     sendEvent({
       action: 'changeEndpointResponseStatus',
       payload: {

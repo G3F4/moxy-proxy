@@ -1,6 +1,5 @@
 import { Selector } from 'testcafe';
 import userClick from '../utils/userClick';
-import userPressKey, { UserPressKeyOptions } from '../utils/userPressKey';
 import userWait from '../utils/userWait';
 import userWrite from '../utils/userWrite';
 import getEditor from './getEditor';
