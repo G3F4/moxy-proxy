@@ -43,6 +43,7 @@ export const AppStateContext = createContext({
   serverStateScenarios: [] as ServerStateScenario[],
 
   resetAllData() {},
+  persistMockedData() {},
   changeViewMode(_viewMode: ViewMode) {},
   changeActiveTab(_tabKey: TabKey) {},
   addServerStateScenario(_serverStateScenario: ServerStateScenario) {},
@@ -291,6 +292,12 @@ function App() {
     });
   }
 
+  function handlePersistMockedData() {
+    sendEvent({
+      action: 'persistMockedData',
+    });
+  }
+
   const contextValue = {
     activeTab: activeTab as TabKey,
     activeServerStateScenarioId,
@@ -300,6 +307,7 @@ function App() {
     serverStateScenarios,
     viewMode,
     resetAllData: handleResetAllData,
+    persistMockedData: handlePersistMockedData,
     changeEndpointResponseStatus: handleChangeEndpointResponseStatus,
     addServerStateScenario: handleAddServerStateScenario,
     deleteStateScenario: handleDeleteStateScenario,

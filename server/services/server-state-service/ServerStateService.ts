@@ -12,10 +12,11 @@ import FileService from '../file-service/FileService';
 const execPromised = util.promisify(exec);
 
 export default class ServerStateService {
-  private activeServerStateScenarioId = 'default';
-  private serverState: ServerState;
-  private serverStateInterface = '';
+  static defaultScenarioId = 'default';
+  private activeServerStateScenarioId = ServerStateService.defaultScenarioId;
+  private serverStateScenarios: Record<string, ServerState> = {};
   private serverStateScenarioMappings: ServerStateScenarioMapping[];
+  private serverStateInterface = '';
   private serverStateInterfaceFileName = 'interfaces.ts';
   private initialServerStatePath = `${DATA_DIR}/serverState/${this.activeServerStateScenarioId}.json`;
   private serverStateScenariosMapPath = `${DATA_DIR}/serverStateScenarios.json`;
@@ -26,7 +27,7 @@ export default class ServerStateService {
   }
 
   getServerState() {
-    return this.serverState;
+    return this.serverStateScenarios[this.activeServerStateScenarioId];
   }
 
   getServerStateInterface() {
@@ -38,7 +39,9 @@ export default class ServerStateService {
   }
 
   constructor(readonly fileService: FileService) {
-    this.serverState = fileService.readJSON(this.initialServerStatePath);
+    this.serverStateScenarios[
+      this.activeServerStateScenarioId
+    ] = fileService.readJSON(this.initialServerStatePath);
     this.serverStateInterface = fileService.readText(
       this.serverStateInterfaceFileName,
     );
@@ -50,7 +53,7 @@ export default class ServerStateService {
     };
   }
 
-  updateServerState({
+  updateScenarioState({
     state,
     serverStateScenarioId,
   }: {
@@ -59,62 +62,40 @@ export default class ServerStateService {
   }) {
     logInfo(['updateServerState'], serverStateScenarioId);
 
-    this.serverState = state;
+    this.serverStateScenarios[serverStateScenarioId] = state;
 
-    this.saveServerStateToFile(serverStateScenarioId, state);
-    this.makeTypesFromInitialServerState().then(() => {
-      return undefined;
-    });
-  }
-
-  private updateMappings(mappings: ServerStateScenarioMapping[]) {
-    logInfo(['updateMappings'], mappings);
-
-    this.serverStateScenarioMappings = mappings;
-    this.saveServerStateScenarioMappings(mappings);
+    // this.saveServerStateToFile(serverStateScenarioId, state);
+    // this.makeTypesFromInitialServerState().then(() => {
+    //   return undefined;
+    // });
   }
 
   addServerStateScenario(scenario: ServerStateScenario) {
-    this.saveServerStateScenario(scenario);
+    logInfo(['addServerStateScenario'], scenario);
 
     const mappings = [
       ...this.serverStateScenarioMappings,
       {
         name: scenario.name,
-        id: Date.now().toString(),
+        id: scenario.id,
         path: this.createServerStateScenarioDataPath(scenario),
       },
     ];
 
+    this.updateScenarioState({
+      serverStateScenarioId: scenario.id,
+      state: scenario.state,
+    });
     this.updateMappings(mappings);
   }
 
   changeServerStateScenario(scenarioId: string) {
-    const mapping = this.serverStateScenarioMappings.find(
-      ({ id }) => id === scenarioId,
-    );
-
-    if (mapping) {
-      this.activeServerStateScenarioId = scenarioId;
-
-      console.log(
-        ['`${DATA_DIR}/${mapping.path}`'],
-        `${DATA_DIR}/${mapping.path}`,
-      );
-
-      const state = this.fileService.readJSON<ServerState>(
-        `${DATA_DIR}/${mapping.path}`,
-      );
-
-      if (!this.initialServerStates[mapping.id]) {
-        this.initialServerStates[mapping.id] = state;
-      }
-
-      this.updateServerState({
-        state,
-        serverStateScenarioId: mapping.id,
-      });
-    }
+    logInfo(['changeServerStateScenario'], scenarioId);
+    this.updateScenarioState({
+      state: this.serverStateScenarios[scenarioId],
+      serverStateScenarioId: scenarioId,
+    });
+    this.activeServerStateScenarioId = scenarioId;
   }
 
   deleteStateScenario(scenarioId: string) {
@@ -123,26 +104,48 @@ export default class ServerStateService {
     );
 
     if (mapping) {
-      const scenarioMappings = this.serverStateScenarioMappings.filter(
+      const updatedScenarioMappings = this.serverStateScenarioMappings.filter(
         ({ id }) => id !== scenarioId,
       );
 
-      this.updateMappings(scenarioMappings);
-      this.activeServerStateScenarioId = scenarioId;
-      this.changeServerStateScenario(this.getDefaultScenarioId());
+      this.updateMappings(updatedScenarioMappings);
+      this.activeServerStateScenarioId = ServerStateService.defaultScenarioId;
+      this.changeServerStateScenario(ServerStateService.defaultScenarioId);
       this.fileService.deleteFile(`/${mapping.path}`);
     }
   }
 
   resetServerState(serverStateScenarioId: string) {
-    this.updateServerState({
+    this.updateScenarioState({
       serverStateScenarioId,
       state: this.initialServerStates[serverStateScenarioId],
     });
   }
 
-  private getDefaultScenarioId() {
-    return 'default';
+  persistChanges() {
+    logInfo(['persistChanges']);
+
+    this.persistMappings();
+    this.persistScenarios();
+  }
+
+  private updateMappings(mappings: ServerStateScenarioMapping[]) {
+    logInfo(['updateMappings'], mappings);
+
+    this.serverStateScenarioMappings = mappings;
+    // this.saveServerStateScenarioMappings(mappings);
+  }
+
+  private persistMappings() {
+    this.saveServerStateScenarioMappings(this.serverStateScenarioMappings);
+  }
+
+  private persistScenarios() {
+    Object.entries(this.serverStateScenarios).forEach(
+      ([scenarioName, scenarioState]) => {
+        this.saveServerStateToFile(scenarioName, scenarioState);
+      },
+    );
   }
 
   private loadServerState(path: string) {

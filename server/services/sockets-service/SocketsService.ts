@@ -101,6 +101,10 @@ export default class SocketsService {
   }
 
   clientMessageHandlers: Record<ClientAction, (payload: any) => void> = {
+    persistMockedData: () => {
+      console.log(['clientMessageHandlers.persistMockedData']);
+      this.serverStateService.persistChanges();
+    },
     resetAllData(): void {
       console.log(['clientMessageHandlers.resetAllData']);
     },
@@ -166,7 +170,7 @@ export default class SocketsService {
       state: ServerState;
       serverStateScenarioId: string;
     }) => {
-      this.serverStateService.updateServerState(payload);
+      this.serverStateService.updateScenarioState(payload);
       this.broadcastEvent({
         action: 'updateServerState',
         payload: this.serverStateService.getServerState(),

@@ -47,7 +47,7 @@ export default class ApiService {
       request,
     );
 
-    this.serverStateService.updateServerState({
+    this.serverStateService.updateScenarioState({
       serverStateScenarioId: this.serverStateService.getActiveServerStateScenarioId(),
       state: produce(
         this.serverStateService.getServerState(),

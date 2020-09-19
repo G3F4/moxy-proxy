@@ -6,7 +6,7 @@ const scenarioName = 'test test test';
 
 fixture`User can read, edit and add server state scenario`.page(APP_URL);
 
-test('read default state scenario data', async () => {
+test('read default state scenario mockedData', async () => {
   const application = getApplication();
 
   await application.waitForLoaded();

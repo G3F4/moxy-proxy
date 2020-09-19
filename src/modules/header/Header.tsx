@@ -91,6 +91,7 @@ export default function Header() {
     serverStateScenarios,
     changeServerStateScenario,
     changeViewMode,
+    persistMockedData,
   } = useContext(AppStateContext);
   const inputLabel = useRef<HTMLLabelElement>(null);
   const [labelWidth, setLabelWidth] = useState(0);
@@ -102,6 +103,11 @@ export default function Header() {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  function handlePersistMockedData() {
+    handleClose();
+    persistMockedData();
+  }
 
   useEffect(() => {
     setLabelWidth(inputLabel.current!.offsetWidth);
@@ -179,6 +185,9 @@ export default function Header() {
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
+            <MenuItem onClick={handlePersistMockedData}>
+              Persist mocked data
+            </MenuItem>
             <MenuItem onClick={handleClose}>
               <ResetAllDataConfirmDialog />
             </MenuItem>

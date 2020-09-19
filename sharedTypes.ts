@@ -1,3 +1,5 @@
+import { ServerState } from './interfaces';
+
 export type Method = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'options';
 
 export type ServerAction =
@@ -18,6 +20,7 @@ export interface ServerEvent extends SocketEvent {
 export type ClientAction =
   | 'ping'
   | 'resetAllData'
+  | 'persistMockedData'
   | 'addEndpoint'
   | 'updateEndpoint'
   | 'deleteEndpoint'
@@ -52,9 +55,9 @@ export interface EndpointMapping {
 }
 
 export interface ServerStateScenario {
-  id?: string;
+  id: string;
   name: string;
-  state: unknown;
+  state: ServerState;
 }
 
 export interface ServerStateScenarioMapping {
