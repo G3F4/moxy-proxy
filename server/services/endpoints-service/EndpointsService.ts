@@ -102,7 +102,7 @@ export default class EndpointsService {
     logInfo(['addEndpoint'], endpoint);
 
     const endpointMapping: EndpointMapping = {
-      id: Date.now().toString(),
+      id: endpoint.id,
       method: endpoint.method,
       url: endpoint.url.slice(1),
       parameters: endpoint.parameters,
@@ -122,6 +122,8 @@ export default class EndpointsService {
   }
 
   deleteEndpoint(endpointId: string) {
+    console.log(['deleteEndpoint'], endpointId);
+
     const endpoint =
       this.endpoints.find(it => it.id === endpointId) ||
       this.endpointMappings.find(it => it.id === endpointId);
