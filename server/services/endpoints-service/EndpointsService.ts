@@ -39,15 +39,41 @@ export default class EndpointsService {
   }
 
   getHandler({ method, url }: { method: Method; url: string }): Handler {
-    const endpointMapping = this.endpointMappings.find(
-      this.findEndpoint({ method, url }),
-    );
+    const endpoint = this.endpoints.find(this.findEndpoint({ method, url }));
 
-    if (endpointMapping) {
-      return this.loadHandler(endpointMapping);
+    logInfo(['getHandler'], endpoint);
+
+    if (endpoint) {
+      const { responseCode, serverStateUpdateCode } = endpoint;
+      const responseCodeLines = responseCode.split('\n').filter(line => line);
+      const serverStateUpdateCodeLines = serverStateUpdateCode
+        .split('\n')
+        .filter(line => line);
+      const responseCodeBody = responseCodeLines
+        .slice(1, responseCodeLines.length - 1)
+        .join('\n');
+      const serverStateUpdateCodeBody = serverStateUpdateCodeLines
+        .slice(1, serverStateUpdateCodeLines.length - 1)
+        .join('\n');
+      const responseFunction = new Function(
+        'state',
+        'request',
+        responseCodeBody,
+      ) as RequestResponse;
+      const serverStateUpdateFunction = new Function(
+        'request',
+        serverStateUpdateCodeBody,
+      ) as ServerUpdate;
+
+      return {
+        requestResponse: responseFunction,
+        serverUpdate: serverStateUpdateFunction,
+      };
     }
 
-    throw new Error(`no handler mapping for url: ${url} | method: ${method}`);
+    throw new Error(
+      `no endpoint definition for url: ${url} | method: ${method}`,
+    );
   }
 
   getUrlParameters({
@@ -115,9 +141,6 @@ export default class EndpointsService {
         { ...endpoint, url: endpointMapping.url },
       ];
       this.endpointMappings = [...this.endpointMappings, endpointMapping];
-
-      this.saveEndpointMappings();
-      this.saveEndpointToFile(endpoint);
     }
   }
 
@@ -146,15 +169,13 @@ export default class EndpointsService {
   }
 
   updateEndpoint(endpoint: Endpoint) {
+    logInfo(['updateEndpoint'], endpoint);
+
     const endpointIndex = this.endpoints.findIndex(
       ({ url, method }) => endpoint.url === url && endpoint.method === method,
     );
 
     this.endpoints[endpointIndex] = endpoint;
-
-    logInfo(['updateEndpoint'], endpoint);
-
-    this.saveEndpointToFile(endpoint);
   }
 
   changeEndpointResponseStatus({
@@ -175,6 +196,12 @@ export default class EndpointsService {
     }
 
     this.saveEndpointMappings();
+  }
+
+  persistChanges() {
+    logInfo(['persistChanges']);
+    this.saveEndpointMappings();
+    this.endpoints.forEach(this.saveEndpointToFile.bind(this));
   }
 
   private endpoints: Endpoint[] = [];
@@ -209,8 +236,11 @@ export default class EndpointsService {
     };
   }
 
-  private loadHandler(endpoint: Endpoint | EndpointMapping): Handler {
-    const path = this.handlerPath(endpoint);
+  private loadHandler(endpointMapping: EndpointMapping): Handler {
+    const path = this.handlerPath(endpointMapping);
+
+    console.log(['loadHandler'], endpointMapping);
+
     const handlerExists = this.fileService.checkIfExist(path);
 
     if (!handlerExists) {
@@ -221,7 +251,7 @@ export default class EndpointsService {
 
     this.handlersWatcher = {
       ...this.handlersWatcher,
-      [endpoint.id]: watcher,
+      [endpointMapping.id]: watcher,
     };
 
     return require(`${this.fileService.cwd}/${path}`);

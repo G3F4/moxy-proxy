@@ -32,10 +32,10 @@ function ResetAllDataConfirmDialog() {
   const handleClose = () => {
     setOpen(false);
   };
-  const { resetAllData } = useContext(AppStateContext);
+  const { persistEndpoints } = useContext(AppStateContext);
 
   function handleConfirm() {
-    resetAllData();
+    persistEndpoints();
     handleClose();
   }
 
@@ -92,6 +92,7 @@ export default function Header() {
     changeServerStateScenario,
     changeViewMode,
     persistMockedData,
+    persistEndpoints,
   } = useContext(AppStateContext);
   const inputLabel = useRef<HTMLLabelElement>(null);
   const [labelWidth, setLabelWidth] = useState(0);
@@ -107,6 +108,11 @@ export default function Header() {
   function handlePersistMockedData() {
     handleClose();
     persistMockedData();
+  }
+
+  function handlePersistEndpoints() {
+    handleClose();
+    persistEndpoints();
   }
 
   useEffect(() => {
@@ -188,8 +194,8 @@ export default function Header() {
             <MenuItem onClick={handlePersistMockedData}>
               Persist mocked data
             </MenuItem>
-            <MenuItem onClick={handleClose}>
-              <ResetAllDataConfirmDialog />
+            <MenuItem onClick={handlePersistEndpoints}>
+              Persist endpoints changes
             </MenuItem>
           </Menu>
         </Toolbar>

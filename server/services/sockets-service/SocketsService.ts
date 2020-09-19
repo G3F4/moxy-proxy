@@ -102,11 +102,10 @@ export default class SocketsService {
 
   clientMessageHandlers: Record<ClientAction, (payload: any) => void> = {
     persistMockedData: () => {
-      console.log(['clientMessageHandlers.persistMockedData']);
       this.serverStateService.persistChanges();
     },
-    resetAllData(): void {
-      console.log(['clientMessageHandlers.resetAllData']);
+    persistEndpoints: () => {
+      this.endpointsService.persistChanges();
     },
     addEndpoint: (payload: Endpoint) => {
       this.endpointsService.addEndpoint(payload);
