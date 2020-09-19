@@ -18,9 +18,10 @@ export default function QueryParameters({
       <div style={{ display: 'flex' }}>
         {endpoint.parameters.map(({ id, name, type }, index) => (
           <>
-            <Typography style={{ marginTop: 20, marginRight: 5 }} variant="body1">{`${
-              index > 0 ? '& ' : ''
-            }${name} = `}</Typography>
+            <Typography
+              style={{ marginTop: 20, marginRight: 5 }}
+              variant="body1"
+            >{`${index > 0 ? '& ' : ''}${name} = `}</Typography>
             <TextField
               label={name}
               placeholder="Set query parameter value"

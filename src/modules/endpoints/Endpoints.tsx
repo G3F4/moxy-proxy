@@ -62,14 +62,25 @@ export default function Endpoints() {
       }
     });
   }, {} as Record<string, EndpointInterface[]>);
-  const [expandedEndpoint, setExpandedEndpoint] = useState<string | false>(false);
-  const handleChange = (panel: string) => (event: ChangeEvent<{}>, newExpanded: boolean) => {
+  const [expandedEndpoint, setExpandedEndpoint] = useState<string | false>(
+    false,
+  );
+  const handleChange = (panel: string) => (
+    event: ChangeEvent<{}>,
+    newExpanded: boolean,
+  ) => {
     setExpandedEndpoint(newExpanded ? panel : false);
   };
 
   return (
     <div className={classes.root}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <Typography style={{ margin: 8 }} variant="h5">
           Endpoints
         </Typography>
@@ -87,7 +98,12 @@ export default function Endpoints() {
         {Object.entries(groupedEndpoints).map(([url, endpoints]) => {
           if (endpoints.length > 1) {
             return (
-              <ExpansionPanel square expanded={expandedEndpoint === url} key={url} onChange={handleChange(url)}>
+              <ExpansionPanel
+                square
+                expanded={expandedEndpoint === url}
+                key={url}
+                onChange={handleChange(url)}
+              >
                 <ExpansionPanelSummary>
                   <Typography>{`Group URL: ${url}`}</Typography>
                 </ExpansionPanelSummary>
@@ -97,7 +113,12 @@ export default function Endpoints() {
           }
 
           return (
-            <ExpansionPanel square expanded={expandedEndpoint === url} key={url} onChange={handleChange(url)}>
+            <ExpansionPanel
+              square
+              expanded={expandedEndpoint === url}
+              key={url}
+              onChange={handleChange(url)}
+            >
               <ExpansionPanelSummary>
                 <Typography>{`${endpoints[0].method.toUpperCase()}: ${url}`}</Typography>
               </ExpansionPanelSummary>

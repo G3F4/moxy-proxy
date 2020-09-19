@@ -1,6 +1,11 @@
 import { FSWatcher } from 'fs';
 import { ServerState } from '../../../interfaces';
-import { Endpoint, EndpointMapping, HttpStatus, Method } from '../../../sharedTypes';
+import {
+  Endpoint,
+  EndpointMapping,
+  HttpStatus,
+  Method,
+} from '../../../sharedTypes';
 import { DATA_DIR } from '../../config';
 import { logInfo } from '../../utils/logger';
 import { nocache } from '../../utils/nocache';
@@ -34,7 +39,9 @@ export default class EndpointsService {
   }
 
   getHandler({ method, url }: { method: Method; url: string }): Handler {
-    const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, url }));
+    const endpointMapping = this.endpointMappings.find(
+      this.findEndpoint({ method, url }),
+    );
 
     if (endpointMapping) {
       return this.loadHandler(endpointMapping);
@@ -43,9 +50,17 @@ export default class EndpointsService {
     throw new Error(`no handler mapping for url: ${url} | method: ${method}`);
   }
 
-  getUrlParameters({ method, url }: { method: Method; url: string }): Record<string, string> {
+  getUrlParameters({
+    method,
+    url,
+  }: {
+    method: Method;
+    url: string;
+  }): Record<string, string> {
     const urlParts = url.split('/').filter(Boolean);
-    const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, url }));
+    const endpointMapping = this.endpointMappings.find(
+      this.findEndpoint({ method, url }),
+    );
 
     if (endpointMapping) {
       const parts = endpointMapping.url.split('/').filter(Boolean);
@@ -57,7 +72,7 @@ export default class EndpointsService {
           return {
             ...acc,
             [part.slice(1)]: urlParts[partIndex],
-          }
+          };
         }
 
         return acc;
@@ -68,7 +83,9 @@ export default class EndpointsService {
   }
 
   getEndpointResponseStatus({ method, url }: { method: Method; url: string }) {
-    const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, url }));
+    const endpointMapping = this.endpointMappings.find(
+      this.findEndpoint({ method, url }),
+    );
 
     if (endpointMapping) {
       return endpointMapping.responseStatus;
@@ -93,7 +110,10 @@ export default class EndpointsService {
     };
 
     if (!this.checkIfEndpointAlreadyExists(endpointMapping)) {
-      this.endpoints = [...this.endpoints, { ...endpoint, url: endpointMapping.url }];
+      this.endpoints = [
+        ...this.endpoints,
+        { ...endpoint, url: endpointMapping.url },
+      ];
       this.endpointMappings = [...this.endpointMappings, endpointMapping];
 
       this.saveEndpointMappings();
@@ -107,7 +127,9 @@ export default class EndpointsService {
       this.endpointMappings.find(it => it.id === endpointId);
 
     this.endpoints = this.endpoints.filter(({ id }) => id !== endpointId);
-    this.endpointMappings = this.endpointMappings.filter(({ id }) => id !== endpointId);
+    this.endpointMappings = this.endpointMappings.filter(
+      ({ id }) => id !== endpointId,
+    );
 
     this.saveEndpointMappings();
 
@@ -141,7 +163,9 @@ export default class EndpointsService {
     status: HttpStatus | null;
   }) {
     const endpoint = this.endpoints.find(({ id }) => id === endpointId);
-    const endpointMapping = this.endpointMappings.find(({ id }) => id === endpointId);
+    const endpointMapping = this.endpointMappings.find(
+      ({ id }) => id === endpointId,
+    );
 
     if (endpoint && endpointMapping) {
       endpoint.responseStatus = status;
@@ -153,12 +177,14 @@ export default class EndpointsService {
 
   private endpoints: Endpoint[] = [];
   private endpointMappings: EndpointMapping[] = [];
-  private dir: string = `${DATA_DIR}/endpoints`;
-  private endpointMappingsFileName: string = `endpoints.json`;
+  private dir = `${DATA_DIR}/endpoints`;
+  private endpointMappingsFileName = `endpoints.json`;
   private handlersWatcher: Record<string, FSWatcher> = {};
 
   private checkIfEndpointAlreadyExists({ method, url }: EndpointMapping) {
-    const endpointMapping = this.endpointMappings.find(this.findEndpoint({ method, url }));
+    const endpointMapping = this.endpointMappings.find(
+      this.findEndpoint({ method, url }),
+    );
 
     return Boolean(endpointMapping);
   }
@@ -172,12 +198,13 @@ export default class EndpointsService {
       if (urlParts.length === parts.length && endpoint.method === method) {
         return parts.every(
           (part, urlPartIndex) =>
-            part[0] === urlParameterDelimiter || part === urlParts[urlPartIndex],
+            part[0] === urlParameterDelimiter ||
+            part === urlParts[urlPartIndex],
         );
       }
 
       return false;
-    }
+    };
   }
 
   private loadHandler(endpoint: Endpoint | EndpointMapping): Handler {
@@ -210,32 +237,38 @@ export default class EndpointsService {
     this.endpointMappings = this.fileService.readJSON<EndpointMapping[]>(
       this.getEndpointMappingsPath(),
     );
-    this.endpoints = this.endpointMappings.reduce<EndpointMapping[]>((acc, endpointMapping) => {
-      const { id, method, url, responseStatus, parameters } = endpointMapping;
-      const handler = this.loadHandler(endpointMapping);
+    this.endpoints = this.endpointMappings.reduce<EndpointMapping[]>(
+      (acc, endpointMapping) => {
+        const { id, method, url, responseStatus, parameters } = endpointMapping;
+        const handler = this.loadHandler(endpointMapping);
 
-      if (handler) {
-        const endpoint: Endpoint = {
-          id,
-          method,
-          url,
-          responseStatus,
-          parameters,
-          responseCode: handler.requestResponse.toString(),
-          serverStateUpdateCode: handler.serverUpdate.toString(),
-        };
+        if (handler) {
+          const endpoint: Endpoint = {
+            id,
+            method,
+            url,
+            responseStatus,
+            parameters,
+            responseCode: handler.requestResponse.toString(),
+            serverStateUpdateCode: handler.serverUpdate.toString(),
+          };
 
-        return [...acc, endpoint];
-      } else {
-        this.deleteEndpoint(endpointMapping.id);
+          return [...acc, endpoint];
+        } else {
+          this.deleteEndpoint(endpointMapping.id);
 
-        return acc;
-      }
-    }, []) as Endpoint[];
+          return acc;
+        }
+      },
+      [],
+    ) as Endpoint[];
   }
 
   private saveEndpointMappings() {
-    this.fileService.saveJSON(this.getEndpointMappingsPath(), this.endpointMappings);
+    this.fileService.saveJSON(
+      this.getEndpointMappingsPath(),
+      this.endpointMappings,
+    );
   }
 
   private saveEndpointToFile(endpoint: Endpoint) {

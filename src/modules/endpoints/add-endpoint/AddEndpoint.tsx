@@ -2,7 +2,12 @@ import { IconButton, Typography, useMediaQuery } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import { createStyles, makeStyles, Theme, useTheme } from '@material-ui/core/styles';
+import {
+  createStyles,
+  makeStyles,
+  Theme,
+  useTheme,
+} from '@material-ui/core/styles';
 import { Close } from '@material-ui/icons';
 import React, { useContext, useState } from 'react';
 import { Endpoint } from '../../../../sharedTypes';
@@ -48,9 +53,17 @@ export default function AddEndpoint() {
         open={open}
         onClose={handleClose}
       >
-        <DialogTitle disableTypography id="max-width-dialog-title" style={{ minWidth: 500 }}>
+        <DialogTitle
+          disableTypography
+          id="max-width-dialog-title"
+          style={{ minWidth: 500 }}
+        >
           <Typography variant="h6">Add endpoint</Typography>
-          <IconButton aria-label="close" className={classes.closeButton} onClick={handleClose}>
+          <IconButton
+            aria-label="close"
+            className={classes.closeButton}
+            onClick={handleClose}
+          >
             <Close />
           </IconButton>
         </DialogTitle>

@@ -9,7 +9,9 @@ export default function EndpointGroup({
 }: {
   endpoints: EndpointInterface[];
 }) {
-  const [expandedEndpoint, setExpandedEndpoint] = useState<string>(endpoints[0].method);
+  const [expandedEndpoint, setExpandedEndpoint] = useState<string>(
+    endpoints[0].method,
+  );
 
   function handleActiveTabChange(event: ChangeEvent<{}>, newValue: string) {
     setExpandedEndpoint(newValue);
@@ -31,9 +33,7 @@ export default function EndpointGroup({
           <Tab key={method} label={method.toUpperCase()} value={method} />
         ))}
       </Tabs>
-      {endpoint && (
-        <Endpoint endpoint={endpoint} />
-      )}
+      {endpoint && <Endpoint endpoint={endpoint} />}
     </>
   );
 }

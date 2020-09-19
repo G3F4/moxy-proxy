@@ -33,9 +33,7 @@ export default function CodeEditor({
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <Typography variant="body1">{title}</Typography>
         {editorReady && editing ? (
-          <Button onClick={handleSave}>
-            Done
-          </Button>
+          <Button onClick={handleSave}>Done</Button>
         ) : (
           <Button onClick={() => setEditing(true)}>Edit</Button>
         )}
@@ -50,7 +48,9 @@ export default function CodeEditor({
             onSave={setDraft}
           />
         ) : (
-          <SyntaxHighlighter language={language}>{code.trim()}</SyntaxHighlighter>
+          <SyntaxHighlighter language={language}>
+            {code.trim()}
+          </SyntaxHighlighter>
         )}
       </div>
     </div>

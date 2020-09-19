@@ -17,6 +17,7 @@ export interface ServerEvent extends SocketEvent {
 
 export type ClientAction =
   | 'ping'
+  | 'resetAllData'
   | 'addEndpoint'
   | 'updateEndpoint'
   | 'deleteEndpoint'

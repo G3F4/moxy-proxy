@@ -5,8 +5,12 @@ import React, { ChangeEvent, lazy, Suspense, useContext } from 'react';
 import { AppStateContext } from '../App';
 
 const LazyEndpoints = lazy(() => import('../modules/endpoints/Endpoints'));
-const LazyServerState = lazy(() => import('../modules/server-state/ServerState'));
-const LazyStateInterface = lazy(() => import('../modules/state-interface/StateInterface'));
+const LazyServerState = lazy(() =>
+  import('../modules/server-state/ServerState'),
+);
+const LazyStateInterface = lazy(() =>
+  import('../modules/state-interface/StateInterface'),
+);
 
 export type TabKey = 'serverInterface' | 'serverState' | 'endpoints';
 

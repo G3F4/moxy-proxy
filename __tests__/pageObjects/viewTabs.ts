@@ -23,7 +23,8 @@ export default function viewTabs(parent: Selector) {
   return {
     waitForLoaded,
     async clickTab(label: string) {
-      const selector = getContainer().find('button')
+      const selector = getContainer()
+        .find('button')
         .withAttribute('role', 'tab')
         .withText(label);
 

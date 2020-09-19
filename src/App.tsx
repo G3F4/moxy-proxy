@@ -1,6 +1,14 @@
+/* eslint-disable @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars */
 import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { ServerState } from '../interfaces';
-import { ClientEvent, Endpoint, HttpStatus, ServerAction, ServerEvent, ServerStateScenario } from '../sharedTypes';
+import {
+  ClientEvent,
+  Endpoint,
+  HttpStatus,
+  ServerAction,
+  ServerEvent,
+  ServerStateScenario,
+} from '../sharedTypes';
 import './App.css';
 import useLocalstorage from './common/hooks/useLocalstorage';
 import Layout from './layouts/Layout';
@@ -34,6 +42,7 @@ export const AppStateContext = createContext({
   serverStateInterface: '',
   serverStateScenarios: [] as ServerStateScenario[],
 
+  resetAllData() {},
   changeViewMode(_viewMode: ViewMode) {},
   changeActiveTab(_tabKey: TabKey) {},
   addServerStateScenario(_serverStateScenario: ServerStateScenario) {},
@@ -41,6 +50,7 @@ export const AppStateContext = createContext({
   updateServerState(_serverState: ServerState) {},
   resetServerState() {},
   deleteStateScenario() {},
+
   addEndpoint(_endpoint: Endpoint) {},
   deleteEndpoint(_endpointId: string) {},
   changeEndpointResponseStatus(
@@ -93,28 +103,31 @@ function App() {
   );
   const [serverStateInterface, setServerStateInterface] = useState('');
   const [endpoints, setEndpoints] = useState(initialEndpoint);
-  const messageHandler = useCallback((event: ServerEvent) => {
-    const { action, payload } = event;
-    const handlers: Record<ServerAction, (payload: any) => void> = {
-      updateEndpoints(payload: Endpoint[]) {
-        setEndpoints(payload);
-      },
-      updateServerState(payload: ServerState) {
-        setServerState(payload);
-      },
-      updateServerStateInterface(payload: string) {
-        setServerStateInterface(payload);
-      },
-      updateActiveStateScenarioId(payload: string) {
-        setActiveServerStateScenarioId(payload);
-      },
-      updateServerStateScenarios(payload: ServerStateScenario[]) {
-        setServerStateScenarios(payload);
-      },
-    };
+  const messageHandler = useCallback(
+    (event: ServerEvent) => {
+      const { action, payload } = event;
+      const handlers: Record<ServerAction, (payload: any) => void> = {
+        updateEndpoints(payload: Endpoint[]) {
+          setEndpoints(payload);
+        },
+        updateServerState(payload: ServerState) {
+          setServerState(payload);
+        },
+        updateServerStateInterface(payload: string) {
+          setServerStateInterface(payload);
+        },
+        updateActiveStateScenarioId(payload: string) {
+          setActiveServerStateScenarioId(payload);
+        },
+        updateServerStateScenarios(payload: ServerStateScenario[]) {
+          setServerStateScenarios(payload);
+        },
+      };
 
-    handlers[action](payload);
-  }, [setActiveServerStateScenarioId]);
+      handlers[action](payload);
+    },
+    [setActiveServerStateScenarioId],
+  );
 
   useEffect(() => {
     socket.onopen = event => {
@@ -272,6 +285,12 @@ function App() {
     });
   }
 
+  function handleResetAllData() {
+    sendEvent({
+      action: 'resetAllData',
+    });
+  }
+
   const contextValue = {
     activeTab: activeTab as TabKey,
     activeServerStateScenarioId,
@@ -280,6 +299,7 @@ function App() {
     serverStateInterface,
     serverStateScenarios,
     viewMode,
+    resetAllData: handleResetAllData,
     changeEndpointResponseStatus: handleChangeEndpointResponseStatus,
     addServerStateScenario: handleAddServerStateScenario,
     deleteStateScenario: handleDeleteStateScenario,

@@ -11,7 +11,11 @@ export default function RequestMethodStep({
   onMethodChange: (value: Method) => void;
 }) {
   return (
-    <ButtonGroup aria-label="text primary button group" color="primary" variant="text">
+    <ButtonGroup
+      aria-label="text primary button group"
+      color="primary"
+      variant="text"
+    >
       <Button
         variant={method === 'get' ? 'outlined' : undefined}
         onClick={() => onMethodChange('get')}

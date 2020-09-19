@@ -13,7 +13,10 @@ export default function StateInterface() {
         Interface
       </Typography>
       <Paper>
-        <SyntaxHighlighter customStyle={{ width: '100%' }} language="typescript">
+        <SyntaxHighlighter
+          customStyle={{ width: '100%' }}
+          language="typescript"
+        >
           {serverStateInterface.trim()}
         </SyntaxHighlighter>
       </Paper>

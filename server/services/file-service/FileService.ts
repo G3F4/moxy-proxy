@@ -2,6 +2,7 @@ import { existsSync, promises, readFileSync, writeFileSync } from 'fs';
 import createFolderIfNotExists from '../../utils/createFolderIfNotExists';
 import { logError, logInfo } from '../../utils/logger';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const rimraf = require('rimraf');
 
 function isDirEmpty(dirname: string) {
@@ -9,11 +10,7 @@ function isDirEmpty(dirname: string) {
 }
 
 export default class FileService {
-
-  constructor(
-    readonly cwd: string,
-  ) {
-  }
+  constructor(readonly cwd: string) {}
 
   checkIfExist(path: string): boolean {
     return existsSync(`${this.cwd}/${path}`);
@@ -42,7 +39,7 @@ export default class FileService {
             logInfo(['folder deleted'], folder);
           });
         }
-      }, 1000)
+      }, 1000);
     });
   }
 
@@ -51,7 +48,11 @@ export default class FileService {
   }
 
   saveJSON(path: string, data: unknown): void {
-    writeFileSync(`${this.cwd}/${path}`, JSON.stringify(data, null, 2), 'utf-8');
+    writeFileSync(
+      `${this.cwd}/${path}`,
+      JSON.stringify(data, null, 2),
+      'utf-8',
+    );
   }
 
   readText(path: string): string {

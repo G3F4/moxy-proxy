@@ -4,5 +4,4 @@ export interface ServerState {
   modified: boolean;
 }
 export interface Data {
-  test?: (string)[] | null;
 }

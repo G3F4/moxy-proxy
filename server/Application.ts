@@ -19,12 +19,13 @@ export default class Application {
     private readonly fileService: FileService,
     private readonly apiService: ApiService,
   ) {
-
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     server.register(require('fastify-cors'), {
       origin: true,
       credentials: true,
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     server.register(require('fastify-websocket'), {
       handle: (conn: SocketStream) => {
         conn.pipe(conn); // creates an echo server
@@ -32,29 +33,33 @@ export default class Application {
       options: { maxPayload: 1048576 },
     });
 
-    server.addContentTypeParser(
-      '*',
-      { parseAs: 'string' },
-      function(req, body, done) {
-        const contentType = req.headers['content-type'];
+    server.addContentTypeParser('*', { parseAs: 'string' }, function(
+      req,
+      body,
+      done,
+    ) {
+      const contentType = req.headers['content-type'];
 
-        if (contentType && contentType.startsWith('application')) {
-          try {
-            done(null, JSON.parse(body));
-          } catch (err) {
-            err.statusCode = 400;
-            done(err, undefined);
-          }
+      if (contentType && contentType.startsWith('application')) {
+        try {
+          done(null, JSON.parse(body));
+        } catch (err) {
+          err.statusCode = 400;
+          done(err, undefined);
         }
+      }
 
-        return body;
-      },
-    );
+      return body;
+    });
   }
 
   start() {
     this.registerRoutes();
-    this.server.listen(parseInt(PORT), '0.0.0.0', this.listenHandler.bind(this));
+    this.server.listen(
+      parseInt(PORT),
+      '0.0.0.0',
+      this.listenHandler.bind(this),
+    );
   }
 
   private registerRoutes() {
@@ -65,17 +70,21 @@ export default class Application {
   private registerSocketsRoute() {
     const socketHash = 'superHash123';
 
-    this.server.get(`/${socketHash}`, { websocket: true }, (connection, req) => {
-      connection.socket.id = Date.now();
-      this.socketsService.handleSocketConnected(connection.socket);
+    this.server.get(
+      `/${socketHash}`,
+      { websocket: true },
+      (connection, req) => {
+        connection.socket.id = Date.now();
+        this.socketsService.handleSocketConnected(connection.socket);
 
-      connection.socket.on('message', (message: string) => {
-        this.socketsService.handleClientMessage(message);
-      });
-      connection.socket.on('close', () => {
-        this.socketsService.deleteSocket(connection.socket);
-      });
-    });
+        connection.socket.on('message', (message: string) => {
+          this.socketsService.handleClientMessage(message);
+        });
+        connection.socket.on('close', () => {
+          this.socketsService.deleteSocket(connection.socket);
+        });
+      },
+    );
   }
 
   private registerApiRoute() {
@@ -86,9 +95,13 @@ export default class Application {
     });
   }
 
-  private rootController(request: FastifyRequest, reply: FastifyReply<ServerResponse>) {
+  private rootController(
+    request: FastifyRequest,
+    reply: FastifyReply<ServerResponse>,
+  ) {
     const IsFileRegex = /\.[0-9a-z]{1,5}$/i;
-    const fileRequest = request.raw.url === '/' || IsFileRegex.test(request.raw.url!);
+    const fileRequest =
+      request.raw.url === '/' || IsFileRegex.test(request.raw.url!);
 
     if (fileRequest) {
       this.staticsController(request, reply);
@@ -97,7 +110,10 @@ export default class Application {
     }
   }
 
-  private apiController(request: FastifyRequest, reply: FastifyReply<ServerResponse>) {
+  private apiController(
+    request: FastifyRequest,
+    reply: FastifyReply<ServerResponse>,
+  ) {
     const method = request.raw.method!.toLowerCase() as Method;
     const { pathname, query } = original(request.raw)!;
     let parameters = {};
@@ -107,7 +123,11 @@ export default class Application {
     }
 
     try {
-      const { contentType, requestResponse, status } = this.apiService.callHandler({
+      const {
+        contentType,
+        requestResponse,
+        status,
+      } = this.apiService.callHandler({
         url: pathname!,
         method,
         parameters,
@@ -119,13 +139,14 @@ export default class Application {
         .code(status)
         .send(requestResponse);
     } catch (e) {
-      reply
-        .code(404)
-        .send(e.toString());
+      reply.code(404).send(e.toString());
     }
   }
 
-  private staticsController(request: FastifyRequest, reply: FastifyReply<ServerResponse>) {
+  private staticsController(
+    request: FastifyRequest,
+    reply: FastifyReply<ServerResponse>,
+  ) {
     const contentTypeMap: Record<string, string> = {
       html: 'text/html',
       js: 'text/javascript',

@@ -15,5 +15,5 @@ describe('Application', () => {
       .expect('Content-Type', 'text/html');
 
     expect(response).toBeTruthy();
-  })
+  });
 });

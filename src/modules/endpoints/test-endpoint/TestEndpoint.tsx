@@ -4,7 +4,12 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import { createStyles, makeStyles, Theme, useTheme } from '@material-ui/core/styles';
+import {
+  createStyles,
+  makeStyles,
+  Theme,
+  useTheme,
+} from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import { Close } from '@material-ui/icons';
 import React, { useContext, useState } from 'react';
@@ -47,7 +52,9 @@ function getUrlParameters(url: string): Record<string, string> {
   }, {} as Record<string, string>);
 }
 
-function initialQueryParamsValues(queryParams: EndpointParameter[]): Record<string, string> {
+function initialQueryParamsValues(
+  queryParams: EndpointParameter[],
+): Record<string, string> {
   return queryParams.reduce(
     (acc, queryParam) => ({
       ...acc,
@@ -66,8 +73,12 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   const classes = useStyles();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
   const { testEndpoint } = useContext(AppStateContext);
-  const [urlParameters, setUrlParameters] = useState(getUrlParameters(endpoint.url));
-  const [queryParams, setQueryParams] = useState(initialQueryParamsValues(endpoint.parameters));
+  const [urlParameters, setUrlParameters] = useState(
+    getUrlParameters(endpoint.url),
+  );
+  const [queryParams, setQueryParams] = useState(
+    initialQueryParamsValues(endpoint.parameters),
+  );
 
   function handleClickOpen() {
     setOpen(true);
@@ -78,12 +89,20 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
   }
 
   function parseQueryParams(params: typeof queryParams) {
-    return Object.entries(params).reduce((acc, [name, value]) => `${acc}&${name}=${value}`, '');
+    return Object.entries(params).reduce(
+      (acc, [name, value]) => `${acc}&${name}=${value}`,
+      '',
+    );
   }
 
   async function handleTest() {
     const queryString = parseQueryParams(queryParams);
-    const response = await testEndpoint(endpoint, urlParameters, queryString, requestBody);
+    const response = await testEndpoint(
+      endpoint,
+      urlParameters,
+      queryString,
+      requestBody,
+    );
 
     if (response.status < 300) {
       try {
@@ -107,12 +126,20 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
         open={open}
         onClose={handleClose}
       >
-        <DialogTitle disableTypography id="max-width-dialog-title" style={{ minWidth: 500 }}>
+        <DialogTitle
+          disableTypography
+          id="max-width-dialog-title"
+          style={{ minWidth: 500 }}
+        >
           <Typography
             style={{ marginRight: 40 }}
             variant="h6"
           >{`Test endpoint ${endpoint.method}:${endpoint.url}`}</Typography>
-          <IconButton aria-label="close" className={classes.closeButton} onClick={handleClose}>
+          <IconButton
+            aria-label="close"
+            className={classes.closeButton}
+            onClick={handleClose}
+          >
             <Close />
           </IconButton>
         </DialogTitle>
@@ -143,7 +170,9 @@ export default function TestEndpoint({ endpoint }: { endpoint: Endpoint }) {
               onSave={setRequestBody}
             />
           ) : (
-            <Button onClick={() => setShowRequestBody(true)}>Add request body</Button>
+            <Button onClick={() => setShowRequestBody(true)}>
+              Add request body
+            </Button>
           )}
         </DialogContent>
         <DialogContent>

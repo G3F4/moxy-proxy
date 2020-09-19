@@ -14,7 +14,7 @@ const execPromised = util.promisify(exec);
 export default class ServerStateService {
   private activeServerStateScenarioId = 'default';
   private serverState: ServerState;
-  private serverStateInterface: string = '';
+  private serverStateInterface = '';
   private serverStateScenarioMappings: ServerStateScenarioMapping[];
   private serverStateInterfaceFileName = 'interfaces.ts';
   private initialServerStatePath = `${DATA_DIR}/serverState/${this.activeServerStateScenarioId}.json`;
@@ -62,7 +62,9 @@ export default class ServerStateService {
     this.serverState = state;
 
     this.saveServerStateToFile(serverStateScenarioId, state);
-    this.makeTypesFromInitialServerState().then(() => {});
+    this.makeTypesFromInitialServerState().then(() => {
+      return undefined;
+    });
   }
 
   private updateMappings(mappings: ServerStateScenarioMapping[]) {
@@ -95,7 +97,10 @@ export default class ServerStateService {
     if (mapping) {
       this.activeServerStateScenarioId = scenarioId;
 
-      console.log(['`${DATA_DIR}/${mapping.path}`'], `${DATA_DIR}/${mapping.path}`)
+      console.log(
+        ['`${DATA_DIR}/${mapping.path}`'],
+        `${DATA_DIR}/${mapping.path}`,
+      );
 
       const state = this.fileService.readJSON<ServerState>(
         `${DATA_DIR}/${mapping.path}`,
@@ -179,7 +184,10 @@ export default class ServerStateService {
       scenario,
     );
 
-    this.fileService.saveJSON(`${DATA_DIR}/${serverStateScenarioDataPath}`, scenario.state);
+    this.fileService.saveJSON(
+      `${DATA_DIR}/${serverStateScenarioDataPath}`,
+      scenario.state,
+    );
   }
 
   private createServerStateScenarioDataPath(scenario: ServerStateScenario) {

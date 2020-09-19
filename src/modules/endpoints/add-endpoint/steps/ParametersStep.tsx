@@ -27,7 +27,11 @@ export default function ParametersStep({
   addParameter(parameter: EndpointParameter): void;
 }) {
   function handleAddParameter() {
-    addParameter({ id: (parameters.length + 1).toString(), name: '', type: '' });
+    addParameter({
+      id: (parameters.length + 1).toString(),
+      name: '',
+      type: '',
+    });
   }
 
   return (
@@ -43,7 +47,9 @@ export default function ParametersStep({
             <TextField
               label="Parameter name"
               value={name}
-              onChange={event => onParametersChange({ name: event.target.value, type, id })}
+              onChange={event =>
+                onParametersChange({ name: event.target.value, type, id })
+              }
             />
           </FormControl>
           <FormControl
@@ -58,7 +64,11 @@ export default function ParametersStep({
               labelId="parameter-typ-label"
               value={type}
               onChange={event =>
-                onParametersChange({ id, type: event.target.value as string, name })
+                onParametersChange({
+                  id,
+                  type: event.target.value as string,
+                  name,
+                })
               }
             >
               {parametersTypes.map(({ text, value }) => (

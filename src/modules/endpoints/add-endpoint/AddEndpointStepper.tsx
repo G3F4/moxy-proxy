@@ -14,7 +14,9 @@ import { Endpoint, EndpointParameter } from '../../../../sharedTypes';
 import ParametersStep from './steps/ParametersStep';
 import RequestMethodStep from './steps/RequestMethodStep';
 import ResponseStep, { initialResponseCode } from './steps/ResponseStep';
-import UpdateServerStateStep, { initialServerStateUpdateCode } from './steps/UpdateServerStateStep';
+import UpdateServerStateStep, {
+  initialServerStateUpdateCode,
+} from './steps/UpdateServerStateStep';
 import UrlPatternStep from './steps/UrlPatternStep';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -99,7 +101,9 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
                 parameter: EndpointParameter,
               ) {
                 return produce(parameters, draft => {
-                  const parameterIndex = parameters.findIndex(({ id }) => id === parameter.id);
+                  const parameterIndex = parameters.findIndex(
+                    ({ id }) => id === parameter.id,
+                  );
 
                   if (!(parameterIndex < 0)) {
                     draft[parameterIndex] = parameter;
@@ -107,7 +111,10 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
                 });
               }
 
-              const parameters = updateParameters(endpoint.parameters, parameter);
+              const parameters = updateParameters(
+                endpoint.parameters,
+                parameter,
+              );
 
               setEndpoint(endpoint => ({
                 ...endpoint,
@@ -200,7 +207,11 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
               <Button className={classes.button} onClick={handleBack}>
                 Back
               </Button>
-              <Button className={classes.button} color="primary" onClick={handleSubmit}>
+              <Button
+                className={classes.button}
+                color="primary"
+                onClick={handleSubmit}
+              >
                 Submit
               </Button>
             </Paper>

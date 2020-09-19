@@ -293,9 +293,7 @@ async function urlSection(wizardContainer: Selector) {
 }
 
 export default async function getAddEndpointView(parent: Selector) {
-  const addEndpointButton = parent
-    .find('button')
-    .withText('ADD ENDPOINT');
+  const addEndpointButton = parent.find('button').withText('ADD ENDPOINT');
 
   await userClick(addEndpointButton);
 

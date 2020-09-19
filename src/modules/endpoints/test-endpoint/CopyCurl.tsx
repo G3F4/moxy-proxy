@@ -36,7 +36,12 @@ export default function CopyCurl({
       <Button onClick={handleClick}>Copy CURL to clipboard</Button>
       <Snackbar
         action={
-          <IconButton aria-label="close" color="inherit" size="small" onClick={handleClose}>
+          <IconButton
+            aria-label="close"
+            color="inherit"
+            size="small"
+            onClick={handleClose}
+          >
             <CloseIcon fontSize="small" />
           </IconButton>
         }

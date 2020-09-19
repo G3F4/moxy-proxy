@@ -11,11 +11,13 @@ import {
 import { logError } from '../../utils/logger';
 import EndpointsService from '../endpoints-service/EndpointsService';
 import ServerStateService from '../server-state-service/ServerStateService';
+import FileService from '../file-service/FileService';
 
 export default class SocketsService {
   sockets: WebSocket[] = [];
 
   constructor(
+    readonly fileService: FileService,
     readonly serverStateService: ServerStateService,
     readonly endpointsService: EndpointsService,
   ) {}
@@ -56,7 +58,7 @@ export default class SocketsService {
     this.broadcastEvent({
       action: 'updateServerStateInterface',
       payload: this.serverStateService.getServerStateInterface(),
-    })
+    });
   }
 
   addSocket(socket: WebSocket) {
@@ -90,13 +92,18 @@ export default class SocketsService {
     });
   }
 
-  parseClientMessage(message: string): { action: ClientAction; payload: unknown } {
+  parseClientMessage(
+    message: string,
+  ): { action: ClientAction; payload: unknown } {
     const { action, payload } = JSON.parse(message);
 
     return { action, payload };
   }
 
   clientMessageHandlers: Record<ClientAction, (payload: any) => void> = {
+    resetAllData(): void {
+      console.log(['clientMessageHandlers.resetAllData']);
+    },
     addEndpoint: (payload: Endpoint) => {
       this.endpointsService.addEndpoint(payload);
       this.broadcastEvent({
@@ -118,7 +125,10 @@ export default class SocketsService {
         payload: this.endpointsService.getEndpoints(),
       });
     },
-    changeEndpointResponseStatus: (payload: { endpointId: string; status: HttpStatus | null }) => {
+    changeEndpointResponseStatus: (payload: {
+      endpointId: string;
+      status: HttpStatus | null;
+    }) => {
       this.endpointsService.changeEndpointResponseStatus(payload);
       this.broadcastEvent({
         action: 'updateEndpoints',
@@ -145,16 +155,17 @@ export default class SocketsService {
       });
     },
     changeServerStateScenario: (payload: string) => {
-      console.log(['changeServerStateScenario'], payload)
+      console.log(['changeServerStateScenario'], payload);
       this.serverStateService.changeServerStateScenario(payload);
       this.broadcastEvent({
         action: 'updateServerState',
         payload: this.serverStateService.getServerState(),
       });
     },
-    clientUpdatedServer: (
-      payload: { state: ServerState; serverStateScenarioId: string },
-    ) => {
+    clientUpdatedServer: (payload: {
+      state: ServerState;
+      serverStateScenarioId: string;
+    }) => {
       this.serverStateService.updateServerState(payload);
       this.broadcastEvent({
         action: 'updateServerState',

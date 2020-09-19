@@ -12,14 +12,17 @@ export default function useLocalstorage<T>(key: string, initialValue: T) {
       return initialValue;
     }
   });
-  const setValue = useCallback((value: T) => {
-    try {
-      window.localStorage.setItem(key, JSON.stringify(value));
-      setLocalValue(value);
-    } catch (error) {
-      console.error(error);
-    }
-  }, [key]);
+  const setValue = useCallback(
+    (value: T) => {
+      try {
+        window.localStorage.setItem(key, JSON.stringify(value));
+        setLocalValue(value);
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    [key],
+  );
 
   return [storedValue, setValue];
 }

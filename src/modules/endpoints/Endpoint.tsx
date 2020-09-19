@@ -6,16 +6,22 @@ import Typography from '@material-ui/core/Typography';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import React, { useContext } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { Endpoint as EndpointInterface, HttpStatus, HttpStatusOption } from '../../../sharedTypes';
+import {
+  Endpoint as EndpointInterface,
+  HttpStatus,
+  HttpStatusOption,
+} from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
 import { httpStatuses } from '../../common/httpStatuses';
 import TestEndpoint from './test-endpoint/TestEndpoint';
 import EndpointCode from './EndpointCode';
 
-const httpStatusOptions: HttpStatusOption[] = Object.keys(httpStatuses).map(key => ({
-  value: (key as unknown) as HttpStatus,
-  text: httpStatuses[(key as unknown) as HttpStatus],
-}));
+const httpStatusOptions: HttpStatusOption[] = Object.keys(httpStatuses).map(
+  key => ({
+    value: (key as unknown) as HttpStatus,
+    text: httpStatuses[(key as unknown) as HttpStatus],
+  }),
+);
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     heading: {
@@ -25,16 +31,26 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export default function Endpoint({ endpoint }: { endpoint: EndpointInterface }) {
+export default function Endpoint({
+  endpoint,
+}: {
+  endpoint: EndpointInterface;
+}) {
   const classes = useStyles();
-  const { updateEndpoint, deleteEndpoint, changeEndpointResponseStatus } = useContext(
-    AppStateContext,
-  );
+  const {
+    updateEndpoint,
+    deleteEndpoint,
+    changeEndpointResponseStatus,
+  } = useContext(AppStateContext);
 
   return (
     <>
       <ExpansionPanelDetails
-        style={{ display: 'flex', justifyContent: 'space-between', alignContent: 'center' }}
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignContent: 'center',
+        }}
       >
         <div style={{ display: 'flex', alignItems: 'center', marginTop: 12 }}>
           <Button onClick={() => deleteEndpoint(endpoint.id)}>Delete</Button>
@@ -55,7 +71,9 @@ export default function Endpoint({ endpoint }: { endpoint: EndpointInterface }) 
             style={{ width: 300 }}
             value={
               {
-                text: endpoint.responseStatus ? httpStatuses[endpoint.responseStatus] : 'default',
+                text: endpoint.responseStatus
+                  ? httpStatuses[endpoint.responseStatus]
+                  : 'default',
                 value: endpoint.responseStatus || 200,
               } as any
             }
@@ -92,15 +110,23 @@ export default function Endpoint({ endpoint }: { endpoint: EndpointInterface }) 
           });
         }}
       />
-      <ExpansionPanelDetails style={{ display: 'flex', flexDirection: 'column' }}>
+      <ExpansionPanelDetails
+        style={{ display: 'flex', flexDirection: 'column' }}
+      >
         {endpoint.parameters.length > 0 && (
           <>
-            <Typography className={classes.heading} style={{ marginBottom: 16 }}>
+            <Typography
+              className={classes.heading}
+              style={{ marginBottom: 16 }}
+            >
               Parameters
             </Typography>
             <SyntaxHighlighter language="json">
               {JSON.stringify(
-                endpoint.parameters.reduce((acc, { name, type }) => ({ ...acc, [name]: type }), {}),
+                endpoint.parameters.reduce(
+                  (acc, { name, type }) => ({ ...acc, [name]: type }),
+                  {},
+                ),
                 null,
                 2,
               )}

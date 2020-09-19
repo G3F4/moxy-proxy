@@ -5,7 +5,12 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import { createStyles, makeStyles, Theme, useTheme } from '@material-ui/core/styles';
+import {
+  createStyles,
+  makeStyles,
+  Theme,
+  useTheme,
+} from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import { Close } from '@material-ui/icons';
 import React, { ChangeEvent, useContext, useState } from 'react';
@@ -70,9 +75,17 @@ export default function AddServerScenario() {
         open={open}
         onClose={handleClose}
       >
-        <DialogTitle disableTypography id="max-width-dialog-title" style={{ minWidth: 500 }}>
+        <DialogTitle
+          disableTypography
+          id="max-width-dialog-title"
+          style={{ minWidth: 500 }}
+        >
           <Typography variant="h6">Add server scenario</Typography>
-          <IconButton aria-label="close" className={classes.closeButton} onClick={handleClose}>
+          <IconButton
+            aria-label="close"
+            className={classes.closeButton}
+            onClick={handleClose}
+          >
             <Close />
           </IconButton>
         </DialogTitle>
@@ -88,7 +101,9 @@ export default function AddServerScenario() {
           />
         </DialogContent>
         <DialogContent>
-          <DialogContentText>Modify copy of state before adding</DialogContentText>
+          <DialogContentText>
+            Modify copy of state before adding
+          </DialogContentText>
           <Editor autoHeight code={code} language="json" onSave={handleSave} />
         </DialogContent>
         <DialogActions>

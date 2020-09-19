@@ -10,10 +10,17 @@ import AddServerScenario from './add-server-scenario/AddServerScenario';
 import ServerStateMenu from './ServerStateMenu';
 
 export default function ServerState() {
-  const { serverState, resetServerState, updateServerState, deleteStateScenario } = useContext(AppStateContext);
+  const {
+    serverState,
+    resetServerState,
+    updateServerState,
+    deleteStateScenario,
+  } = useContext(AppStateContext);
   const [editing, setEditing] = useState(false);
   const [invalidJson, setInvalidJson] = useState(false);
-  const [draftCode, setDraftCode] = useState(JSON.stringify(serverState, null, 2));
+  const [draftCode, setDraftCode] = useState(
+    JSON.stringify(serverState, null, 2),
+  );
 
   function handleStartEditing() {
     setEditing(true);
@@ -54,13 +61,21 @@ export default function ServerState() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <Typography style={{ margin: 8 }} variant="h5">
           Server state
         </Typography>
         <div style={{ display: 'flex' }}>
           {editing ? (
-            <Button disabled={invalidJson} onClick={handleDoneEditing}>Done</Button>
+            <Button disabled={invalidJson} onClick={handleDoneEditing}>
+              Done
+            </Button>
           ) : (
             <Button onClick={handleStartEditing}>Edit</Button>
           )}
@@ -69,7 +84,10 @@ export default function ServerState() {
             actions={[
               { label: 'Reset server', onClick: resetServerState },
               { label: 'Copy to clipboard', onClick: handleCopyToClipboard },
-              { label: 'Update with clipboard', onClick: handleUpdateWithClipboard },
+              {
+                label: 'Update with clipboard',
+                onClick: handleUpdateWithClipboard,
+              },
               { label: 'Delete scenario', onClick: handleDeleteScenario },
             ]}
           />

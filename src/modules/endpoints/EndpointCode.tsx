@@ -11,12 +11,16 @@ export default function EndpointCode({
   responseCode: string;
   serverStateUpdateCode: string;
   onResponseCodeSave(_code: string): void;
-  onServerStateUpdateCodeSave(_code: string): void ;
+  onServerStateUpdateCodeSave(_code: string): void;
 }) {
   return (
     <>
       <ExpansionPanelDetails>
-        <CodeEditor code={responseCode} title="Response" onSave={onResponseCodeSave} />
+        <CodeEditor
+          code={responseCode}
+          title="Response"
+          onSave={onResponseCodeSave}
+        />
       </ExpansionPanelDetails>
       <ExpansionPanelDetails>
         <CodeEditor

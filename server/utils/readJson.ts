@@ -1,10 +1,10 @@
 export function readJson(res: any, cb: (json: unknown) => void, err: any) {
   let buffer: Buffer;
-  
+
   res.onData((ab: ArrayBuffer, isLast: boolean) => {
     try {
-      let chunk = Buffer.from(ab);
-      
+      const chunk = Buffer.from(ab);
+
       if (isLast) {
         if (buffer) {
           cb(JSON.parse(Buffer.concat([buffer, chunk]).toString()));
@@ -22,7 +22,7 @@ export function readJson(res: any, cb: (json: unknown) => void, err: any) {
       cb({});
     }
   });
-  
+
   res.onAborted(err);
 }
 
