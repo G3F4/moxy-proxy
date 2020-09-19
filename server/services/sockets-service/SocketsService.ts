@@ -1,84 +1,38 @@
 //@ts-ignore
 import * as WebSocket from 'ws';
-import { ServerState } from '../../../interfaces';
-import {
-  ClientAction,
-  Endpoint,
-  HttpStatus,
-  ServerEvent,
-  ServerStateScenario,
-} from '../../../sharedTypes';
+import { ClientAction, ServerEvent } from '../../../sharedTypes';
 import { logError } from '../../utils/logger';
-import EndpointsService from '../endpoints-service/EndpointsService';
-import ServerStateService from '../server-state-service/ServerStateService';
-import FileService from '../file-service/FileService';
 
 export default class SocketsService {
   sockets: WebSocket[] = [];
+  clientMessageHandlers: Record<string, Function> = {};
 
-  constructor(
-    readonly fileService: FileService,
-    readonly serverStateService: ServerStateService,
-    readonly endpointsService: EndpointsService,
-  ) {}
+  private generateSocketId() {
+    return Date.now();
+  }
 
-  handleSocketConnected(socket: WebSocket) {
+  connect(socket: WebSocket, onDisconnect: (socketId: string) => void): string {
     this.addSocket(socket);
+    socket.id = this.generateSocketId();
+    socket.on('message', (message: string) => {
+      this.handleClientMessage(message);
+    });
+    socket.on('close', () => {
+      this.deleteSocket(socket);
+      onDisconnect(socket.id);
+    });
 
-    this.sendEvent(socket, {
-      action: 'updateServerState',
-      payload: this.serverStateService.getServerState(),
-    });
-    this.sendEvent(socket, {
-      action: 'updateServerStateInterface',
-      payload: this.serverStateService.getServerStateInterface(),
-    });
-    this.sendEvent(socket, {
-      action: 'updateServerStateScenarios',
-      payload: this.serverStateService.getServerStateScenarioMappings(),
-    });
-    this.sendEvent(socket, {
-      action: 'updateActiveStateScenarioId',
-      payload: this.serverStateService.getActiveServerStateScenarioId(),
-    });
-    this.sendEvent(socket, {
-      action: 'updateEndpoints',
-      payload: this.endpointsService.getEndpoints(),
-    });
+    return socket.id;
   }
 
-  handleClientMessage(message: string) {
-    const { action, payload } = this.parseClientMessage(message);
-    const handler = this.clientMessageHandlers[action];
-
-    handler(payload);
+  registerMessageHandlers(handlers: Record<string, Function>) {
+    this.clientMessageHandlers = handlers;
   }
 
-  sendServerStateInterface() {
-    this.broadcastEvent({
-      action: 'updateServerStateInterface',
-      payload: this.serverStateService.getServerStateInterface(),
-    });
-  }
+  sendEventToSocket(socketId: string, event: ServerEvent) {
+    const socket = this.getSocket(socketId);
 
-  addSocket(socket: WebSocket) {
-    this.sockets.push(socket);
-  }
-
-  deleteSocket(socket: WebSocket) {
-    this.sockets = this.sockets.filter(({ id }) => id === socket.id);
-  }
-
-  sendEvent(socket: WebSocket, event: ServerEvent): void {
-    try {
-      socket.send(JSON.stringify(event));
-    } catch (e) {
-      logError(e);
-    }
-  }
-
-  clearSocket(socketId: string) {
-    this.sockets.filter(({ id }) => id === socketId);
+    this.sendEvent(socket, event);
   }
 
   broadcastEvent(event: ServerEvent) {
@@ -92,97 +46,42 @@ export default class SocketsService {
     });
   }
 
-  parseClientMessage(
+  private sendEvent(socket: WebSocket, event: ServerEvent): void {
+    try {
+      socket.send(JSON.stringify(event));
+    } catch (e) {
+      logError(e);
+    }
+  }
+
+  private handleClientMessage(message: string) {
+    const { action, payload } = this.parseClientMessage(message);
+    const handler = this.clientMessageHandlers[action];
+
+    handler(payload);
+  }
+
+  private addSocket(socket: WebSocket) {
+    this.sockets.push(socket);
+  }
+
+  private deleteSocket(socket: WebSocket) {
+    this.sockets = this.sockets.filter(({ id }) => id === socket.id);
+  }
+
+  private clearSocket(socketId: string) {
+    this.sockets.filter(({ id }) => id === socketId);
+  }
+
+  private getSocket(socketId: string) {
+    return this.sockets.find(({ id }) => id === socketId);
+  }
+
+  private parseClientMessage(
     message: string,
   ): { action: ClientAction; payload: unknown } {
     const { action, payload } = JSON.parse(message);
 
     return { action, payload };
   }
-
-  clientMessageHandlers: Record<ClientAction, (payload: any) => void> = {
-    persistMockedData: () => {
-      this.serverStateService.persistChanges();
-    },
-    persistEndpoints: () => {
-      this.endpointsService.persistChanges();
-    },
-    addEndpoint: (payload: Endpoint) => {
-      this.endpointsService.addEndpoint(payload);
-      this.broadcastEvent({
-        action: 'updateEndpoints',
-        payload: this.endpointsService.getEndpoints(),
-      });
-    },
-    updateEndpoint: (payload: Endpoint) => {
-      this.endpointsService.updateEndpoint(payload);
-      this.broadcastEvent({
-        action: 'updateEndpoints',
-        payload: this.endpointsService.getEndpoints(),
-      });
-    },
-    deleteEndpoint: (payload: string) => {
-      this.endpointsService.deleteEndpoint(payload);
-      this.broadcastEvent({
-        action: 'updateEndpoints',
-        payload: this.endpointsService.getEndpoints(),
-      });
-    },
-    changeEndpointResponseStatus: (payload: {
-      endpointId: string;
-      status: HttpStatus | null;
-    }) => {
-      this.endpointsService.changeEndpointResponseStatus(payload);
-      this.broadcastEvent({
-        action: 'updateEndpoints',
-        payload: this.endpointsService.getEndpoints(),
-      });
-    },
-
-    addServerStateScenario: (payload: ServerStateScenario) => {
-      this.serverStateService.addServerStateScenario(payload);
-      this.broadcastEvent({
-        action: 'updateServerStateScenarios',
-        payload: this.serverStateService.getServerStateScenarioMappings(),
-      });
-    },
-    deleteStateScenario: (payload: string) => {
-      this.serverStateService.deleteStateScenario(payload);
-      this.broadcastEvent({
-        action: 'updateServerStateScenarios',
-        payload: this.serverStateService.getServerStateScenarioMappings(),
-      });
-      this.broadcastEvent({
-        action: 'updateActiveStateScenarioId',
-        payload: this.serverStateService.getActiveServerStateScenarioId(),
-      });
-    },
-    changeServerStateScenario: (payload: string) => {
-      console.log(['changeServerStateScenario'], payload);
-      this.serverStateService.changeServerStateScenario(payload);
-      this.broadcastEvent({
-        action: 'updateServerState',
-        payload: this.serverStateService.getServerState(),
-      });
-    },
-    clientUpdatedServer: (payload: {
-      state: ServerState;
-      serverStateScenarioId: string;
-    }) => {
-      this.serverStateService.updateScenarioState(payload);
-      this.broadcastEvent({
-        action: 'updateServerState',
-        payload: this.serverStateService.getServerState(),
-      });
-    },
-    resetServerState: (payload: string) => {
-      this.serverStateService.resetServerState(payload);
-      this.broadcastEvent({
-        action: 'updateServerState',
-        payload: this.serverStateService.getServerState(),
-      });
-    },
-
-    ping: (_payload: unknown) => {},
-  };
 }
