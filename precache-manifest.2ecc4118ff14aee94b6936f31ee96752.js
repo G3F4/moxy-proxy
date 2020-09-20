@@ -1,10 +1,10 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "4245c5d850b8bb7693c0f15977990cf8",
+    "revision": "fa2243d02a2795553182821871223fd0",
     "url": "/moxy-proxy/index.html"
   },
   {
-    "revision": "4d364ae8a8958502101e",
+    "revision": "6fc645ae98892c208dde",
     "url": "/moxy-proxy/static/css/10.9a3e48bb.chunk.css"
   },
   {
@@ -24,24 +24,24 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/moxy-proxy/static/js/1.97b2e1e4.chunk.js"
   },
   {
-    "revision": "4d364ae8a8958502101e",
-    "url": "/moxy-proxy/static/js/10.2e069c62.chunk.js"
+    "revision": "6fc645ae98892c208dde",
+    "url": "/moxy-proxy/static/js/10.df299365.chunk.js"
   },
   {
     "revision": "d8fe9a95f11706596b28",
     "url": "/moxy-proxy/static/js/11.177096dd.chunk.js"
   },
   {
-    "revision": "ff5f4b62f50fb26ca7e9",
-    "url": "/moxy-proxy/static/js/12.4fad9c51.chunk.js"
+    "revision": "678895ffc04fe04ba08d",
+    "url": "/moxy-proxy/static/js/12.a96f665d.chunk.js"
   },
   {
-    "revision": "0375932fe831291bb123",
-    "url": "/moxy-proxy/static/js/13.a16a5dcd.chunk.js"
+    "revision": "d2187f662fca7069f150",
+    "url": "/moxy-proxy/static/js/13.2a421312.chunk.js"
   },
   {
-    "revision": "968a83f030ff03dfe8fa",
-    "url": "/moxy-proxy/static/js/14.1c039479.chunk.js"
+    "revision": "e09899843e8d5218ba98",
+    "url": "/moxy-proxy/static/js/14.af2c3dc1.chunk.js"
   },
   {
     "revision": "a7e0fdc2f3b0bf598427",
@@ -84,7 +84,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/moxy-proxy/static/js/main.c401b4da.chunk.js"
   },
   {
-    "revision": "7d87602d91729e69489f",
-    "url": "/moxy-proxy/static/js/runtime-main.88687812.js"
+    "revision": "f35e6227fb0ebd16fd08",
+    "url": "/moxy-proxy/static/js/runtime-main.24a1ef2b.js"
   }
 ]);

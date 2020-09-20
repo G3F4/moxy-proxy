@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/moxy-proxy/precache-manifest.81742f5de7a36d7af104d9796f1d2df1.js"
+  "/moxy-proxy/precache-manifest.2ecc4118ff14aee94b6936f31ee96752.js"
 );
 
 self.addEventListener('message', (event) => {
