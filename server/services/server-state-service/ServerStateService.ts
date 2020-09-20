@@ -6,8 +6,8 @@ import {
   ServerStateScenarioMapping,
 } from '../../../sharedTypes';
 import { DATA_DIR } from '../../config';
-import { logError, logInfo } from '../../utils/logger';
 import FileManager from '../../infrastructure/file-manager/FileManager';
+import { logError, logInfo } from '../../utils/logger';
 
 const execPromised = util.promisify(exec);
 

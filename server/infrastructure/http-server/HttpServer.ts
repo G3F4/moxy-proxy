@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import 'fastify-websocket';
 import { SocketStream } from 'fastify-websocket';
@@ -5,38 +6,26 @@ import { ServerResponse } from 'http';
 import { original } from 'parseurl';
 import { parse } from 'querystring';
 import { Method } from '../../../sharedTypes';
-import ClientFacade from '../../domain/ClientFacade';
 import { PORT } from '../../config';
-import ApiService from '../../services/api-service/ApiService';
-import FileManager from '../file-manager/FileManager';
-import ServerStateService from '../../services/server-state-service/ServerStateService';
-import SocketsClient from '../sockets-client/SocketsClient';
+import MoxyProxyFacade from '../../domain/MoxyProxyFacade';
 
 export default class HttpServer {
-  constructor(
-    private readonly server: FastifyInstance,
-    private readonly serverStateService: ServerStateService,
-    private readonly socketsClient: SocketsClient,
-    private readonly fileManager: FileManager,
-    private readonly apiService: ApiService,
-    private readonly clientFacade: ClientFacade,
-  ) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    server.register(require('fastify-cors'), {
+  private server: FastifyInstance;
+
+  constructor(private readonly moxyProxyFacade: MoxyProxyFacade) {
+    this.server = require('fastify')({
+      logger: true,
+    });
+    this.server.register(require('fastify-cors'), {
       origin: true,
       credentials: true,
     });
-
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    server.register(require('fastify-websocket'), {
+    this.server.register(require('fastify-websocket'), {
       handle: (conn: SocketStream) => {
         conn.pipe(conn); // creates an echo server
       },
       options: { maxPayload: 1048576 },
     });
-  }
-
-  start() {
     this.registerRoutes();
     this.server.listen(
       parseInt(PORT),
@@ -46,7 +35,7 @@ export default class HttpServer {
   }
 
   private registerRoutes() {
-    this.registerApiRoute();
+    this.registerRestRoute();
     this.registerSocketsRoute();
   }
 
@@ -54,19 +43,19 @@ export default class HttpServer {
     const socketHash = 'superHash123';
 
     this.server.get(`/${socketHash}`, { websocket: true }, connection => {
-      this.clientFacade.connectClient(connection.socket);
+      this.moxyProxyFacade.connectClient(connection.socket);
     });
   }
 
-  private registerApiRoute() {
+  private registerRestRoute() {
     this.server.route({
       method: ['DELETE', 'GET', 'PATCH', 'POST', 'PUT'],
       url: '*',
-      handler: this.apiController.bind(this),
+      handler: this.restController.bind(this),
     });
   }
 
-  private apiController(
+  private restController(
     request: FastifyRequest,
     reply: FastifyReply<ServerResponse>,
   ) {
@@ -83,7 +72,7 @@ export default class HttpServer {
         contentType,
         requestResponse,
         status,
-      } = this.apiService.callHandler({
+      } = this.moxyProxyFacade.callHandler({
         url: pathname!,
         method,
         parameters,
@@ -105,8 +94,5 @@ export default class HttpServer {
     }
 
     this.server.log.info(`server listening on ${address}`);
-
-    await this.serverStateService.makeTypesFromInitialServerState();
-    // this.socketsClient.sendServerStateInterface();
   }
 }

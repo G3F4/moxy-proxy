@@ -10,7 +10,7 @@ function isDirEmpty(dirname: string) {
 }
 
 export default class FileManager {
-  constructor(readonly cwd: string) {}
+  cwd = process.cwd();
 
   checkIfExist(path: string): boolean {
     return existsSync(`${this.cwd}/${path}`);

@@ -3,5 +3,4 @@ export interface ServerState {
   data: Data;
   modified: boolean;
 }
-export interface Data {
-}
+export interface Data {}

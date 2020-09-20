@@ -7,9 +7,9 @@ import {
   Method,
 } from '../../../sharedTypes';
 import { DATA_DIR } from '../../config';
+import FileManager from '../../infrastructure/file-manager/FileManager';
 import { logInfo } from '../../utils/logger';
 import { nocache } from '../../utils/nocache';
-import FileManager from '../../infrastructure/file-manager/FileManager';
 
 function handlerTemplate(endpoint: Endpoint) {
   return (
@@ -34,6 +34,10 @@ export interface Handler {
 const urlParameterDelimiter = ':';
 
 export default class EndpointsService {
+  constructor(readonly fileManager: FileManager) {
+    this.loadEndpoints();
+  }
+
   getEndpoints() {
     return this.endpoints;
   }
@@ -118,10 +122,6 @@ export default class EndpointsService {
     }
 
     return null;
-  }
-
-  constructor(readonly fileManager: FileManager) {
-    this.loadEndpoints();
   }
 
   addEndpoint(endpoint: Endpoint) {

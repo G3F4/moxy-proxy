@@ -1,15 +1,20 @@
+import produce from 'immer';
 import { ServerState } from '../../interfaces';
 import {
   ClientAction,
   Endpoint,
   HttpStatus,
+  Method,
   ServerStateScenario,
 } from '../../sharedTypes';
+import SocketsClient from '../infrastructure/sockets-client/SocketsClient';
 import EndpointsService from '../services/endpoints-service/EndpointsService';
 import ServerStateService from '../services/server-state-service/ServerStateService';
-import SocketsClient from '../infrastructure/sockets-client/SocketsClient';
+import { logInfo } from '../utils/logger';
 
-export default class ClientFacade {
+const DefaultContentType = 'json/application';
+
+export default class MoxyProxyFacade {
   connectedSocketIds: string[] = [];
 
   constructor(
@@ -18,7 +23,7 @@ export default class ClientFacade {
     private readonly serverStateService: ServerStateService,
   ) {}
 
-  connectClient(socket: WebSocket) {
+  connectClient = (socket: WebSocket) => {
     const socketId = this.socketsClient.connect(
       socket,
       this.disconnectClient.bind(this),
@@ -27,13 +32,62 @@ export default class ClientFacade {
     this.connectedSocketIds.push(socketId);
     this.socketsClient.registerMessageHandlers(this.clientMessageHandlers);
     this.sendCurrentStateToClient(socketId);
-  }
+  };
 
   sendServerStateInterface() {
     this.socketsClient.broadcastEvent({
       action: 'updateServerStateInterface',
       payload: this.serverStateService.getServerStateInterface(),
     });
+  }
+
+  callHandler({
+    url = '/',
+    method = 'get',
+    body = {},
+    parameters = {},
+  }: {
+    url: string;
+    method: Method;
+    body: Record<string, any>;
+    parameters: Record<string, any>;
+  }): {
+    status: HttpStatus;
+    contentType: string;
+    requestResponse: string;
+  } {
+    console.log(['callHandler']);
+
+    const handler = this.endpointsService.getHandler({ url, method });
+    const urlParameters = this.endpointsService.getUrlParameters({
+      url,
+      method,
+    });
+    const responseStatus = this.endpointsService.getEndpointResponseStatus({
+      url,
+      method,
+    });
+    const status = responseStatus ? responseStatus : 200;
+    const { requestResponse, serverUpdate } = handler;
+    const request = { body, parameters, urlParameters };
+    const requestResponseReturn = requestResponse(
+      this.serverStateService.getServerState(),
+      request,
+    );
+
+    this.serverStateService.updateScenarioState({
+      serverStateScenarioId: this.serverStateService.getActiveServerStateScenarioId(),
+      state: produce(
+        this.serverStateService.getServerState(),
+        serverUpdate(request),
+      ),
+    });
+
+    return {
+      status,
+      contentType: DefaultContentType,
+      requestResponse: JSON.stringify(requestResponseReturn),
+    };
   }
 
   private disconnectClient(socketId: string) {
@@ -151,6 +205,8 @@ export default class ClientFacade {
       });
     },
 
-    ping: (_payload: unknown) => {},
+    ping: () => {
+      logInfo(['ping']);
+    },
   };
 }
