@@ -1,10 +1,10 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "eacdac2313d5a80a8dee6016d92c0e13",
+    "revision": "8415d35b19e0fb7826d015cdef2b586e",
     "url": "/moxy-proxy/index.html"
   },
   {
-    "revision": "de46e481cc019f97b586",
+    "revision": "16bd1dc7f3ea1b4e385c",
     "url": "/moxy-proxy/static/css/10.9a3e48bb.chunk.css"
   },
   {
@@ -24,8 +24,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/moxy-proxy/static/js/1.97b2e1e4.chunk.js"
   },
   {
-    "revision": "de46e481cc019f97b586",
-    "url": "/moxy-proxy/static/js/10.d5558267.chunk.js"
+    "revision": "16bd1dc7f3ea1b4e385c",
+    "url": "/moxy-proxy/static/js/10.6c10914c.chunk.js"
   },
   {
     "revision": "d8fe9a95f11706596b28",
@@ -84,7 +84,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/moxy-proxy/static/js/main.c401b4da.chunk.js"
   },
   {
-    "revision": "5ec8bb5fc0082e4f283a",
-    "url": "/moxy-proxy/static/js/runtime-main.6531b6b1.js"
+    "revision": "af5fe66c14a175a22d7f",
+    "url": "/moxy-proxy/static/js/runtime-main.07c728aa.js"
   }
 ]);
