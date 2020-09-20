@@ -1,33 +1,33 @@
-import { ServerState } from '../interfaces';
+import { ServerState } from '../../interfaces';
 import {
   ClientAction,
   Endpoint,
   HttpStatus,
   ServerStateScenario,
-} from '../sharedTypes';
-import EndpointsService from './services/endpoints-service/EndpointsService';
-import ServerStateService from './services/server-state-service/ServerStateService';
-import SocketsService from './services/sockets-service/SocketsService';
+} from '../../sharedTypes';
+import EndpointsService from '../services/endpoints-service/EndpointsService';
+import ServerStateService from '../services/server-state-service/ServerStateService';
+import SocketsClient from '../infrastructure/sockets-client/SocketsClient';
 
 export default class ClientFacade {
   connectedSocketIds: string[] = [];
 
   constructor(
-    private readonly socketsService: SocketsService,
+    private readonly socketsClient: SocketsClient,
     private readonly endpointsService: EndpointsService,
     private readonly serverStateService: ServerStateService,
   ) {}
 
   connectClient(socket: WebSocket) {
-    const socketId = this.socketsService.connect(socket, this.disconnectClient);
+    const socketId = this.socketsClient.connect(socket, this.disconnectClient);
 
     this.connectedSocketIds.push(socketId);
-    this.socketsService.registerMessageHandlers(this.clientMessageHandlers);
+    this.socketsClient.registerMessageHandlers(this.clientMessageHandlers);
     this.sendCurrentStateToClient(socketId);
   }
 
   sendServerStateInterface() {
-    this.socketsService.broadcastEvent({
+    this.socketsClient.broadcastEvent({
       action: 'updateServerStateInterface',
       payload: this.serverStateService.getServerStateInterface(),
     });
@@ -40,23 +40,23 @@ export default class ClientFacade {
   }
 
   private sendCurrentStateToClient(socketId: string) {
-    this.socketsService.sendEventToSocket(socketId, {
+    this.socketsClient.sendEventToSocket(socketId, {
       action: 'updateServerState',
       payload: this.serverStateService.getServerState(),
     });
-    this.socketsService.sendEventToSocket(socketId, {
+    this.socketsClient.sendEventToSocket(socketId, {
       action: 'updateServerStateInterface',
       payload: this.serverStateService.getServerStateInterface(),
     });
-    this.socketsService.sendEventToSocket(socketId, {
+    this.socketsClient.sendEventToSocket(socketId, {
       action: 'updateServerStateScenarios',
       payload: this.serverStateService.getServerStateScenarioMappings(),
     });
-    this.socketsService.sendEventToSocket(socketId, {
+    this.socketsClient.sendEventToSocket(socketId, {
       action: 'updateActiveStateScenarioId',
       payload: this.serverStateService.getActiveServerStateScenarioId(),
     });
-    this.socketsService.sendEventToSocket(socketId, {
+    this.socketsClient.sendEventToSocket(socketId, {
       action: 'updateEndpoints',
       payload: this.endpointsService.getEndpoints(),
     });
@@ -74,21 +74,21 @@ export default class ClientFacade {
     },
     addEndpoint: (payload: Endpoint) => {
       this.endpointsService.addEndpoint(payload);
-      this.socketsService.broadcastEvent({
+      this.socketsClient.broadcastEvent({
         action: 'updateEndpoints',
         payload: this.endpointsService.getEndpoints(),
       });
     },
     updateEndpoint: (payload: Endpoint) => {
       this.endpointsService.updateEndpoint(payload);
-      this.socketsService.broadcastEvent({
+      this.socketsClient.broadcastEvent({
         action: 'updateEndpoints',
         payload: this.endpointsService.getEndpoints(),
       });
     },
     deleteEndpoint: (payload: string) => {
       this.endpointsService.deleteEndpoint(payload);
-      this.socketsService.broadcastEvent({
+      this.socketsClient.broadcastEvent({
         action: 'updateEndpoints',
         payload: this.endpointsService.getEndpoints(),
       });
@@ -98,7 +98,7 @@ export default class ClientFacade {
       status: HttpStatus | null;
     }) => {
       this.endpointsService.changeEndpointResponseStatus(payload);
-      this.socketsService.broadcastEvent({
+      this.socketsClient.broadcastEvent({
         action: 'updateEndpoints',
         payload: this.endpointsService.getEndpoints(),
       });
@@ -106,18 +106,18 @@ export default class ClientFacade {
 
     addServerStateScenario: (payload: ServerStateScenario) => {
       this.serverStateService.addServerStateScenario(payload);
-      this.socketsService.broadcastEvent({
+      this.socketsClient.broadcastEvent({
         action: 'updateServerStateScenarios',
         payload: this.serverStateService.getServerStateScenarioMappings(),
       });
     },
     deleteStateScenario: (payload: string) => {
       this.serverStateService.deleteStateScenario(payload);
-      this.socketsService.broadcastEvent({
+      this.socketsClient.broadcastEvent({
         action: 'updateServerStateScenarios',
         payload: this.serverStateService.getServerStateScenarioMappings(),
       });
-      this.socketsService.broadcastEvent({
+      this.socketsClient.broadcastEvent({
         action: 'updateActiveStateScenarioId',
         payload: this.serverStateService.getActiveServerStateScenarioId(),
       });
@@ -125,7 +125,7 @@ export default class ClientFacade {
     changeServerStateScenario: (payload: string) => {
       console.log(['changeServerStateScenario'], payload);
       this.serverStateService.changeServerStateScenario(payload);
-      this.socketsService.broadcastEvent({
+      this.socketsClient.broadcastEvent({
         action: 'updateServerState',
         payload: this.serverStateService.getServerState(),
       });
@@ -135,14 +135,14 @@ export default class ClientFacade {
       serverStateScenarioId: string;
     }) => {
       this.serverStateService.updateScenarioState(payload);
-      this.socketsService.broadcastEvent({
+      this.socketsClient.broadcastEvent({
         action: 'updateServerState',
         payload: this.serverStateService.getServerState(),
       });
     },
     resetServerState: (payload: string) => {
       this.serverStateService.resetServerState(payload);
-      this.socketsService.broadcastEvent({
+      this.socketsClient.broadcastEvent({
         action: 'updateServerState',
         payload: this.serverStateService.getServerState(),
       });

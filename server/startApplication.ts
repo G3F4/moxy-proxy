@@ -1,19 +1,19 @@
 import { FastifyInstance } from 'fastify';
-import Application from './Application';
-import ClientFacade from './ClientFacade';
+import HttpServer from './infrastructure/http-server/HttpServer';
+import ClientFacade from './domain/ClientFacade';
 import ApiService from './services/api-service/ApiService';
 import EndpointsService from './services/endpoints-service/EndpointsService';
-import FileService from './services/file-service/FileService';
+import FileManager from './infrastructure/file-manager/FileManager';
 import ServerStateService from './services/server-state-service/ServerStateService';
-import SocketsService from './services/sockets-service/SocketsService';
+import SocketsClient from './infrastructure/sockets-client/SocketsClient';
 
-const fileService = new FileService(process.cwd());
-const endpointsService = new EndpointsService(fileService);
-const serverStateService = new ServerStateService(fileService);
-const socketsService = new SocketsService();
+const fileManager = new FileManager(process.cwd());
+const endpointsService = new EndpointsService(fileManager);
+const serverStateService = new ServerStateService(fileManager);
+const socketsClient = new SocketsClient();
 const apiService = new ApiService(serverStateService, endpointsService);
 const clientFacade = new ClientFacade(
-  socketsService,
+  socketsClient,
   endpointsService,
   serverStateService,
 );
@@ -23,11 +23,11 @@ const fastify: FastifyInstance = require('fastify')({
 });
 
 export default function startApplication() {
-  const app = new Application(
+  const app = new HttpServer(
     fastify,
     serverStateService,
-    socketsService,
-    fileService,
+    socketsClient,
+    fileManager,
     apiService,
     clientFacade,
   );

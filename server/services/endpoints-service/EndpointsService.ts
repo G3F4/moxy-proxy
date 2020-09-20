@@ -9,7 +9,7 @@ import {
 import { DATA_DIR } from '../../config';
 import { logInfo } from '../../utils/logger';
 import { nocache } from '../../utils/nocache';
-import FileService from '../file-service/FileService';
+import FileManager from '../../infrastructure/file-manager/FileManager';
 
 function handlerTemplate(endpoint: Endpoint) {
   return (
@@ -120,7 +120,7 @@ export default class EndpointsService {
     return null;
   }
 
-  constructor(readonly fileService: FileService) {
+  constructor(readonly fileManager: FileManager) {
     this.loadEndpoints();
   }
 
@@ -164,7 +164,7 @@ export default class EndpointsService {
     }
 
     if (endpoint) {
-      this.fileService.deleteFile(this.getEndpointPath(endpoint));
+      this.fileManager.deleteFile(this.getEndpointPath(endpoint));
     }
   }
 
@@ -241,20 +241,20 @@ export default class EndpointsService {
 
     console.log(['loadHandler'], endpointMapping);
 
-    const handlerExists = this.fileService.checkIfExist(path);
+    const handlerExists = this.fileManager.checkIfExist(path);
 
     if (!handlerExists) {
       throw new Error(`handler at path: ${path} not exists`);
     }
 
-    const watcher = nocache(`${this.fileService.cwd}/${path}`);
+    const watcher = nocache(`${this.fileManager.cwd}/${path}`);
 
     this.handlersWatcher = {
       ...this.handlersWatcher,
       [endpointMapping.id]: watcher,
     };
 
-    return require(`${this.fileService.cwd}/${path}`);
+    return require(`${this.fileManager.cwd}/${path}`);
   }
 
   private getEndpointPath(endpoint: Endpoint | EndpointMapping) {
@@ -266,7 +266,7 @@ export default class EndpointsService {
   }
 
   private loadEndpoints() {
-    this.endpointMappings = this.fileService.readJSON<EndpointMapping[]>(
+    this.endpointMappings = this.fileManager.readJSON<EndpointMapping[]>(
       this.getEndpointMappingsPath(),
     );
     this.endpoints = this.endpointMappings.reduce<EndpointMapping[]>(
@@ -297,7 +297,7 @@ export default class EndpointsService {
   }
 
   private saveEndpointMappings() {
-    this.fileService.saveJSON(
+    this.fileManager.saveJSON(
       this.getEndpointMappingsPath(),
       this.endpointMappings,
     );
@@ -306,8 +306,8 @@ export default class EndpointsService {
   private saveEndpointToFile(endpoint: Endpoint) {
     const code = handlerTemplate(endpoint);
 
-    this.fileService.checkFolder(`${this.dir}/${endpoint.url}`);
-    this.fileService.saveText(this.handlerPath(endpoint), code);
+    this.fileManager.checkFolder(`${this.dir}/${endpoint.url}`);
+    this.fileManager.saveText(this.handlerPath(endpoint), code);
   }
 
   private handlerPath({ url, method }: Endpoint | EndpointMapping) {

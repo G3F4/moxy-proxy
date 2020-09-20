@@ -4,20 +4,20 @@ import { SocketStream } from 'fastify-websocket';
 import { ServerResponse } from 'http';
 import { original } from 'parseurl';
 import { parse } from 'querystring';
-import { Method } from '../sharedTypes';
-import ClientFacade from './ClientFacade';
-import { PORT } from './config';
-import ApiService from './services/api-service/ApiService';
-import FileService from './services/file-service/FileService';
-import ServerStateService from './services/server-state-service/ServerStateService';
-import SocketsService from './services/sockets-service/SocketsService';
+import { Method } from '../../../sharedTypes';
+import ClientFacade from '../../domain/ClientFacade';
+import { PORT } from '../../config';
+import ApiService from '../../services/api-service/ApiService';
+import FileManager from '../file-manager/FileManager';
+import ServerStateService from '../../services/server-state-service/ServerStateService';
+import SocketsClient from '../sockets-client/SocketsClient';
 
-export default class Application {
+export default class HttpServer {
   constructor(
     private readonly server: FastifyInstance,
     private readonly serverStateService: ServerStateService,
-    private readonly socketsService: SocketsService,
-    private readonly fileService: FileService,
+    private readonly socketsClient: SocketsClient,
+    private readonly fileManager: FileManager,
     private readonly apiService: ApiService,
     private readonly clientFacade: ClientFacade,
   ) {
@@ -146,7 +146,7 @@ export default class Application {
       map: 'application/octet-stream',
     } as const;
     const filePath = request.raw.url !== '/' ? request.raw.url : '/index.html';
-    const file = this.fileService.readText(`build${filePath}`);
+    const file = this.fileManager.readText(`build${filePath}`);
     const parts = filePath!.split('.');
     const extension = parts[parts.length - 1];
     const contentType = contentTypeMap[extension];
@@ -165,6 +165,6 @@ export default class Application {
     this.server.log.info(`server listening on ${address}`);
 
     await this.serverStateService.makeTypesFromInitialServerState();
-    // this.socketsService.sendServerStateInterface();
+    // this.socketsClient.sendServerStateInterface();
   }
 }

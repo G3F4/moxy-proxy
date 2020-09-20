@@ -3,7 +3,7 @@ import * as WebSocket from 'ws';
 import { ClientAction, ServerEvent } from '../../../sharedTypes';
 import { logError } from '../../utils/logger';
 
-export default class SocketsService {
+export default class SocketsClient {
   sockets: WebSocket[] = [];
   clientMessageHandlers: Record<string, Function> = {};
 

@@ -9,7 +9,7 @@ function isDirEmpty(dirname: string) {
   return promises.readdir(dirname).then(files => files.length === 0);
 }
 
-export default class FileService {
+export default class FileManager {
   constructor(readonly cwd: string) {}
 
   checkIfExist(path: string): boolean {

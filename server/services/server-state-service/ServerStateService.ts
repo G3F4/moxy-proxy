@@ -7,7 +7,7 @@ import {
 } from '../../../sharedTypes';
 import { DATA_DIR } from '../../config';
 import { logError, logInfo } from '../../utils/logger';
-import FileService from '../file-service/FileService';
+import FileManager from '../../infrastructure/file-manager/FileManager';
 
 const execPromised = util.promisify(exec);
 
@@ -38,14 +38,14 @@ export default class ServerStateService {
     return this.serverStateScenarioMappings;
   }
 
-  constructor(readonly fileService: FileService) {
+  constructor(readonly fileManager: FileManager) {
     this.serverStateScenarios[
       this.activeServerStateScenarioId
-    ] = fileService.readJSON(this.initialServerStatePath);
-    this.serverStateInterface = fileService.readText(
+    ] = fileManager.readJSON(this.initialServerStatePath);
+    this.serverStateInterface = fileManager.readText(
       this.serverStateInterfaceFileName,
     );
-    this.serverStateScenarioMappings = fileService.readJSON(
+    this.serverStateScenarioMappings = fileManager.readJSON(
       this.serverStateScenariosMapPath,
     );
     this.initialServerStates = {
@@ -111,7 +111,7 @@ export default class ServerStateService {
       this.updateMappings(updatedScenarioMappings);
       this.activeServerStateScenarioId = ServerStateService.defaultScenarioId;
       this.changeServerStateScenario(ServerStateService.defaultScenarioId);
-      this.fileService.deleteFile(`/${mapping.path}`);
+      this.fileManager.deleteFile(`/${mapping.path}`);
     }
   }
 
@@ -149,7 +149,7 @@ export default class ServerStateService {
   }
 
   private loadServerState(path: string) {
-    return this.fileService.readJSON<ServerState>(path);
+    return this.fileManager.readJSON<ServerState>(path);
   }
 
   private saveServerStateToFile(
@@ -161,7 +161,7 @@ export default class ServerStateService {
     );
 
     if (serverStateScenarioMapping) {
-      this.fileService.saveJSON(
+      this.fileManager.saveJSON(
         `${DATA_DIR}/${serverStateScenarioMapping.path}`,
         data,
       );
@@ -176,7 +176,7 @@ export default class ServerStateService {
     if (stderr) {
       logError(stderr);
     } else {
-      this.serverStateInterface = this.fileService.readText(
+      this.serverStateInterface = this.fileManager.readText(
         this.serverStateInterfaceFileName,
       );
     }
@@ -187,7 +187,7 @@ export default class ServerStateService {
       scenario,
     );
 
-    this.fileService.saveJSON(
+    this.fileManager.saveJSON(
       `${DATA_DIR}/${serverStateScenarioDataPath}`,
       scenario.state,
     );
@@ -200,6 +200,6 @@ export default class ServerStateService {
   private saveServerStateScenarioMappings(
     scenarios: ServerStateScenarioMapping[],
   ) {
-    this.fileService.saveJSON(this.serverStateScenariosMapPath, scenarios);
+    this.fileManager.saveJSON(this.serverStateScenariosMapPath, scenarios);
   }
 }
