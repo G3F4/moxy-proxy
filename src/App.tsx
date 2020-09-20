@@ -11,16 +11,27 @@ import {
 } from '../sharedTypes';
 import './App.css';
 import useLocalstorage from './common/hooks/useLocalstorage';
-import Layout from './layouts/Layout';
-import { TabKey } from './layouts/TabsLayout';
+import Layout from './layout/Layout';
+import { TabKey } from './layout/layouts/TabsLayout';
 import { urlDelimiter } from './modules/endpoints/test-endpoint/TestEndpoint';
 
-const socketHash = 'superHash123';
-const socketUrl =
+const hostName =
   process.env.NODE_ENV === 'production' &&
   window.location.hostname !== 'localhost'
-    ? `wss://${window.location.host}/${socketHash}`
-    : `ws://localhost:5000/${socketHash}`;
+    ? `moxy-proxy.herokuapp.com`
+    : `localhost:5000`;
+const httpProtocol =
+  process.env.NODE_ENV === 'production' &&
+  window.location.hostname !== 'localhost'
+    ? 'https://'
+    : `http://`;
+const socketsProtocol =
+  process.env.NODE_ENV === 'production' &&
+  window.location.hostname !== 'localhost'
+    ? 'wss://'
+    : `ws://`;
+const socketHash = 'superHash123';
+const socketUrl = `${socketsProtocol}${hostName}/${socketHash}`;
 
 function initialServerState(): ServerState {
   //@ts-ignore
@@ -218,8 +229,7 @@ function App() {
       urlParameters: Record<string, string>,
     ) {
       const urlParts = url.split('/').filter(Boolean);
-
-      return urlParts.reduce((acc, part) => {
+      const path = urlParts.reduce((acc, part) => {
         const urlParameter = part[0] === urlDelimiter;
 
         if (urlParameter) {
@@ -228,12 +238,16 @@ function App() {
 
         return `${acc}/${part}`;
       }, '');
+
+      return `${httpProtocol}${hostName}${path}`;
     }
 
     const parsedUrl = `${parseUrlWithParameters(
       url,
       urlParameters,
     )}?${queryParams}`;
+
+    console.log(['parsedUrl'], parsedUrl);
 
     return await fetch(parsedUrl, {
       body,

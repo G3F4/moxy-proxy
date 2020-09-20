@@ -19,7 +19,10 @@ export default class ClientFacade {
   ) {}
 
   connectClient(socket: WebSocket) {
-    const socketId = this.socketsClient.connect(socket, this.disconnectClient);
+    const socketId = this.socketsClient.connect(
+      socket,
+      this.disconnectClient.bind(this),
+    );
 
     this.connectedSocketIds.push(socketId);
     this.socketsClient.registerMessageHandlers(this.clientMessageHandlers);

@@ -34,25 +34,6 @@ export default class HttpServer {
       },
       options: { maxPayload: 1048576 },
     });
-
-    server.addContentTypeParser('*', { parseAs: 'string' }, function(
-      req,
-      body,
-      done,
-    ) {
-      const contentType = req.headers['content-type'];
-
-      if (contentType && contentType.startsWith('application')) {
-        try {
-          done(null, JSON.parse(body));
-        } catch (err) {
-          err.statusCode = 400;
-          done(err, undefined);
-        }
-      }
-
-      return body;
-    });
   }
 
   start() {
@@ -81,23 +62,8 @@ export default class HttpServer {
     this.server.route({
       method: ['DELETE', 'GET', 'PATCH', 'POST', 'PUT'],
       url: '*',
-      handler: this.rootController.bind(this),
+      handler: this.apiController.bind(this),
     });
-  }
-
-  private rootController(
-    request: FastifyRequest,
-    reply: FastifyReply<ServerResponse>,
-  ) {
-    const IsFileRegex = /\.[0-9a-z]{1,5}$/i;
-    const fileRequest =
-      request.raw.url === '/' || IsFileRegex.test(request.raw.url!);
-
-    if (fileRequest) {
-      this.staticsController(request, reply);
-    } else {
-      this.apiController(request, reply);
-    }
   }
 
   private apiController(
@@ -131,30 +97,6 @@ export default class HttpServer {
     } catch (e) {
       reply.code(404).send(e.toString());
     }
-  }
-
-  private staticsController(
-    request: FastifyRequest,
-    reply: FastifyReply<ServerResponse>,
-  ) {
-    const contentTypeMap: Record<string, string> = {
-      html: 'text/html',
-      js: 'text/javascript',
-      css: 'text/css',
-      png: 'image/png',
-      json: 'application/javascript',
-      map: 'application/octet-stream',
-    } as const;
-    const filePath = request.raw.url !== '/' ? request.raw.url : '/index.html';
-    const file = this.fileManager.readText(`build${filePath}`);
-    const parts = filePath!.split('.');
-    const extension = parts[parts.length - 1];
-    const contentType = contentTypeMap[extension];
-
-    reply
-      .type(contentType)
-      .code(200)
-      .send(file);
   }
 
   private async listenHandler(err: Error, address: string) {

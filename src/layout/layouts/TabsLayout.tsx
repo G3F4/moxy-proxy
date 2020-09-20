@@ -2,14 +2,14 @@ import { Paper } from '@material-ui/core';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import React, { ChangeEvent, lazy, Suspense, useContext } from 'react';
-import { AppStateContext } from '../App';
+import { AppStateContext } from '../../App';
 
-const LazyEndpoints = lazy(() => import('../modules/endpoints/Endpoints'));
+const LazyEndpoints = lazy(() => import('../../modules/endpoints/Endpoints'));
 const LazyServerState = lazy(() =>
-  import('../modules/server-state/ServerState'),
+  import('../../modules/server-state/ServerState'),
 );
 const LazyStateInterface = lazy(() =>
-  import('../modules/state-interface/StateInterface'),
+  import('../../modules/state-interface/StateInterface'),
 );
 
 export type TabKey = 'serverInterface' | 'serverState' | 'endpoints';

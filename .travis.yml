@@ -8,7 +8,6 @@ cache:
     - node_modules
 
 script:
-  - yarn run build:client
   - yarn test
 
 deploy:

@@ -2,9 +2,9 @@ import React, { lazy, Suspense, useContext } from 'react';
 import { AppStateContext } from '../App';
 
 const Header = lazy(() => import('../modules/header/Header'));
-const BoardLayout = lazy(() => import('./BoardLayout'));
-const PanelLayout = lazy(() => import('./PanelLayout'));
-const TabsLayout = lazy(() => import('./TabsLayout'));
+const BoardLayout = lazy(() => import('./layouts/BoardLayout'));
+const PanelLayout = lazy(() => import('./layouts/PanelLayout'));
+const TabsLayout = lazy(() => import('./layouts/TabsLayout'));
 
 export default function Layout() {
   const { viewMode } = useContext(AppStateContext);
