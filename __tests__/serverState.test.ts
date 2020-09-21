@@ -7,7 +7,7 @@ const scenarioName = 'test test test';
 fixture`User can read, edit and add server state scenario`.page(APP_URL);
 
 test('read default state scenario mockedData', async () => {
-  const application = getApplication();
+  const application = await getApplication();
 
   await application.waitForLoaded();
 
@@ -39,7 +39,7 @@ test('read default state scenario mockedData', async () => {
 });
 
 test('add state scenario from scratch', async () => {
-  const application = getApplication();
+  const application = await getApplication();
 
   await application.waitForLoaded();
 
@@ -113,7 +113,7 @@ test('add state scenario from scratch', async () => {
 });
 
 test('delete state scenario', async () => {
-  const application = getApplication();
+  const application = await getApplication();
 
   await application.waitForLoaded();
   await application.getApplicationBar().changeStateScenario(scenarioName);

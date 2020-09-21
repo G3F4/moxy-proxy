@@ -7,7 +7,7 @@ fixture`User can add, test and delete endpoint`.page(APP_URL);
 const endpointLabel = 'GET: test/:it/good/:id';
 
 test('add endpoint', async () => {
-  const { getApplicationBar, getViewTabs, views } = getApplication();
+  const { getApplicationBar, getViewTabs, views } = await getApplication();
 
   await getApplicationBar().changeStateScenario('test');
   await getViewTabs().clickTab('ENDPOINTS');
@@ -53,7 +53,7 @@ test('add endpoint', async () => {
 });
 
 test('test endpoint', async () => {
-  const { getApplicationBar, getViewTabs, views } = getApplication();
+  const { getApplicationBar, getViewTabs, views } = await getApplication();
 
   await getApplicationBar().changeStateScenario('test');
   await getViewTabs().clickTab('ENDPOINTS');
@@ -89,8 +89,8 @@ test('test endpoint', async () => {
   await testEndpointView.closeWizard();
 });
 
-test('delete endpoint', async t => {
-  const { getApplicationBar, getViewTabs, views } = getApplication();
+test('delete endpoint', async (t) => {
+  const { getApplicationBar, getViewTabs, views } = await getApplication();
 
   await getApplicationBar().changeStateScenario('test');
   await getViewTabs().clickTab('ENDPOINTS');

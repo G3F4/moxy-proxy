@@ -5,7 +5,7 @@ import getApplication from './pageObjects/getApplication';
 fixture`User can change layout`.page(APP_URL);
 
 test('change view mode', async () => {
-  const { getApplicationBar } = getApplication();
+  const { getApplicationBar } = await getApplication();
 
   await getApplicationBar().changeViewMode('Board view');
   await getApplicationBar().changeViewMode('Tabs view');
