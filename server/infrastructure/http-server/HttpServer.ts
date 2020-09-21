@@ -51,12 +51,14 @@ export default class HttpServer {
     this.server.route({
       method: ['DELETE', 'GET', 'PATCH', 'POST', 'PUT'],
       url: '*',
+      // @ts-ignore
       handler: this.restController.bind(this),
     });
   }
 
   private restController(
     request: FastifyRequest,
+    // @ts-ignore
     reply: FastifyReply<ServerResponse>,
   ) {
     const method = request.raw.method!.toLowerCase() as Method;
@@ -75,7 +77,7 @@ export default class HttpServer {
       method,
       parameters,
       url: pathname!,
-      body: request.body,
+      body: request.body as Record<string, any>,
     });
 
     reply

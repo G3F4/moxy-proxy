@@ -15,24 +15,6 @@ import Layout from './layout/Layout';
 import { TabKey } from './layout/layouts/TabsLayout';
 import { urlDelimiter } from './modules/endpoints/test-endpoint/TestEndpoint';
 
-const hostName =
-  process.env.NODE_ENV === 'production' &&
-  window.location.hostname !== 'localhost'
-    ? `moxy-proxy.herokuapp.com`
-    : `localhost:5000`;
-const httpProtocol =
-  process.env.NODE_ENV === 'production' &&
-  window.location.hostname !== 'localhost'
-    ? 'https://'
-    : `http://`;
-const socketsProtocol =
-  process.env.NODE_ENV === 'production' &&
-  window.location.hostname !== 'localhost'
-    ? 'wss://'
-    : `ws://`;
-const socketHash = 'superHash123';
-const socketUrl = `${socketsProtocol}${hostName}/${socketHash}`;
-
 function initialServerState(): ServerState {
   //@ts-ignore
   return {};
@@ -88,7 +70,23 @@ function parseMessage(
   return { action, payload };
 }
 
-const socket = new WebSocket(socketUrl);
+function getSocketUrl() {
+  if (process.env.REACT_APP_SOCKET_URL) {
+    return process.env.REACT_APP_SOCKET_URL;
+  }
+
+  return 'ws://moxy-proxy.herokuapp.com/superHash123';
+}
+
+function getApiUrl() {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+
+  return 'https://moxy-proxy.herokuapp.com';
+}
+
+const socket = new WebSocket(getSocketUrl());
 
 function sendEvent(event: ClientEvent) {
   console.log(['sendEvent'], event);
@@ -142,11 +140,11 @@ function App() {
   );
 
   useEffect(() => {
-    socket.onopen = event => {
+    socket.onopen = (event) => {
       console.log(['WebSocket.onopen'], event);
     };
 
-    socket.onclose = event => {
+    socket.onclose = (event) => {
       console.log(['WebSocket.onclose'], event);
       // TODO wznawianie połączenia po utracie
       setTimeout(() => {
@@ -154,12 +152,12 @@ function App() {
       }, 3000);
     };
 
-    socket.onmessage = event => {
+    socket.onmessage = (event) => {
       console.log(['WebSocket.onmessage'], JSON.parse(event.data));
       messageHandler(parseMessage(event.data));
     };
 
-    socket.onerror = event => {
+    socket.onerror = (event) => {
       console.error(['WebSocket.onerror'], event);
     };
 
@@ -239,7 +237,7 @@ function App() {
         return `${acc}/${part}`;
       }, '');
 
-      return `${httpProtocol}${hostName}${path}`;
+      return `${getApiUrl()}${path}`;
     }
 
     const parsedUrl = `${parseUrlWithParameters(
@@ -271,7 +269,7 @@ function App() {
   function handleAddServerStateScenario(
     serverStateScenario: ServerStateScenario,
   ) {
-    setServerStateScenarios(scenarios => [...scenarios, serverStateScenario]);
+    setServerStateScenarios((scenarios) => [...scenarios, serverStateScenario]);
     sendEvent({
       action: 'addServerStateScenario',
       payload: serverStateScenario,
