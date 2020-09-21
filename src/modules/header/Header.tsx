@@ -7,7 +7,6 @@ import {
   createStyles,
   makeStyles,
   Theme,
-  useTheme,
 } from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
@@ -16,53 +15,48 @@ import { AppStateContext, ViewMode } from '../../App';
 import Menu from '@material-ui/core/Menu';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import IconButton from '@material-ui/core/IconButton';
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import useMediaQuery from '@material-ui/core/useMediaQuery';
 
-function ResetAllDataConfirmDialog() {
-  const [open, setOpen] = React.useState(false);
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-  const handleClose = () => {
-    setOpen(false);
-  };
-  const { persistEndpoints } = useContext(AppStateContext);
-
-  function handleConfirm() {
-    persistEndpoints();
-    handleClose();
-  }
-
-  return (
-    <>
-      <span onClick={handleClickOpen}>Reset all data</span>
-      <Dialog
-        fullScreen={fullScreen}
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="responsive-dialog-title"
-      >
-        <DialogTitle id="responsive-dialog-title">
-          You are deleting all data changes
-        </DialogTitle>
-        <DialogActions>
-          <Button autoFocus onClick={handleConfirm} color="secondary">
-            Confirm reset all data
-          </Button>
-          <Button onClick={handleClose} color="primary" autoFocus>
-            Cancel
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
-  );
-}
+// function ResetAllDataConfirmDialog() {
+//   const [open, setOpen] = React.useState(false);
+//   const theme = useTheme();
+//   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+//   const handleClickOpen = () => {
+//     setOpen(true);
+//   };
+//   const handleClose = () => {
+//     setOpen(false);
+//   };
+//   const { persistEndpoints } = useContext(AppStateContext);
+//
+//   function handleConfirm() {
+//     persistEndpoints();
+//     handleClose();
+//   }
+//
+//   return (
+//     <>
+//       <span onClick={handleClickOpen}>Reset all data</span>
+//       <Dialog
+//         fullScreen={fullScreen}
+//         open={open}
+//         onClose={handleClose}
+//         aria-labelledby="responsive-dialog-title"
+//       >
+//         <DialogTitle id="responsive-dialog-title">
+//           You are deleting all data changes
+//         </DialogTitle>
+//         <DialogActions>
+//           <Button autoFocus onClick={handleConfirm} color="secondary">
+//             Confirm reset all data
+//           </Button>
+//           <Button onClick={handleClose} color="primary" autoFocus>
+//             Cancel
+//           </Button>
+//         </DialogActions>
+//       </Dialog>
+//     </>
+//   );
+// }
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

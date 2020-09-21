@@ -13,13 +13,6 @@
     ]
   },
   {
-    "id": "2",
-    "method": "put",
-    "url": "test",
-    "responseStatus": null,
-    "parameters": []
-  },
-  {
     "id": "3",
     "method": "delete",
     "url": "test",

@@ -5,9 +5,11 @@ node_js:
 
 cache:
   directories:
+    - dist
     - node_modules
 
 script:
+  - yarn build:client
   - yarn test
 
 deploy:

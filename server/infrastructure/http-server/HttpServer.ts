@@ -67,32 +67,26 @@ export default class HttpServer {
       parameters = parse(query);
     }
 
-    try {
-      const {
-        contentType,
-        requestResponse,
-        status,
-      } = this.moxyProxyFacade.callHandler({
-        url: pathname!,
-        method,
-        parameters,
-        body: request.body,
-      });
+    const {
+      contentType,
+      requestResponse,
+      status,
+    } = this.moxyProxyFacade.callHandler({
+      method,
+      parameters,
+      url: pathname!,
+      body: request.body,
+    });
 
-      reply
-        .type(contentType)
-        .code(status)
-        .send(requestResponse);
-    } catch (e) {
-      reply.code(404).send(e.toString());
-    }
+    reply
+      .type(contentType)
+      .code(status)
+      .send(requestResponse);
   }
 
   private async listenHandler(err: Error, address: string) {
     if (err) {
       this.server.log.error(err);
     }
-
-    this.server.log.info(`server listening on ${address}`);
   }
 }

@@ -238,9 +238,6 @@ export default class EndpointsService {
 
   private loadHandler(endpointMapping: EndpointMapping): Handler {
     const path = this.handlerPath(endpointMapping);
-
-    console.log(['loadHandler'], endpointMapping);
-
     const handlerExists = this.fileManager.checkIfExist(path);
 
     if (!handlerExists) {
