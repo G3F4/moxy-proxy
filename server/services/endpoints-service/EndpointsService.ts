@@ -238,7 +238,7 @@ export default class EndpointsService {
 
   private loadHandler(endpointMapping: EndpointMapping): Handler {
     const path = this.handlerPath(endpointMapping);
-    const handlerExists = this.fileManager.checkIfExist(path);
+    const handlerExists = this.fileManager.checkIfExists(path);
 
     if (!handlerExists) {
       throw new Error(`handler at path: ${path} not exists`);
@@ -263,34 +263,46 @@ export default class EndpointsService {
   }
 
   private loadEndpoints() {
-    this.endpointMappings = this.fileManager.readJSON<EndpointMapping[]>(
+    const savedMappingsExists = this.fileManager.checkIfExists(
       this.getEndpointMappingsPath(),
     );
-    this.endpoints = this.endpointMappings.reduce<EndpointMapping[]>(
-      (acc, endpointMapping) => {
-        const { id, method, url, responseStatus, parameters } = endpointMapping;
-        const handler = this.loadHandler(endpointMapping);
 
-        if (handler) {
-          const endpoint: Endpoint = {
+    if (savedMappingsExists) {
+      this.endpointMappings = this.fileManager.readJSON<EndpointMapping[]>(
+        this.getEndpointMappingsPath(),
+      );
+      this.endpoints = this.endpointMappings.reduce<EndpointMapping[]>(
+        (acc, endpointMapping) => {
+          const {
             id,
             method,
             url,
             responseStatus,
             parameters,
-            responseCode: handler.requestResponse.toString(),
-            serverStateUpdateCode: handler.serverUpdate.toString(),
-          };
+          } = endpointMapping;
+          const handler = this.loadHandler(endpointMapping);
 
-          return [...acc, endpoint];
-        } else {
-          this.deleteEndpoint(endpointMapping.id);
+          if (handler) {
+            const endpoint: Endpoint = {
+              id,
+              method,
+              url,
+              responseStatus,
+              parameters,
+              responseCode: handler.requestResponse.toString(),
+              serverStateUpdateCode: handler.serverUpdate.toString(),
+            };
 
-          return acc;
-        }
-      },
-      [],
-    ) as Endpoint[];
+            return [...acc, endpoint];
+          } else {
+            this.deleteEndpoint(endpointMapping.id);
+
+            return acc;
+          }
+        },
+        [],
+      ) as Endpoint[];
+    }
   }
 
   private saveEndpointMappings() {

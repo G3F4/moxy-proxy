@@ -12,7 +12,7 @@ function isDirEmpty(dirname: string) {
 export default class FileManager {
   cwd = process.cwd();
 
-  checkIfExist(path: string): boolean {
+  checkIfExists(path: string): boolean {
     return existsSync(`${this.cwd}/${path}`);
   }
 
@@ -60,7 +60,7 @@ export default class FileManager {
   }
 
   saveText(path: string, text: string): void {
-    const fileExists = this.checkIfExist(path);
+    const fileExists = this.checkIfExists(path);
 
     if (fileExists) {
       writeFileSync(path, text);

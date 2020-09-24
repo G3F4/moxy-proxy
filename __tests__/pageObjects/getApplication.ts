@@ -1,21 +1,8 @@
-import { exec } from 'child_process';
 import { Selector } from 'testcafe';
-import * as util from 'util';
 import getApplicationBar from './appBar';
 import getEndpointsView from './getEndpointsView';
 import getServerStateView from './getServerStateView';
 import getViewTabs from './viewTabs';
-
-const execPromised = util.promisify(exec);
-
-async function prepareServerState(presetName: string) {
-  const cleanData = 'rm -rf __testsData__/data';
-  const createDataFolder = 'mkdirp __testsData__/data';
-  const loadDataFromPreset = `cp -a __testsData__/${presetName}/* __testsData__/data`;
-  const command = `${cleanData};${createDataFolder};${loadDataFromPreset}`;
-
-  await execPromised(command);
-}
 
 export default async function getApplication() {
   function getApplicationContainer() {
@@ -36,8 +23,6 @@ export default async function getApplication() {
     }
   }
 
-  await prepareServerState('initial');
-
   return {
     waitForLoaded,
     getApplicationBar() {
@@ -46,7 +31,6 @@ export default async function getApplication() {
     getViewTabs() {
       return getViewTabs(getApplicationContainer());
     },
-    getActiveLayout() {},
     views: {
       getEndpointsView,
       getServerStateView: () => getServerStateView(getApplicationContainer()),

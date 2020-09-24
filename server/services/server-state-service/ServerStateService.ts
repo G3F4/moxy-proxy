@@ -15,12 +15,12 @@ export default class ServerStateService {
   static defaultScenarioId = 'default';
   private activeServerStateScenarioId = ServerStateService.defaultScenarioId;
   private serverStateScenarios: Record<string, ServerState> = {};
-  private serverStateScenarioMappings: ServerStateScenarioMapping[];
+  private serverStateScenarioMappings: ServerStateScenarioMapping[] = [];
   private serverStateInterface = '';
   private serverStateInterfaceFileName = 'interfaces.ts';
   private initialServerStatePath = `${DATA_DIR}/serverState/${this.activeServerStateScenarioId}.json`;
   private serverStateScenariosMapPath = `${DATA_DIR}/serverStateScenarios.json`;
-  private initialServerStates: Record<string, ServerState> = {};
+  private readonly initialServerStates: Record<string, ServerState> = {};
 
   getActiveServerStateScenarioId() {
     return this.activeServerStateScenarioId;
@@ -39,18 +39,37 @@ export default class ServerStateService {
   }
 
   constructor(readonly fileManager: FileManager) {
-    this.serverStateScenarios[
-      this.activeServerStateScenarioId
-    ] = fileManager.readJSON(this.initialServerStatePath);
-    this.serverStateInterface = fileManager.readText(
-      this.serverStateInterfaceFileName,
-    );
-    this.serverStateScenarioMappings = fileManager.readJSON(
-      this.serverStateScenariosMapPath,
-    );
-    this.initialServerStates = {
-      default: this.loadServerState(this.initialServerStatePath),
-    };
+    if (this.fileManager.checkIfExists(this.initialServerStatePath)) {
+      this.serverStateScenarios[
+        this.activeServerStateScenarioId
+      ] = fileManager.readJSON(this.initialServerStatePath);
+    } else {
+      this.serverStateScenarios[
+        this.activeServerStateScenarioId
+      ] = {} as ServerState;
+    }
+
+    if (this.fileManager.checkIfExists(this.serverStateInterfaceFileName)) {
+      this.serverStateInterface = fileManager.readText(
+        this.serverStateInterfaceFileName,
+      );
+    }
+
+    if (this.fileManager.checkIfExists(this.serverStateScenariosMapPath)) {
+      this.serverStateScenarioMappings = fileManager.readJSON(
+        this.serverStateScenariosMapPath,
+      );
+    } else {
+      this.serverStateScenarioMappings = [
+        {
+          id: this.activeServerStateScenarioId,
+          name: this.activeServerStateScenarioId,
+          path: null,
+        },
+      ];
+    }
+
+    this.initialServerStates = this.serverStateScenarios;
   }
 
   updateScenarioState({

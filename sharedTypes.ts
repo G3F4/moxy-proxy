@@ -63,7 +63,7 @@ export interface ServerStateScenario {
 export interface ServerStateScenarioMapping {
   id: string;
   name: string;
-  path: string;
+  path: string | null;
 }
 
 export type HttpStatus =

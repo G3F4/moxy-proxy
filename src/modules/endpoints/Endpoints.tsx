@@ -15,6 +15,9 @@ const useStyles = makeStyles({
   root: {
     width: '100%',
   },
+  emptyMessageWrapper: {
+    margin: 8,
+  },
 });
 const ExpansionPanel = withStyles({
   root: {
@@ -54,7 +57,7 @@ export default function Endpoints() {
   const classes = useStyles();
   const { endpoints } = useContext(AppStateContext);
   const groupedEndpoints = endpoints.reduce((acc, endpoint) => {
-    return produce(acc, draft => {
+    return produce(acc, (draft) => {
       if (draft[endpoint.url]) {
         draft[endpoint.url].push(endpoint);
       } else {
@@ -91,7 +94,13 @@ export default function Endpoints() {
       <Paper>
         {endpoints.length === 0 && (
           <>
-            <Typography variant="caption">No endpoint defined.</Typography>
+            <br />
+            <Typography
+              className={classes.emptyMessageWrapper}
+              variant="caption"
+            >
+              No endpoint defined.
+            </Typography>
             <AddEndpoint />
           </>
         )}
