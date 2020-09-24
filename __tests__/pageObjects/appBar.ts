@@ -10,17 +10,11 @@ export default function appBar(parent: Selector) {
   }
 
   function getViewModeSelect() {
-    return appBarContainer
-      .find('label')
-      .withText('View mode')
-      .parent();
+    return appBarContainer.find('label').withText('View mode').parent();
   }
 
   function getStateScenarioSelect() {
-    return appBarContainer
-      .find('label')
-      .withText('State scenario')
-      .parent();
+    return appBarContainer.find('label').withText('State scenario').parent();
   }
 
   async function selectOption(select: Selector, optionLabel: string) {
@@ -45,6 +39,10 @@ export default function appBar(parent: Selector) {
     }
   }
 
+  async function getViewMode() {
+    return await getViewModeSelect().find('input').value;
+  }
+
   return {
     waitForLoaded,
     async changeStateScenario(scenarioName: string) {
@@ -60,9 +58,10 @@ export default function appBar(parent: Selector) {
     async tabsViewActive() {
       await appBarContainer;
 
-      const viewMode = await getViewModeSelect().find('input').value;
+      const viewMode = await getViewMode();
 
       return viewMode === 'tabs';
     },
+    getViewMode,
   };
 }

@@ -46,6 +46,7 @@ export default async function getApplication() {
     getViewTabs() {
       return getViewTabs(getApplicationContainer());
     },
+    getActiveLayout() {},
     views: {
       getEndpointsView,
       getServerStateView: () => getServerStateView(getApplicationContainer()),
