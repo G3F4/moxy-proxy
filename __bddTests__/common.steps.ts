@@ -1,9 +1,10 @@
 import { Given, Then } from 'cucumber';
+import { Selector } from 'testcafe';
 import getApplication from '../__tests__/pageObjects/getApplication';
 import userClick from '../__tests__/utils/userClick';
 import userWrite from '../__tests__/utils/userWrite';
 import { APP_URL } from '../server/config';
-import { Selector } from 'testcafe';
+import TestController from './TestController';
 
 Given('I open Moxy Proxy', async (t: any) => {
   await t.navigateTo(APP_URL);

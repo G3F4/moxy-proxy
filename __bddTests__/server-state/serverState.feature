@@ -5,3 +5,5 @@ Feature: Server State
     When I click "ADD SERVER SCENARIO" button
     When I enter "test scenario" in input with label "Scenario name"
     When I click "SUBMIT" button
+    When I clean editor
+    When I enter into editor "asdasd"
