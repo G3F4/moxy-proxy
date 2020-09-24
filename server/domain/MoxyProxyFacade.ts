@@ -1,10 +1,10 @@
 import produce from 'immer';
-import { ServerState } from '../../interfaces';
 import {
   ClientAction,
   Endpoint,
   HttpStatus,
   Method,
+  ServerState,
   ServerStateScenario,
 } from '../../sharedTypes';
 import SocketsClient from '../infrastructure/sockets-client/SocketsClient';

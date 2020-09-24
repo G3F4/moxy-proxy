@@ -1,5 +1,3 @@
-import { ServerState } from './interfaces';
-
 export type Method = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'options';
 
 export type ServerAction =
@@ -53,6 +51,8 @@ export interface EndpointMapping {
   responseStatus: HttpStatus | null;
   parameters: EndpointParameter[];
 }
+
+export type ServerState = JSON;
 
 export interface ServerStateScenario {
   id: string;

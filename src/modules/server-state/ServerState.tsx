@@ -3,7 +3,7 @@ import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import React, { useContext, useState } from 'react';
 import ReactJson from 'react-json-view';
-import { ServerState as ServerStateInterface } from '../../../interfaces';
+import { ServerState as ServerStateInterface } from '../../../sharedTypes';
 import { AppStateContext } from '../../App';
 import { Editor } from '../../common/Editor';
 import AddServerScenario from './add-server-scenario/AddServerScenario';

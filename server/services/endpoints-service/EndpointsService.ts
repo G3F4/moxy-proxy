@@ -1,10 +1,10 @@
 import { FSWatcher } from 'fs';
-import { ServerState } from '../../../interfaces';
 import {
   Endpoint,
   EndpointMapping,
   HttpStatus,
   Method,
+  ServerState,
 } from '../../../sharedTypes';
 import { DATA_DIR } from '../../config';
 import FileManager from '../../infrastructure/file-manager/FileManager';

@@ -1,15 +1,12 @@
-import { exec } from 'child_process';
-import * as util from 'util';
-import { ServerState } from '../../../interfaces';
 import {
+  ServerState,
   ServerStateScenario,
   ServerStateScenarioMapping,
 } from '../../../sharedTypes';
 import { DATA_DIR } from '../../config';
 import FileManager from '../../infrastructure/file-manager/FileManager';
+import generateTypeFromJSON from '../../utils/generateTypeFromJSON';
 import { logError, logInfo } from '../../utils/logger';
-
-const execPromised = util.promisify(exec);
 
 export default class ServerStateService {
   static defaultScenarioId = 'default';
@@ -53,6 +50,18 @@ export default class ServerStateService {
       this.serverStateInterface = fileManager.readText(
         this.serverStateInterfaceFileName,
       );
+    } else {
+      generateTypeFromJSON(
+        'typescript',
+        'ServerState',
+        JSON.stringify(
+          this.serverStateScenarios[this.activeServerStateScenarioId],
+        ),
+      )
+        .then((response) => {
+          this.serverStateInterface = response;
+        })
+        .catch(logError);
     }
 
     if (this.fileManager.checkIfExists(this.serverStateScenariosMapPath)) {
@@ -84,7 +93,7 @@ export default class ServerStateService {
     this.serverStateScenarios[serverStateScenarioId] = state;
 
     // this.saveServerStateToFile(serverStateScenarioId, state);
-    // this.makeTypesFromInitialServerState().then(() => {
+    // this.generateTypesFromState().then(() => {
     //   return undefined;
     // });
   }
@@ -183,20 +192,6 @@ export default class ServerStateService {
       this.fileManager.saveJSON(
         `${DATA_DIR}/${serverStateScenarioMapping.path}`,
         data,
-      );
-    }
-  }
-
-  async makeTypesFromInitialServerState() {
-    const { stderr } = await execPromised(
-      `make_types -i ${this.serverStateInterfaceFileName} ${this.initialServerStatePath} ServerState`,
-    );
-
-    if (stderr) {
-      logError(stderr);
-    } else {
-      this.serverStateInterface = this.fileManager.readText(
-        this.serverStateInterfaceFileName,
       );
     }
   }

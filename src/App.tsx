@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars */
 import React, { createContext, useCallback, useEffect, useState } from 'react';
-import { ServerState } from '../interfaces';
 import {
   ClientEvent,
   Endpoint,
   HttpStatus,
   ServerAction,
   ServerEvent,
+  ServerState,
   ServerStateScenario,
 } from '../sharedTypes';
 import './App.css';
