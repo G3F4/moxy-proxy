@@ -23,7 +23,12 @@ export default class MoxyProxyFacade {
     private readonly serverStateService: ServerStateService,
   ) {}
 
-  connectClient = (socket: WebSocket) => {
+  async loadServices() {
+    await this.serverStateService.load();
+    await this.endpointsService.load();
+  }
+
+  connectClient = async (socket: WebSocket) => {
     const socketId = this.socketsClient.connect(
       socket,
       this.disconnectClient.bind(this),
@@ -31,17 +36,10 @@ export default class MoxyProxyFacade {
 
     this.connectedSocketIds.push(socketId);
     this.socketsClient.registerMessageHandlers(this.clientMessageHandlers);
-    this.sendCurrentStateToClient(socketId);
+    await this.sendCurrentStateToClient(socketId);
   };
 
-  sendServerStateInterface() {
-    this.socketsClient.broadcastEvent({
-      action: 'updateServerStateInterface',
-      payload: this.serverStateService.getServerStateInterface(),
-    });
-  }
-
-  callHandler({
+  async callHandler({
     url = '/',
     method = 'get',
     body = {},
@@ -51,11 +49,11 @@ export default class MoxyProxyFacade {
     method: Method;
     body: Record<string, any>;
     parameters: Record<string, any>;
-  }): {
+  }): Promise<{
     status: HttpStatus;
     contentType: string;
     requestResponse: string;
-  } {
+  }> {
     console.log(['callHandler']);
 
     const handler = this.endpointsService.getHandler({ url, method });
@@ -75,12 +73,16 @@ export default class MoxyProxyFacade {
       request,
     );
 
-    this.serverStateService.updateScenarioState({
-      serverStateScenarioId: this.serverStateService.getActiveServerStateScenarioId(),
-      state: produce(
-        this.serverStateService.getServerState(),
-        serverUpdate(request),
-      ),
+    await this.serverStateService.updateActiveScenario(
+      produce(this.serverStateService.getServerState(), serverUpdate(request)),
+    );
+    await this.socketsClient.broadcastEvent({
+      action: 'updateServerState',
+      payload: this.serverStateService.getServerState(),
+    });
+    await this.socketsClient.broadcastEvent({
+      action: 'updateServerStateInterface',
+      payload: this.serverStateService.getServerStateInterface(),
     });
 
     return {
@@ -96,24 +98,24 @@ export default class MoxyProxyFacade {
     );
   }
 
-  private sendCurrentStateToClient(socketId: string) {
-    this.socketsClient.sendEventToSocket(socketId, {
+  private async sendCurrentStateToClient(socketId: string) {
+    await this.socketsClient.sendEventToSocket(socketId, {
       action: 'updateServerState',
       payload: this.serverStateService.getServerState(),
     });
-    this.socketsClient.sendEventToSocket(socketId, {
+    await this.socketsClient.sendEventToSocket(socketId, {
       action: 'updateServerStateInterface',
       payload: this.serverStateService.getServerStateInterface(),
     });
-    this.socketsClient.sendEventToSocket(socketId, {
+    await this.socketsClient.sendEventToSocket(socketId, {
       action: 'updateServerStateScenarios',
       payload: this.serverStateService.getServerStateScenarioMappings(),
     });
-    this.socketsClient.sendEventToSocket(socketId, {
+    await this.socketsClient.sendEventToSocket(socketId, {
       action: 'updateActiveStateScenarioId',
       payload: this.serverStateService.getActiveServerStateScenarioId(),
     });
-    this.socketsClient.sendEventToSocket(socketId, {
+    await this.socketsClient.sendEventToSocket(socketId, {
       action: 'updateEndpoints',
       payload: this.endpointsService.getEndpoints(),
     });
@@ -121,91 +123,95 @@ export default class MoxyProxyFacade {
 
   private clientMessageHandlers: Record<
     ClientAction,
-    (payload: any) => void
+    (payload: any) => Promise<void>
   > = {
-    persistMockedData: () => {
+    persistMockedData: async () => {
       this.serverStateService.persistChanges();
     },
-    persistEndpoints: () => {
+    persistEndpoints: async () => {
       this.endpointsService.persistChanges();
     },
-    addEndpoint: (payload: Endpoint) => {
-      this.endpointsService.addEndpoint(payload);
-      this.socketsClient.broadcastEvent({
+    addEndpoint: async (payload: Endpoint) => {
+      await this.endpointsService.addEndpoint(payload);
+      await this.socketsClient.broadcastEvent({
         action: 'updateEndpoints',
         payload: this.endpointsService.getEndpoints(),
       });
     },
-    updateEndpoint: (payload: Endpoint) => {
+    updateEndpoint: async (payload: Endpoint) => {
       this.endpointsService.updateEndpoint(payload);
-      this.socketsClient.broadcastEvent({
+      await this.socketsClient.broadcastEvent({
         action: 'updateEndpoints',
         payload: this.endpointsService.getEndpoints(),
       });
     },
-    deleteEndpoint: (payload: string) => {
+    deleteEndpoint: async (payload: string) => {
       this.endpointsService.deleteEndpoint(payload);
-      this.socketsClient.broadcastEvent({
+      await this.socketsClient.broadcastEvent({
         action: 'updateEndpoints',
         payload: this.endpointsService.getEndpoints(),
       });
     },
-    changeEndpointResponseStatus: (payload: {
+    changeEndpointResponseStatus: async (payload: {
       endpointId: string;
       status: HttpStatus | null;
     }) => {
       this.endpointsService.changeEndpointResponseStatus(payload);
-      this.socketsClient.broadcastEvent({
+      await this.socketsClient.broadcastEvent({
         action: 'updateEndpoints',
         payload: this.endpointsService.getEndpoints(),
       });
     },
 
-    addServerStateScenario: (payload: ServerStateScenario) => {
+    addServerStateScenario: async (payload: ServerStateScenario) => {
       this.serverStateService.addServerStateScenario(payload);
-      this.socketsClient.broadcastEvent({
+      await this.socketsClient.broadcastEvent({
         action: 'updateServerStateScenarios',
         payload: this.serverStateService.getServerStateScenarioMappings(),
       });
     },
-    deleteStateScenario: (payload: string) => {
+    deleteStateScenario: async (payload: string) => {
       this.serverStateService.deleteStateScenario(payload);
-      this.socketsClient.broadcastEvent({
+      await this.socketsClient.broadcastEvent({
         action: 'updateServerStateScenarios',
         payload: this.serverStateService.getServerStateScenarioMappings(),
       });
-      this.socketsClient.broadcastEvent({
+      await this.socketsClient.broadcastEvent({
         action: 'updateActiveStateScenarioId',
         payload: this.serverStateService.getActiveServerStateScenarioId(),
       });
     },
-    changeServerStateScenario: (payload: string) => {
+    changeServerStateScenario: async (payload: string) => {
       console.log(['changeServerStateScenario'], payload);
       this.serverStateService.changeServerStateScenario(payload);
-      this.socketsClient.broadcastEvent({
+      await this.socketsClient.broadcastEvent({
         action: 'updateServerState',
         payload: this.serverStateService.getServerState(),
       });
     },
-    clientUpdatedServer: (payload: {
+    clientUpdatedServer: async (payload: {
       state: ServerState;
       serverStateScenarioId: string;
     }) => {
-      this.serverStateService.updateScenarioState(payload);
-      this.socketsClient.broadcastEvent({
+      await this.serverStateService.updateScenarioState(payload);
+      await this.socketsClient.broadcastEvent({
         action: 'updateServerState',
         payload: this.serverStateService.getServerState(),
       });
+      await this.socketsClient.broadcastEvent({
+        action: 'updateServerStateInterface',
+        payload: this.serverStateService.getServerStateInterface(),
+      });
     },
-    resetServerState: (payload: string) => {
+    resetServerState: async (payload: string) => {
       this.serverStateService.resetServerState(payload);
-      this.socketsClient.broadcastEvent({
+      await this.socketsClient.broadcastEvent({
         action: 'updateServerState',
         payload: this.serverStateService.getServerState(),
       });
     },
 
-    ping: () => {
+    ping: async () => {
       logInfo(['ping']);
     },
   };

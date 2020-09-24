@@ -34,7 +34,9 @@ export interface Handler {
 const urlParameterDelimiter = ':';
 
 export default class EndpointsService {
-  constructor(readonly fileManager: FileManager) {
+  constructor(readonly fileManager: FileManager) {}
+
+  async load() {
     this.loadEndpoints();
   }
 

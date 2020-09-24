@@ -15,6 +15,7 @@ const moxyProxyFacade = new MoxyProxyFacade(
   serverStateService,
 );
 
-export default function startApplication() {
+export default async function startApplication() {
+  await moxyProxyFacade.loadServices();
   new HttpServer(moxyProxyFacade);
 }

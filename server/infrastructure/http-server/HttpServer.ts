@@ -42,9 +42,13 @@ export default class HttpServer {
   private registerSocketsRoute() {
     const socketHash = 'superHash123';
 
-    this.server.get(`/${socketHash}`, { websocket: true }, connection => {
-      this.moxyProxyFacade.connectClient(connection.socket);
-    });
+    this.server.get(
+      `/${socketHash}`,
+      { websocket: true },
+      async (connection) => {
+        await this.moxyProxyFacade.connectClient(connection.socket);
+      },
+    );
   }
 
   private registerRestRoute() {
@@ -56,7 +60,7 @@ export default class HttpServer {
     });
   }
 
-  private restController(
+  private async restController(
     request: FastifyRequest,
     // @ts-ignore
     reply: FastifyReply<ServerResponse>,
@@ -73,17 +77,14 @@ export default class HttpServer {
       contentType,
       requestResponse,
       status,
-    } = this.moxyProxyFacade.callHandler({
+    } = await this.moxyProxyFacade.callHandler({
       method,
       parameters,
       url: pathname!,
       body: request.body as Record<string, any>,
     });
 
-    reply
-      .type(contentType)
-      .code(status)
-      .send(requestResponse);
+    reply.type(contentType).code(status).send(requestResponse);
   }
 
   private async listenHandler(err: Error, address: string) {

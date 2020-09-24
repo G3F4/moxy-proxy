@@ -5,7 +5,10 @@ import { logError } from '../../utils/logger';
 
 export default class SocketsClient {
   sockets: WebSocket[] = [];
-  clientMessageHandlers: Record<string, Function> = {};
+  clientMessageHandlers: Record<
+    string,
+    (payload: unknown) => Promise<void>
+  > = {};
 
   private generateSocketId() {
     return Date.now();
@@ -14,8 +17,8 @@ export default class SocketsClient {
   connect(socket: WebSocket, onDisconnect: (socketId: string) => void): string {
     this.addSocket(socket);
     socket.id = this.generateSocketId();
-    socket.on('message', (message: string) => {
-      this.handleClientMessage(message);
+    socket.on('message', async (message: string) => {
+      await this.handleClientMessage(message);
     });
     socket.on('close', () => {
       this.deleteSocket(socket);
@@ -25,40 +28,47 @@ export default class SocketsClient {
     return socket.id;
   }
 
-  registerMessageHandlers(handlers: Record<string, Function>) {
+  registerMessageHandlers(
+    handlers: Record<string, (payload: unknown) => Promise<void>>,
+  ) {
     this.clientMessageHandlers = handlers;
   }
 
-  sendEventToSocket(socketId: string, event: ServerEvent) {
+  async sendEventToSocket(socketId: string, event: ServerEvent) {
     const socket = this.getSocket(socketId);
 
-    this.sendEvent(socket, event);
+    await this.sendEvent(socket, event);
   }
 
-  broadcastEvent(event: ServerEvent) {
-    this.sockets.forEach(socket => {
-      try {
-        socket.send(JSON.stringify(event));
-      } catch (e) {
-        logError(e);
-        this.clearSocket(socket.id);
-      }
-    });
+  async broadcastEvent(event: ServerEvent) {
+    await Promise.all(
+      this.sockets.map(async (socket) => {
+        try {
+          await socket.send(JSON.stringify(event));
+        } catch (e) {
+          logError(e);
+          this.clearSocket(socket.id);
+        }
+      }),
+    );
   }
 
-  private sendEvent(socket: WebSocket, event: ServerEvent): void {
+  private async sendEvent(
+    socket: WebSocket,
+    event: ServerEvent,
+  ): Promise<void> {
     try {
-      socket.send(JSON.stringify(event));
+      await socket.send(JSON.stringify(event));
     } catch (e) {
       logError(e);
     }
   }
 
-  private handleClientMessage(message: string) {
+  private async handleClientMessage(message: string) {
     const { action, payload } = this.parseClientMessage(message);
     const handler = this.clientMessageHandlers[action];
 
-    handler(payload);
+    await handler(payload);
   }
 
   private addSocket(socket: WebSocket) {
