@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import 'fastify-websocket';
 import { SocketStream } from 'fastify-websocket';
-import { ServerResponse } from 'http';
+import { RouteHandlerMethod } from 'fastify/types/route';
 import { original } from 'parseurl';
 import { parse } from 'querystring';
 import { Method } from '../../../sharedTypes';
@@ -60,34 +60,54 @@ export default class HttpServer {
     });
   }
 
-  private async restController(
-    request: FastifyRequest,
-    // @ts-ignore
-    reply: FastifyReply<ServerResponse>,
-  ) {
-    const method = request.raw.method!.toLowerCase() as Method;
-    const { pathname, query } = original(request.raw)!;
-    let parameters = {};
+  private static parseMethod(method: string): Method {
+    const correctMethods = ['get', 'post', 'put', 'patch', 'delete', 'options'];
 
-    if (typeof query === 'string') {
-      parameters = parse(query);
+    if (correctMethods.includes(method)) {
+      return method as Method;
     }
 
-    const {
-      contentType,
-      requestResponse,
-      status,
-    } = await this.moxyProxyFacade.callHandler({
-      method,
-      parameters,
-      url: pathname!,
-      body: request.body as Record<string, any>,
-    });
-
-    reply.type(contentType).code(status).send(requestResponse);
+    throw new Error('Incorrect method');
   }
 
-  private async listenHandler(err: Error, address: string) {
+  private static parseUrl(url: string | null): string {
+    if (url) {
+      return url;
+    }
+
+    throw new Error('Incorrect url');
+  }
+
+  restController: RouteHandlerMethod = async (request, reply) => {
+    const method = request.raw.method;
+    const parsedUrl = original(request.raw);
+
+    if (method && parsedUrl) {
+      const { pathname, query } = parsedUrl;
+      let parameters = {};
+
+      if (typeof query === 'string') {
+        parameters = parse(query);
+      }
+
+      const {
+        contentType,
+        requestResponse,
+        status,
+      } = await this.moxyProxyFacade.callHandler({
+        parameters,
+        url: HttpServer.parseUrl(pathname),
+        body: request.body as Record<string, unknown>,
+        method: HttpServer.parseMethod(method),
+      });
+
+      reply.type(contentType).code(status).send(requestResponse);
+    }
+
+    throw new Error('Wrong rest controller request');
+  };
+
+  private async listenHandler(err: Error) {
     if (err) {
       this.server.log.error(err);
     }

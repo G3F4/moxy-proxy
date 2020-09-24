@@ -1,7 +1,10 @@
 import './dotenv';
 import startApplication from './startApplication';
+import { logInfo } from './utils/logger';
 
-startApplication();
+startApplication().then(() => {
+  logInfo('Application up and running.');
+});
 
 // curl -i --header "Content-Type: application/json" --request GET  http://localhost:5000/test
 // curl -i --header "Content-Type: application/json" --request PUT  http://localhost:5000/test

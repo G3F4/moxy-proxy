@@ -47,8 +47,8 @@ export default class MoxyProxyFacade {
   }: {
     url: string;
     method: Method;
-    body: Record<string, any>;
-    parameters: Record<string, any>;
+    body: Record<string, unknown>;
+    parameters: Record<string, unknown>;
   }): Promise<{
     status: HttpStatus;
     contentType: string;
