@@ -1,4 +1,5 @@
-import { Given, Then } from 'cucumber';
+import { ChildProcessByStdio, ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import { Given, Then, Before, After, AfterAll, BeforeAll } from 'cucumber';
 import { Selector } from 'testcafe';
 import getApplication from '../__tests__/pageObjects/getApplication';
 import userClick from '../__tests__/utils/userClick';
@@ -8,6 +9,30 @@ import userWait from '../__tests__/utils/userWait';
 import userWrite from '../__tests__/utils/userWrite';
 import { APP_URL } from '../server/config';
 import TestController from './TestController';
+
+let subprocess: ChildProcessWithoutNullStreams;
+
+
+async function startApp() {
+  subprocess = spawn('yarn', ['run', 'test:bdd:app']);
+  return new Promise(((resolve, reject) => {
+    setTimeout(() => {
+      resolve();
+    }, 2000);
+  }))
+}
+
+function stopApp() {
+  subprocess.kill();
+}
+
+BeforeAll('@BeforeAll', async () => {
+  await startApp();
+});
+
+AfterAll('@AfterAll', async () => {
+  stopApp();
+});
 
 Given('I open Moxy Proxy', async (t: any) => {
   await t.navigateTo(APP_URL);
