@@ -88,19 +88,19 @@ export default function AddEndpointStepper({ onDone }: { onDone: any }) {
       case 2: {
         return (
           <ParametersStep
-            addParameter={parameter => {
+            addParameter={(parameter) => {
               setEndpoint(endpoint => ({
                 ...endpoint,
                 parameters: [...endpoint.parameters, parameter],
               }));
             }}
             parameters={endpoint.parameters}
-            onParametersChange={parameter => {
+            onParametersChange={(parameter) => {
               function updateParameters(
                 parameters: EndpointParameter[],
                 parameter: EndpointParameter,
               ) {
-                return produce(parameters, draft => {
+                return produce(parameters, (draft) => {
                   const parameterIndex = parameters.findIndex(
                     ({ id }) => id === parameter.id,
                   );

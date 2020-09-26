@@ -6,10 +6,7 @@ import getEditor from './getEditor';
 
 export default function getServerStateView(parent: Selector) {
   function getViewHeader() {
-    return parent
-      .find('h5')
-      .withText('Server state')
-      .parent();
+    return parent.find('h5').withText('Server state').parent();
   }
 
   function getViewContainer() {
@@ -31,9 +28,7 @@ export default function getServerStateView(parent: Selector) {
   }
 
   async function searchValue(expectedValue: string) {
-    const value = await getViewContainer()
-      .find('div')
-      .withText(expectedValue);
+    const value = await getViewContainer().find('div').withText(expectedValue);
     const valueExists = await value.exists;
 
     if (!valueExists) {
@@ -60,9 +55,7 @@ export default function getServerStateView(parent: Selector) {
       return {
         async deleteScenario() {
           await userClick(
-            getMoreMenuContainer()
-              .find('li')
-              .withText('Delete scenario'),
+            getMoreMenuContainer().find('li').withText('Delete scenario'),
           );
         },
       };
@@ -115,9 +108,7 @@ export default function getServerStateView(parent: Selector) {
       }
 
       function getAddServerStateScenarioButton() {
-        return getViewHeader()
-          .find('button')
-          .withText('ADD SERVER SCENARIO');
+        return getViewHeader().find('button').withText('ADD SERVER SCENARIO');
       }
 
       function getSubmitServerStateScenarioSubmit() {

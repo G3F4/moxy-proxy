@@ -70,20 +70,15 @@ function parseMessage(
   return { action, payload };
 }
 
-function getSocketUrl() {
-  if (process.env.REACT_APP_SOCKET_URL) {
-    return process.env.REACT_APP_SOCKET_URL;
-  }
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL;
+const API_URL = process.env.REACT_APP_API_URL;
 
-  return 'ws://moxy-proxy.herokuapp.com/superHash123';
+function getSocketUrl() {
+  return SOCKET_URL as string;
 }
 
 function getApiUrl() {
-  if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
-  }
-
-  return 'https://moxy-proxy.herokuapp.com';
+  return API_URL as string;
 }
 
 const socket = new WebSocket(getSocketUrl());

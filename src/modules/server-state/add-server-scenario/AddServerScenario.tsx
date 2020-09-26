@@ -14,6 +14,7 @@ import {
 import TextField from '@material-ui/core/TextField';
 import { Close } from '@material-ui/icons';
 import React, { ChangeEvent, useContext, useState } from 'react';
+import { ServerState } from '../../../../sharedTypes';
 import { AppStateContext } from '../../../App';
 import { Editor } from '../../../common/Editor';
 
@@ -34,11 +35,16 @@ export default function AddServerScenario() {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('xs'));
   const { addServerStateScenario, serverState } = useContext(AppStateContext);
-  const [scenarioServerState, setScenarioServerState] = useState(serverState);
+  const [scenarioServerState, setScenarioServerState] = useState(
+    {} as ServerState,
+  );
   const [name, setName] = useState('');
+
+  console.log(['serverState'], serverState);
 
   function handleClickOpen() {
     setOpen(true);
+    setScenarioServerState(serverState);
   }
 
   function handleClose() {

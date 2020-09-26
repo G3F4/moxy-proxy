@@ -27,7 +27,7 @@ export function readJson(res: any, cb: (json: unknown) => void, err: any) {
 }
 
 export async function readJsonAsync(res: any) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     readJson(res, resolve, reject);
   });
 }

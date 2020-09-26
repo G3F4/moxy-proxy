@@ -3,11 +3,7 @@ import AppBar from '@material-ui/core/AppBar';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
-import {
-  createStyles,
-  makeStyles,
-  Theme,
-} from '@material-ui/core/styles';
+import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import React, { useContext, useEffect, useRef, useState } from 'react';
@@ -92,7 +88,7 @@ export default function Header() {
   const [labelWidth, setLabelWidth] = useState(0);
   const [anchorEl, setAnchorEl] = React.useState(null);
   // @ts-ignore
-  const handleClick = event => {
+  const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
   const handleClose = () => {
@@ -134,7 +130,7 @@ export default function Header() {
               labelId="view-mode-select"
               labelWidth={labelWidth}
               value={viewMode}
-              onChange={event => {
+              onChange={(event) => {
                 changeViewMode(event.target.value as ViewMode);
               }}
             >
@@ -159,7 +155,7 @@ export default function Header() {
               labelId="state-scenario-select"
               labelWidth={labelWidth}
               value={activeServerStateScenarioId}
-              onChange={event => {
+              onChange={(event) => {
                 changeServerStateScenario(event.target.value as string);
               }}
             >

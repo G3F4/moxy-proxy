@@ -44,6 +44,8 @@ export default class FileManager {
   }
 
   readJSON<T extends unknown>(path: string): T {
+    console.log(['path'], path);
+
     return JSON.parse(readFileSync(`${this.cwd}/${path}`, 'utf8'));
   }
 

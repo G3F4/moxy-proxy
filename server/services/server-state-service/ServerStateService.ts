@@ -6,77 +6,66 @@ import {
 import { DATA_DIR } from '../../config';
 import FileManager from '../../infrastructure/file-manager/FileManager';
 import generateTypeFromJSON from '../../utils/generateTypeFromJSON';
-import { logError, logInfo } from '../../utils/logger';
+import { logInfo } from '../../utils/logger';
 
 export default class ServerStateService {
   static defaultScenarioId = 'default';
-  private activeServerStateScenarioId = ServerStateService.defaultScenarioId;
-  private serverStateScenarios: Record<string, ServerState> = {};
-  private serverStateScenarioMappings: ServerStateScenarioMapping[] = [];
+
+  private activeScenarioId = ServerStateService.defaultScenarioId;
+  private scenarios: Record<string, ServerState> = {};
+  private scenarioMappings: ServerStateScenarioMapping[] = [];
   private serverStateInterface = '';
-  private serverStateInterfaceFileName = 'interfaces.ts';
-  private initialServerStatePath = `${DATA_DIR}/serverState/${this.activeServerStateScenarioId}.json`;
   private serverStateScenariosMapPath = `${DATA_DIR}/serverStateScenarios.json`;
   private initialServerStates: Record<string, ServerState> = {};
 
   getActiveServerStateScenarioId() {
-    return this.activeServerStateScenarioId;
+    return this.activeScenarioId;
   }
 
   getServerState() {
-    return this.serverStateScenarios[this.activeServerStateScenarioId];
+    return this.scenarios[this.activeScenarioId];
   }
 
-  getServerStateInterface() {
-    return this.serverStateInterface;
+  async getActiveScenarioInterface() {
+    return await generateTypeFromJSON(
+      'typescript',
+      'ServerState',
+      JSON.stringify(this.scenarios[this.activeScenarioId]),
+    );
   }
 
   getServerStateScenarioMappings() {
-    return this.serverStateScenarioMappings;
+    return this.scenarioMappings;
   }
 
   constructor(readonly fileManager: FileManager) {}
 
   async load() {
-    if (this.fileManager.checkIfExists(this.initialServerStatePath)) {
-      this.serverStateScenarios[
-        this.activeServerStateScenarioId
-      ] = this.fileManager.readJSON(this.initialServerStatePath);
-    } else {
-      this.serverStateScenarios[
-        this.activeServerStateScenarioId
-      ] = {} as ServerState;
-    }
+    const initialServerStatePath = `${DATA_DIR}/serverState/${this.activeScenarioId}.json`;
 
-    if (this.fileManager.checkIfExists(this.serverStateInterfaceFileName)) {
-      this.serverStateInterface = this.fileManager.readText(
-        this.serverStateInterfaceFileName,
+    if (this.fileManager.checkIfExists(initialServerStatePath)) {
+      this.updateActiveScenario(
+        this.fileManager.readJSON(initialServerStatePath),
       );
     } else {
-      this.serverStateInterface = await generateTypeFromJSON(
-        'typescript',
-        'ServerState',
-        JSON.stringify(
-          this.serverStateScenarios[this.activeServerStateScenarioId],
-        ),
-      );
+      this.updateActiveScenario({} as ServerState);
     }
 
     if (this.fileManager.checkIfExists(this.serverStateScenariosMapPath)) {
-      this.serverStateScenarioMappings = this.fileManager.readJSON(
-        this.serverStateScenariosMapPath,
+      this.updateMappings(
+        this.fileManager.readJSON(this.serverStateScenariosMapPath),
       );
     } else {
-      this.serverStateScenarioMappings = [
+      this.updateMappings([
         {
-          id: this.activeServerStateScenarioId,
-          name: this.activeServerStateScenarioId,
+          id: this.activeScenarioId,
+          name: this.activeScenarioId,
           path: null,
         },
-      ];
+      ]);
     }
 
-    this.initialServerStates = this.serverStateScenarios;
+    this.initialServerStates = this.scenarios;
   }
 
   async updateScenarioState({
@@ -88,34 +77,25 @@ export default class ServerStateService {
   }) {
     logInfo(['updateServerState'], serverStateScenarioId);
 
-    this.serverStateScenarios[serverStateScenarioId] = state;
+    this.scenarios[serverStateScenarioId] = state;
     this.serverStateInterface = await generateTypeFromJSON(
       'typescript',
       'ServerState',
-      JSON.stringify(
-        this.serverStateScenarios[this.activeServerStateScenarioId],
-      ),
+      JSON.stringify(this.scenarios[this.activeScenarioId]),
     );
   }
 
-  async updateActiveScenario(state: ServerState) {
+  updateActiveScenario(state: ServerState) {
     logInfo(['updateActiveScenario'], state);
 
-    this.serverStateScenarios[this.activeServerStateScenarioId] = state;
-    this.serverStateInterface = await generateTypeFromJSON(
-      'typescript',
-      'ServerState',
-      JSON.stringify(
-        this.serverStateScenarios[this.activeServerStateScenarioId],
-      ),
-    );
+    this.scenarios[this.activeScenarioId] = state;
   }
 
-  addServerStateScenario(scenario: ServerStateScenario) {
+  async addServerStateScenario(scenario: ServerStateScenario) {
     logInfo(['addServerStateScenario'], scenario);
 
     const mappings = [
-      ...this.serverStateScenarioMappings,
+      ...this.scenarioMappings,
       {
         name: scenario.name,
         id: scenario.id,
@@ -123,41 +103,41 @@ export default class ServerStateService {
       },
     ];
 
-    this.updateScenarioState({
+    await this.updateScenarioState({
       serverStateScenarioId: scenario.id,
       state: scenario.state,
     });
     this.updateMappings(mappings);
   }
 
-  changeServerStateScenario(scenarioId: string) {
+  async changeServerStateScenario(scenarioId: string) {
     logInfo(['changeServerStateScenario'], scenarioId);
-    this.updateScenarioState({
-      state: this.serverStateScenarios[scenarioId],
+    await this.updateScenarioState({
+      state: this.scenarios[scenarioId],
       serverStateScenarioId: scenarioId,
     });
-    this.activeServerStateScenarioId = scenarioId;
+    this.activeScenarioId = scenarioId;
   }
 
-  deleteStateScenario(scenarioId: string) {
-    const mapping = this.serverStateScenarioMappings.find(
-      ({ id }) => id === scenarioId,
-    );
+  async deleteStateScenario(scenarioId: string) {
+    const mapping = this.scenarioMappings.find(({ id }) => id === scenarioId);
 
     if (mapping) {
-      const updatedScenarioMappings = this.serverStateScenarioMappings.filter(
+      const updatedScenarioMappings = this.scenarioMappings.filter(
         ({ id }) => id !== scenarioId,
       );
 
       this.updateMappings(updatedScenarioMappings);
-      this.activeServerStateScenarioId = ServerStateService.defaultScenarioId;
-      this.changeServerStateScenario(ServerStateService.defaultScenarioId);
+      this.activeScenarioId = ServerStateService.defaultScenarioId;
+      await this.changeServerStateScenario(
+        ServerStateService.defaultScenarioId,
+      );
       this.fileManager.deleteFile(`/${mapping.path}`);
     }
   }
 
-  resetServerState(serverStateScenarioId: string) {
-    this.updateScenarioState({
+  async resetServerState(serverStateScenarioId: string) {
+    await this.updateScenarioState({
       serverStateScenarioId,
       state: this.initialServerStates[serverStateScenarioId],
     });
@@ -173,31 +153,24 @@ export default class ServerStateService {
   private updateMappings(mappings: ServerStateScenarioMapping[]) {
     logInfo(['updateMappings'], mappings);
 
-    this.serverStateScenarioMappings = mappings;
-    // this.saveServerStateScenarioMappings(mappings);
+    this.scenarioMappings = mappings;
   }
 
   private persistMappings() {
-    this.saveServerStateScenarioMappings(this.serverStateScenarioMappings);
+    this.saveServerStateScenarioMappings(this.scenarioMappings);
   }
 
   private persistScenarios() {
-    Object.entries(this.serverStateScenarios).forEach(
-      ([scenarioName, scenarioState]) => {
-        this.saveServerStateToFile(scenarioName, scenarioState);
-      },
-    );
-  }
-
-  private loadServerState(path: string) {
-    return this.fileManager.readJSON<ServerState>(path);
+    Object.entries(this.scenarios).forEach(([scenarioName, scenarioState]) => {
+      this.saveServerStateToFile(scenarioName, scenarioState);
+    });
   }
 
   private saveServerStateToFile(
     serverStateScenarioId: string,
     data: ServerState,
   ) {
-    const serverStateScenarioMapping = this.serverStateScenarioMappings.find(
+    const serverStateScenarioMapping = this.scenarioMappings.find(
       scenario => scenario.id === serverStateScenarioId,
     );
 
@@ -209,6 +182,20 @@ export default class ServerStateService {
     }
   }
 
+  private createServerStateScenarioDataPath(scenario: ServerStateScenario) {
+    return `serverState/${scenario.name}.json`;
+  }
+
+  private saveServerStateScenarioMappings(
+    scenarios: ServerStateScenarioMapping[],
+  ) {
+    this.fileManager.saveJSON(this.serverStateScenariosMapPath, scenarios);
+  }
+
+  private loadServerState(path: string) {
+    return this.fileManager.readJSON<ServerState>(path);
+  }
+
   private saveServerStateScenario(scenario: ServerStateScenario) {
     const serverStateScenarioDataPath = this.createServerStateScenarioDataPath(
       scenario,
@@ -218,15 +205,5 @@ export default class ServerStateService {
       `${DATA_DIR}/${serverStateScenarioDataPath}`,
       scenario.state,
     );
-  }
-
-  private createServerStateScenarioDataPath(scenario: ServerStateScenario) {
-    return `serverState/${scenario.name}.json`;
-  }
-
-  private saveServerStateScenarioMappings(
-    scenarios: ServerStateScenarioMapping[],
-  ) {
-    this.fileManager.saveJSON(this.serverStateScenariosMapPath, scenarios);
   }
 }

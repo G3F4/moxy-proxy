@@ -22,7 +22,7 @@ export default function UrlParameters({
         Fill url parameters
       </Typography>
       <div style={{ display: 'flex' }}>
-        {urlParts.map(part => {
+        {urlParts.map((part) => {
           const urlParameter = part[0] === urlDelimiter;
 
           if (urlParameter) {
@@ -35,7 +35,7 @@ export default function UrlParameters({
                 label={parameterName}
                 placeholder="Set parameter value"
                 value={value}
-                onChange={event => {
+                onChange={(event) => {
                   setUrlParameters({
                     ...urlParameters,
                     [parameterName]: event.target.value,

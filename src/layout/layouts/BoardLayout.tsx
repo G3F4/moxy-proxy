@@ -2,11 +2,11 @@ import { Grid } from '@material-ui/core';
 import React, { lazy, Suspense } from 'react';
 
 const LazyEndpoints = lazy(() => import('../../modules/endpoints/Endpoints'));
-const LazyServerState = lazy(() =>
-  import('../../modules/server-state/ServerState'),
+const LazyServerState = lazy(
+  () => import('../../modules/server-state/ServerState'),
 );
-const LazyStateInterface = lazy(() =>
-  import('../../modules/state-interface/StateInterface'),
+const LazyStateInterface = lazy(
+  () => import('../../modules/state-interface/StateInterface'),
 );
 
 export default function BoardLayout() {

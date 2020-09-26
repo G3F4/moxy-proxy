@@ -1,8 +1,7 @@
 import { t } from 'testcafe';
-import randomUserDelay from './randomUserDelay';
 
-export default async function userWait(random = true, fixedDelay = 100) {
-  const delay = random ? randomUserDelay() : fixedDelay;
+export default async function userWait(seconds = 1) {
+  const delay = seconds * 1000;
 
   return t.wait(delay);
 }

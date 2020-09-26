@@ -5,10 +5,7 @@ import getAddEndpointView from './getAddEndpointView';
 
 export default async function getEndpointsView() {
   function getViewContainer() {
-    return Selector('h5')
-      .withText('Endpoints')
-      .parent()
-      .parent();
+    return Selector('h5').withText('Endpoints').parent().parent();
   }
 
   await t.expect(getViewContainer().exists).ok('view container doesnt exists');

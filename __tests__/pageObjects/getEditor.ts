@@ -67,7 +67,7 @@ export default function getEditor(parent: Selector) {
       const chars = code.split('');
 
       await Promise.all(
-        chars.map(async char => {
+        chars.map(async (char) => {
           const key = char === ' ' ? 'space' : char;
 
           await userPressKey({ key });

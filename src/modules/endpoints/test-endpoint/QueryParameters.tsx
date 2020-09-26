@@ -26,7 +26,7 @@ export default function QueryParameters({
               label={name}
               placeholder="Set query parameter value"
               value={queryParams[name]}
-              onChange={event => {
+              onChange={(event) => {
                 setQueryParams({
                   ...queryParams,
                   [name]: event.target.value,

@@ -4,6 +4,7 @@ Feature: Server State
     When I select "Tabs view" option
     When I click "ADD SERVER SCENARIO" button
     When I enter "test scenario" in input with label "Scenario name"
+    Then I wait for 2 seconds
+    When I press tab on keyboard
+    Then I wait for 2 seconds
     When I click "SUBMIT" button
-    When I clean editor
-    When I enter into editor "asdasd"

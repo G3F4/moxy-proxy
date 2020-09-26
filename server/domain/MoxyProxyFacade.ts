@@ -82,7 +82,7 @@ export default class MoxyProxyFacade {
     });
     await this.socketsClient.broadcastEvent({
       action: 'updateServerStateInterface',
-      payload: this.serverStateService.getServerStateInterface(),
+      payload: await this.serverStateService.getActiveScenarioInterface(),
     });
 
     return {
@@ -105,7 +105,7 @@ export default class MoxyProxyFacade {
     });
     await this.socketsClient.sendEventToSocket(socketId, {
       action: 'updateServerStateInterface',
-      payload: this.serverStateService.getServerStateInterface(),
+      payload: await this.serverStateService.getActiveScenarioInterface(),
     });
     await this.socketsClient.sendEventToSocket(socketId, {
       action: 'updateServerStateScenarios',
@@ -164,14 +164,14 @@ export default class MoxyProxyFacade {
     },
 
     addServerStateScenario: async (payload: ServerStateScenario) => {
-      this.serverStateService.addServerStateScenario(payload);
+      await this.serverStateService.addServerStateScenario(payload);
       await this.socketsClient.broadcastEvent({
         action: 'updateServerStateScenarios',
         payload: this.serverStateService.getServerStateScenarioMappings(),
       });
     },
     deleteStateScenario: async (payload: string) => {
-      this.serverStateService.deleteStateScenario(payload);
+      await this.serverStateService.deleteStateScenario(payload);
       await this.socketsClient.broadcastEvent({
         action: 'updateServerStateScenarios',
         payload: this.serverStateService.getServerStateScenarioMappings(),
@@ -183,7 +183,7 @@ export default class MoxyProxyFacade {
     },
     changeServerStateScenario: async (payload: string) => {
       console.log(['changeServerStateScenario'], payload);
-      this.serverStateService.changeServerStateScenario(payload);
+      await this.serverStateService.changeServerStateScenario(payload);
       await this.socketsClient.broadcastEvent({
         action: 'updateServerState',
         payload: this.serverStateService.getServerState(),
@@ -200,11 +200,11 @@ export default class MoxyProxyFacade {
       });
       await this.socketsClient.broadcastEvent({
         action: 'updateServerStateInterface',
-        payload: this.serverStateService.getServerStateInterface(),
+        payload: await this.serverStateService.getActiveScenarioInterface(),
       });
     },
     resetServerState: async (payload: string) => {
-      this.serverStateService.resetServerState(payload);
+      await this.serverStateService.resetServerState(payload);
       await this.socketsClient.broadcastEvent({
         action: 'updateServerState',
         payload: this.serverStateService.getServerState(),
