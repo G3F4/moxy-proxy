@@ -1,2 +1,3 @@
 import '../common.steps';
-import '../jsonView.steps';
+import '../jsonViewer.steps';
+import '../editor.steps';

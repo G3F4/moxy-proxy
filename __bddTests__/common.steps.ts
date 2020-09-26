@@ -58,19 +58,19 @@ Then(/^I click tab with label "(.+)"$/, async (t: TestController, [text]: [strin
 });
 
 Then(/^I open select with label "(.+)" and select "(.+)" option$/, async (t: TestController, [selectLabel, optionLabel]: [string, string]) => {
-  const selectLabelEl = await Selector('label').withExactText(selectLabel);
+  const selectLabelEl = Selector('label').withExactText(selectLabel);
   const selectId = await selectLabelEl.id;
   try {
-    await userClick(selectLabelEl);
+    await userClick(selectLabelEl.parent());
   } catch (e) {
     throw new Error(`Unable to find select with label: "${selectLabel}"`)
   }
-  const options = await Selector('ul').withAttribute('aria-labelledby', selectId);
+  const options = Selector('ul').withAttribute('aria-labelledby', selectId);
   if (!(await options.exists)) {
     throw new Error(`Unable to find select option list labelled by id: "${selectId}"`)
   }
   try {
-    const option = await options.find('li').withExactText(optionLabel);
+    const option = options.find('li').withExactText(optionLabel);
     await userClick(option);
   } catch (e) {
     throw new Error(`Unable to find select option with label: "${optionLabel}"`);

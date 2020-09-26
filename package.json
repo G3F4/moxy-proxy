@@ -33,7 +33,7 @@
     "lint": "eslint './**/*.{ts,tsx}'",
     "lint:fix": "eslint './**/*.{ts,tsx}' --fix",
     "client:deploy:predeploy": "yarn build:client",
-    "client:deploy:gh-pages": "gh-pages -d dist/public"
+    "client:deploy:gh-pages": "yarn client:deploy:predeploy;gh-pages -d dist/public"
   },
   "proxy": "http://localhost:5000",
   "dependencies": {
