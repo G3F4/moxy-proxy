@@ -13,10 +13,10 @@ import {
 } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import { Close } from '@material-ui/icons';
-import React, { ChangeEvent, useContext, useState } from 'react';
+import React, { ChangeEvent, useContext, useRef, useState } from 'react';
 import { ServerState } from '../../../../sharedTypes';
 import { AppStateContext } from '../../../App';
-import { Editor } from '../../../common/Editor';
+import { SimpleEditor } from '../../../common/SimpleEditor';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -39,8 +39,8 @@ export default function AddServerScenario() {
     {} as ServerState,
   );
   const [name, setName] = useState('');
-
-  console.log(['serverState'], serverState);
+  const valueGetter = useRef<() => string>();
+  const code = JSON.stringify(scenarioServerState, null, 2);
 
   function handleClickOpen() {
     setOpen(true);
@@ -56,19 +56,15 @@ export default function AddServerScenario() {
   }
 
   async function handleSubmit() {
-    await addServerStateScenario({
-      id: Date.now().toString(),
-      name,
-      state: scenarioServerState,
-    });
-    setOpen(false);
+    if (valueGetter.current) {
+      await addServerStateScenario({
+        id: Date.now().toString(),
+        name,
+        state: JSON.parse(valueGetter.current()) as ServerState,
+      });
+      setOpen(false);
+    }
   }
-
-  function handleSave(code: string) {
-    setScenarioServerState(JSON.parse(code));
-  }
-
-  const code = JSON.stringify(scenarioServerState, null, 2);
 
   return (
     <>
@@ -110,7 +106,12 @@ export default function AddServerScenario() {
           <DialogContentText>
             Modify copy of state before adding
           </DialogContentText>
-          <Editor autoHeight code={code} language="json" onSave={handleSave} />
+          <SimpleEditor
+            autoHeight
+            initialCode={code}
+            language="json"
+            valueGetter={valueGetter}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleSubmit}>Submit</Button>

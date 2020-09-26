@@ -1,16 +1,10 @@
 Feature: Layout
-
-  I want to find out if layout works fine
-
   Scenario: One with changing layout
-    When I open Moxy Proxy
-    When I select "Board view" option
-    Then Layout changes to Board
-    When I select "Panels view" option
-    Then Layout changes to Panels
-    When I select "Tabs view" option
-    Then Layout changes to Tabs
-    When I select "Panels view" option
-    Then Layout changes to Panels
-    When I select "Board view" option
-    Then Layout changes to Board
+    * I open Moxy Proxy
+    * I open select with label "View mode" and select "Board view" option
+    * I open select with label "View mode" and select "Panels view" option
+    * I open select with label "View mode" and select "Tabs view" option
+    * I click tab with label "STATE INTERFACE"
+    * I click tab with label "SERVER STATE"
+    * I click tab with label "ENDPOINTS"
+    * I open select with label "View mode" and select "Board view" option

@@ -19,7 +19,7 @@
     "test:bdd:local:headless": "env-cmd -f .env.staging gherkin-testcafe chrome:headless __bddTests__/**/*.steps.ts __bddTests__/**/*.feature --skip-js-errors;yarn test:bdd:cleanup",
     "test:bdd:local:headless:with-app": "env-cmd -f .env.staging npm-run-all -p -r test:bdd:app test:bdd:local:headless;yarn test:bdd:cleanup",
     "test:bdd:app": "env-cmd -f .env.staging npm-run-all -p -r run:server host:client",
-    "test:bdd:cleanup": "rm -rf __testsData__",
+    "test:bdd:cleanup": "rm -rf __NotExistingFolder__",
     "test:client": "react-scripts test",
     "build": "yarn build:clean;npm-run-all -p build:client build:server",
     "build:staging": "yarn build:clean;npm-run-all -p build:client:staging build:server",

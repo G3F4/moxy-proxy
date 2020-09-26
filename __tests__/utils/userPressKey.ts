@@ -32,6 +32,6 @@ export default async function userPressKey({
   await t.wait(delay);
 
   for (let i = 0; i < times; i++) {
-    await t.pressKey(keys);
+    await t.pressKey(keys, { speed: 0.2 });
   }
 }
