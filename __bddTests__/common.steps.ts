@@ -57,7 +57,7 @@ Then(/^I click tab with label "(.+)"$/, async (t: TestController, [text]: [strin
   }
 });
 
-Then(/^I open select with label "(.+)" and select "(.+)" option$/, async (t: TestController, [selectLabel, optionLabel]: [string, string]) => {
+async function openSelect(selectLabel: string) {
   const selectLabelEl = Selector('label').withExactText(selectLabel);
   const selectId = await selectLabelEl.id;
   try {
@@ -69,10 +69,26 @@ Then(/^I open select with label "(.+)" and select "(.+)" option$/, async (t: Tes
   if (!(await options.exists)) {
     throw new Error(`Unable to find select option list labelled by id: "${selectId}"`)
   }
+  return options;
+}
+
+Then(/^I open select with label "(.+)" and select "(.+)" option$/, async (t: TestController, [selectLabel, optionLabel]: [string, string]) => {
+  const options = await openSelect(selectLabel);
+
   try {
     const option = options.find('li').withExactText(optionLabel);
     await userClick(option);
   } catch (e) {
     throw new Error(`Unable to find select option with label: "${optionLabel}"`);
+  }
+});
+
+Then(/^I can't see option with label "(.+)" in select with label "(.+)"$/, async (t: TestController, [optionLabel, selectLabel]: [string, string]) => {
+  const options = await openSelect(selectLabel);
+  const optionExists = await options
+    .find('li').withExactText(optionLabel).exists;
+
+  if (optionExists) {
+    throw new Error(`Option with label ${optionLabel} still exists in select with label ${selectLabel}`);
   }
 });

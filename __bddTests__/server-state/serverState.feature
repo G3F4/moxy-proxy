@@ -34,3 +34,10 @@ Feature: Server State
     * I see ""nested":{1 item" line in JSON viewer
     * I see ""deep":{1 item" line in JSON viewer
     * I see ""arr":[3 items" line in JSON viewer
+    * I see "0:int1" line in JSON viewer
+    * I see "1:int2" line in JSON viewer
+    * I see "2:int3" line in JSON viewer
+  Scenario: One with deleting server state scenario
+    * I open Moxy Proxy
+    * I open server state scenario menu and select "Delete scenario" option
+    * I can't see option with label "test scenario" in select with label "State scenario"
