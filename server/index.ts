@@ -1,9 +1,10 @@
 import './dotenv';
+import { SERVER_START_MESSAGE } from './config';
 import startApplication from './startApplication';
 import { logInfo } from './utils/logger';
 
 startApplication().then(() => {
-  logInfo('Application up and running.');
+  console.log(SERVER_START_MESSAGE);
 });
 
 // curl -i --header "Content-Type: application/json" --request GET  http://localhost:5000/test

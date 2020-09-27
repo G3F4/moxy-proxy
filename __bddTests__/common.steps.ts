@@ -6,11 +6,12 @@ import userPressKey from '../__tests__/utils/userPressKey';
 import userTypes from '../__tests__/utils/userTypes';
 import userWait from '../__tests__/utils/userWait';
 import userWrite from '../__tests__/utils/userWrite';
-import { APP_URL } from '../server/config';
+import './feature.steps';
 import TestController from './TestController';
 
 When('I open Moxy Proxy', async (t: any) => {
-  await t.navigateTo(APP_URL);
+  console.log(['I open Moxy Proxy'], t.fixtureCtx);
+  await t.navigateTo(t.fixtureCtx.host);
 
   const { waitForLoaded } = await getApplication();
 
