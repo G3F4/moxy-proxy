@@ -3,6 +3,7 @@ Feature: Server State
     * I open Moxy Proxy
     * I click "ADD SERVER SCENARIO" button
     * I enter "test scenario" in input with label "Scenario name"
+    * I wait for editor to load
     * I press tab on keyboard
     * I press end on keyboard
     * I press left on keyboard
@@ -16,6 +17,7 @@ Feature: Server State
   Scenario: One with editing server state scenario
     * I open Moxy Proxy
     * I click "EDIT" button
+    * I wait for editor to load
     * I click editor to focus editor input
     * I press up on keyboard
     * I press end on keyboard

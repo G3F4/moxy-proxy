@@ -10,7 +10,6 @@ import './feature.steps';
 import TestController from './TestController';
 
 When('I open Moxy Proxy', async (t: any) => {
-  console.log(['I open Moxy Proxy'], t.fixtureCtx);
   await t.navigateTo(t.fixtureCtx.host);
 
   const { waitForLoaded } = await getApplication();
