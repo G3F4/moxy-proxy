@@ -9,7 +9,7 @@ async function startApp() {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve();
-    }, 2000);
+    }, 5000);
   });
 }
 

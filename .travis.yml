@@ -9,8 +9,9 @@ cache:
     - node_modules
 
 script:
-  - yarn build
+  - yarn build:staging
   - yarn test
+  - yarn build
 
 deploy:
   provider: heroku

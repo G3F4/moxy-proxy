@@ -1,5 +1,4 @@
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
-import { AfterAll, BeforeAll } from 'cucumber';
+import { When } from 'cucumber';
 import { Selector } from 'testcafe';
 import getApplication from '../__tests__/pageObjects/getApplication';
 import userClick from '../__tests__/utils/userClick';
@@ -8,7 +7,6 @@ import userTypes from '../__tests__/utils/userTypes';
 import userWait from '../__tests__/utils/userWait';
 import userWrite from '../__tests__/utils/userWrite';
 import { APP_URL } from '../server/config';
-import { When } from 'cucumber';
 import TestController from './TestController';
 
 When('I open Moxy Proxy', async (t: any) => {
