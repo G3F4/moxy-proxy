@@ -1,5 +1,5 @@
-import { ChildProcessByStdio, ChildProcessWithoutNullStreams, spawn } from 'child_process';
-import { Given, Then, Before, After, AfterAll, BeforeAll } from 'cucumber';
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import { AfterAll, BeforeAll } from 'cucumber';
 import { Selector } from 'testcafe';
 import getApplication from '../__tests__/pageObjects/getApplication';
 import userClick from '../__tests__/utils/userClick';
@@ -8,33 +8,10 @@ import userTypes from '../__tests__/utils/userTypes';
 import userWait from '../__tests__/utils/userWait';
 import userWrite from '../__tests__/utils/userWrite';
 import { APP_URL } from '../server/config';
+import { When } from 'cucumber';
 import TestController from './TestController';
 
-let subprocess: ChildProcessWithoutNullStreams;
-
-
-async function startApp() {
-  subprocess = spawn('yarn', ['run', 'test:bdd:app']);
-  return new Promise(((resolve, reject) => {
-    setTimeout(() => {
-      resolve();
-    }, 2000);
-  }))
-}
-
-function stopApp() {
-  subprocess.kill();
-}
-
-BeforeAll('@BeforeAll', async () => {
-  await startApp();
-});
-
-AfterAll('@AfterAll', async () => {
-  stopApp();
-});
-
-Given('I open Moxy Proxy', async (t: any) => {
+When('I open Moxy Proxy', async (t: any) => {
   await t.navigateTo(APP_URL);
 
   const { waitForLoaded } = await getApplication();
@@ -42,35 +19,35 @@ Given('I open Moxy Proxy', async (t: any) => {
   await waitForLoaded();
 });
 
-Then(/^I wait for (.+) seconds$/, async (t: TestController, [seconds]: [string]) => {
+When(/^I wait for (.+) seconds$/, async (t: TestController, [seconds]: [string]) => {
   await userWait(parseInt(seconds,10));
 });
 
-Then(/^I click "(.+)" button$/, async (t: TestController, [buttonLabel]: [string]) => {
+When(/^I click "(.+)" button$/, async (t: TestController, [buttonLabel]: [string]) => {
   const button = await Selector('button').withExactText(buttonLabel);
   await userClick(button);
 });
 
-Then(/^I enter "(.+)" in input with label "(.+)"$/, async (t: TestController, [textToEnter, inputLabel]: [string, string]) => {
+When(/^I enter "(.+)" in input with label "(.+)"$/, async (t: TestController, [textToEnter, inputLabel]: [string, string]) => {
   const input = await Selector('label').withExactText(inputLabel).parent().find('input');
   await userWrite(input, textToEnter);
 });
 
-Then(/^I press (backspace|tab|enter|capslock|esc|space|pageup|pagedown|end|home|left|right|up|down|ins|delete) on keyboard$/, async (t: TestController, [key]: [string]) => {
+When(/^I press (backspace|tab|enter|capslock|esc|space|pageup|pagedown|end|home|left|right|up|down|ins|delete) on keyboard$/, async (t: TestController, [key]: [string]) => {
   await userPressKey({ key });
 });
 
-Then(/^I type "(.+)" on keyboard$/, async (t: TestController, [text]: [string]) => {
+When(/^I type "(.+)" on keyboard$/, async (t: TestController, [text]: [string]) => {
   await userTypes(text);
 });
 
-Then(/^I see view header with label "(.+)"$/, async (t: TestController, [text]: [string]) => {
+When(/^I see view header with label "(.+)"$/, async (t: TestController, [text]: [string]) => {
   const header = await Selector('h5').withExactText(text);
 
   await t.expect(header.exists).ok(`Unable to find view header | text: ${text}`)
 });
 
-Then(/^I click tab with label "(.+)"$/, async (t: TestController, [text]: [string]) => {
+When(/^I click tab with label "(.+)"$/, async (t: TestController, [text]: [string]) => {
   const tabs = await Selector('div').withAttribute('role', 'tablist');
   const tabLabel = tabs.find('button').withExactText(text);
 
@@ -97,7 +74,7 @@ async function openSelect(selectLabel: string) {
   return options;
 }
 
-Then(/^I open select with label "(.+)" and select "(.+)" option$/, async (t: TestController, [selectLabel, optionLabel]: [string, string]) => {
+When(/^I open select with label "(.+)" and select "(.+)" option$/, async (t: TestController, [selectLabel, optionLabel]: [string, string]) => {
   const options = await openSelect(selectLabel);
 
   try {
@@ -108,7 +85,7 @@ Then(/^I open select with label "(.+)" and select "(.+)" option$/, async (t: Tes
   }
 });
 
-Then(/^I can't see option with label "(.+)" in select with label "(.+)"$/, async (t: TestController, [optionLabel, selectLabel]: [string, string]) => {
+When(/^I can't see option with label "(.+)" in select with label "(.+)"$/, async (t: TestController, [optionLabel, selectLabel]: [string, string]) => {
   const options = await openSelect(selectLabel);
   const optionExists = await options
     .find('li').withExactText(optionLabel).exists;

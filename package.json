@@ -13,7 +13,7 @@
     "start:local:with-build": "yarn build:staging;yarn run:server",
     "run:server": "node dist/server",
     "host:client": "http-server -c-1 dist/public",
-    "test": "yarn test:bdd:local:headless",
+    "test": "yarn test:bdd:headless",
     "test:bdd:chrome": "env-cmd -f .env.staging gherkin-testcafe chrome __bddTests__/**/*.steps.ts __bddTests__/**/*.feature --skip-js-errors;yarn test:bdd:cleanup",
     "test:bdd:headless": "env-cmd -f .env.staging gherkin-testcafe chrome:headless __bddTests__/**/*.steps.ts __bddTests__/**/*.feature --skip-js-errors;yarn test:bdd:cleanup",
     "test:bdd:app": "env-cmd -f .env.staging npm-run-all -p -r run:server host:client",
