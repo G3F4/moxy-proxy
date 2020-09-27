@@ -47,7 +47,7 @@ async function startApp(ctx: any) {
 
     setTimeout(() => {
       reject(new Error('Application not started within time limit.'));
-    }, 15000);
+    }, 25000);
   });
 }
 
