@@ -4,7 +4,7 @@ import userClick from '../__tests__/utils/userClick';
 
 const editorSelector = '.monaco-editor';
 
-Then('I click editor to focus editor input', async () => {
+Then('I click editor to set cursor at the end of last line', async () => {
   const monacoEditor = await Selector(editorSelector);
 
   await userClick(monacoEditor);

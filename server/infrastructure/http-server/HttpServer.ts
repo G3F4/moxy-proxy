@@ -61,10 +61,11 @@ export default class HttpServer {
   }
 
   private static parseMethod(method: string): Method {
+    const lowerCased = method.toLowerCase() as Method;
     const correctMethods = ['get', 'post', 'put', 'patch', 'delete', 'options'];
 
-    if (correctMethods.includes(method)) {
-      return method as Method;
+    if (correctMethods.includes(lowerCased)) {
+      return lowerCased;
     }
 
     throw new Error('Incorrect method');

@@ -18,7 +18,7 @@ Feature: Server State
 #    * I open Moxy Proxy
 #    * I click "EDIT" button
 #    * I wait for editor to load
-#    * I click editor to focus editor input
+#    * I click editor to set cursor at the end of last line
 #    * I press up on keyboard
 #    * I press end on keyboard
 #    * I type "," on keyboard

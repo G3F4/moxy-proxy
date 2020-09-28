@@ -55,6 +55,7 @@ export default class MoxyProxyFacade {
     requestResponse: string;
   }> {
     console.log(['callHandler']);
+    console.log(['method'], method);
 
     const handler = this.endpointsService.getHandler({ url, method });
     const urlParameters = this.endpointsService.getUrlParameters({

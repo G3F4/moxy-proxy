@@ -10,6 +10,7 @@
   "private": false,
   "scripts": {
     "start": "yarn run:server",
+    "start:staging": "env-cmd -f .env.staging yarn run:server",
     "start:local:with-build": "yarn build:staging;yarn run:server",
     "run:server": "node dist/server",
     "host:client": "http-server -c-1 dist/public",
@@ -22,7 +23,7 @@
     "build": "yarn build:clean;npm-run-all -p build:client build:server",
     "build:staging": "yarn build:clean;npm-run-all -p build:client:staging build:server",
     "build:client": "rm -rf dist/public;react-scripts build;mv build dist/public",
-    "build:client:staging": "env-cmd -f .env.staging npm run build:client",
+    "build:client:staging": "env-cmd -f .env.staging react-scripts build;mv build dist/public",
     "build:server": "tsc -p tsconfig.server.prod.json",
     "build:clean": "rm -rf dist;mkdirp dist",
     "dev": "npm-run-all -p -r dev:server dev:client",
